@@ -1,35 +1,21 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "leeguooooo-plugins",
+  "description": "Developer plugins by leeguooooo — for Claude Code, Cursor, and more.",
   "owner": {
     "name": "leeguooooo",
-    "url": "https://github.com/leeguooooo"
-  },
-  "metadata": {
-    "description": "Developer plugins by leeguooooo — for Claude Code, Cursor, and more.",
-    "homepage": "https://github.com/leeguooooo/plugins"
+    "email": "leeguooooo@gmail.com"
   },
   "plugins": [
     {
       "name": "prompt-language-coach",
       "description": "Real-time language coaching in Claude Code. Auto-corrects your writing and provides natural expressions on every prompt. Supports any language pair.",
-      "version": "0.1.0",
-      "author": {
-        "name": "leeguooooo"
-      },
-      "homepage": "https://github.com/leeguooooo/prompt-language-coach",
-      "repository": "https://github.com/leeguooooo/prompt-language-coach",
-      "license": "MIT",
-      "keywords": [
-        "language-learning",
-        "ai-language-coach",
-        "english-learning",
-        "esl",
-        "developer-tools"
-      ],
+      "category": "productivity",
       "source": {
-        "source": "github",
-        "repo": "leeguooooo/prompt-language-coach"
-      }
+        "source": "url",
+        "url": "https://github.com/leeguooooo/prompt-language-coach.git"
+      },
+      "homepage": "https://github.com/leeguooooo/prompt-language-coach"
     }
   ]
 }
