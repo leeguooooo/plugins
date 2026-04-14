@@ -1,0 +1,35 @@
+{
+  "name": "leeguooooo-marketplace",
+  "owner": {
+    "name": "leeguooooo",
+    "url": "https://github.com/leeguooooo"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by leeguooooo — developer tools and productivity plugins.",
+    "homepage": "https://github.com/leeguooooo/claude-marketplace"
+  },
+  "plugins": [
+    {
+      "name": "prompt-language-coach",
+      "description": "Real-time language coaching in Claude Code. Auto-corrects your writing and provides natural expressions on every prompt. Supports any language pair.",
+      "version": "0.1.0",
+      "author": {
+        "name": "leeguooooo"
+      },
+      "homepage": "https://github.com/leeguooooo/prompt-language-coach",
+      "repository": "https://github.com/leeguooooo/prompt-language-coach",
+      "license": "MIT",
+      "keywords": [
+        "language-learning",
+        "ai-language-coach",
+        "english-learning",
+        "esl",
+        "developer-tools"
+      ],
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/prompt-language-coach"
+      }
+    }
+  ]
+}
