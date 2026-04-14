@@ -16,7 +16,12 @@ Developer plugins for Claude Code and Cursor.
 
 Real-time language coaching in every prompt. Corrects your writing and provides natural, native-like expressions automatically. Supports any language pair.
 
-**Claude Code:** `/plugin install prompt-language-coach@leeguooooo-plugins`  
+**Claude Code:**
+```
+/plugin install prompt-language-coach@leeguooooo-plugins
+/reload-plugins
+/language-coach:language-coach setup
+```
 
 ---
 
