@@ -1,12 +1,12 @@
 {
-  "name": "leeguooooo-marketplace",
+  "name": "leeguooooo-plugins",
   "owner": {
     "name": "leeguooooo",
     "url": "https://github.com/leeguooooo"
   },
   "metadata": {
-    "description": "Claude Code plugins by leeguooooo — developer tools and productivity plugins.",
-    "homepage": "https://github.com/leeguooooo/claude-marketplace"
+    "description": "Developer plugins by leeguooooo — for Claude Code, Cursor, and more.",
+    "homepage": "https://github.com/leeguooooo/plugins"
   },
   "plugins": [
     {
