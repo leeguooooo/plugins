@@ -54,6 +54,18 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/curl-crypto-plugin"
+    },
+    {
+      "name": "wrangler-accounts",
+      "description": "Cloudflare Wrangler multi-account helper. AWS-style profiles for Claude Code with a guard hook that blocks raw wrangler calls.",
+      "version": "1.5.1",
+      "category": "development",
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/wrangler-accounts",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/wrangler-accounts"
     }
   ]
 }

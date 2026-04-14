@@ -43,6 +43,12 @@ Decrypt encrypted curl request parameters and encrypt payloads for test-service 
 
 **Claude Code:** `/plugin install curl-crypto-plugin@leeguooooo-plugins`
 
+### [wrangler-accounts](https://github.com/leeguooooo/wrangler-accounts)
+
+Cloudflare Wrangler multi-account helper. AWS-style profiles with a guard hook that blocks raw `wrangler` calls when local profiles are configured.
+
+**Claude Code:** `/plugin install wrangler-accounts@leeguooooo-plugins`
+
 ---
 
 ## More plugins coming
