@@ -1,8 +1,10 @@
 # leeguooooo/plugins
 
-Developer plugins for Claude Code (and more editors coming).
+Developer plugins for Claude Code and Cursor.
 
-## Add this marketplace
+---
+
+## Claude Code — add this marketplace
 
 ```
 /plugin marketplace add leeguooooo/plugins
@@ -18,13 +20,16 @@ Real-time language coaching in every prompt. Corrects your writing and provides 
 
 Supports any language pair (Chinese → English, Japanese → English, Spanish → French, etc.).
 
+**Claude Code:**
 ```
 /plugin install prompt-language-coach@leeguooooo-plugins
 /language-coach setup
 ```
 
+**Cursor:** copy [`cursor-rules/language-coach.mdc`](https://github.com/leeguooooo/prompt-language-coach/blob/main/cursor-rules/language-coach.mdc) to `.cursor/rules/` or paste into Cursor Settings → Rules for AI.
+
 ---
 
 ## More plugins coming
 
-New plugins will appear in this marketplace as they are released. Star the repo to follow updates.
+New plugins will be added here as they are released. Star the repo to follow updates.
