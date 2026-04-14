@@ -13,10 +13,47 @@
       "version": "0.1.0",
       "category": "productivity",
       "source": {
-        "source": "url",
-        "url": "https://github.com/leeguooooo/prompt-language-coach.git"
+        "source": "github",
+        "repo": "leeguooooo/prompt-language-coach",
+        "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/prompt-language-coach"
+    },
+    {
+      "name": "zentao-plugin",
+      "description": "Use ZenTao from Claude Code through the local zentao CLI. Inspect products, bugs, tasks, and run self-test workflows.",
+      "version": "0.1.0",
+      "category": "development",
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/zentao-plugin",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/zentao-plugin"
+    },
+    {
+      "name": "yapi-plugin",
+      "description": "Use YApi from Claude Code through the local yapi CLI. Inspect interfaces and sync API docs.",
+      "version": "0.1.2",
+      "category": "development",
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/yapi-plugin",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/yapi-plugin"
+    },
+    {
+      "name": "curl-crypto-plugin",
+      "description": "Decrypt encrypted curl request parameters and encrypt payloads for test-service calls.",
+      "version": "0.1.3",
+      "category": "development",
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/curl-crypto-plugin",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/curl-crypto-plugin"
     }
   ]
 }
