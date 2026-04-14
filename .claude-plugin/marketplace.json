@@ -38,10 +38,11 @@
       "category": "development",
       "source": {
         "source": "github",
-        "repo": "leeguooooo/yapi-plugin",
-        "ref": "main"
+        "repo": "leeguooooo/cross-request-master",
+        "ref": "main",
+        "path": "plugins/yapi-plugin"
       },
-      "homepage": "https://github.com/leeguooooo/yapi-plugin"
+      "homepage": "https://github.com/leeguooooo/cross-request-master/tree/main/plugins/yapi-plugin"
     },
     {
       "name": "curl-crypto-plugin",
