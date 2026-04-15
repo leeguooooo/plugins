@@ -4,24 +4,29 @@ Developer plugins for Claude Code and Cursor.
 
 ## Add this marketplace
 
+**Claude Code:**
 ```
 /plugin marketplace add leeguooooo/plugins
 ```
+
+**Cursor:** Open Settings → Plugins → Marketplace, then add `leeguooooo/plugins`.
 
 ---
 
 ## Plugins
 
-### [prompt-language-coach](https://github.com/leeguooooo/prompt-language-coach)
+### [language-coach](https://github.com/leeguooooo/prompt-language-coach)
 
 Real-time language coaching in every prompt. Corrects your writing and provides natural, native-like expressions automatically. Supports any language pair.
 
 **Claude Code:**
 ```
-/plugin install prompt-language-coach@leeguooooo-plugins
+/plugin install language-coach@leeguooooo-plugins
 /reload-plugins
 /language-coach:language-coach setup
 ```
+
+**Cursor:** Install **language-coach** from the marketplace, then run `/language-coach setup` in the AI panel.
 
 ---
 
