@@ -1,0 +1,40 @@
+name: Sync language-coach version
+
+on:
+  repository_dispatch:
+    types: [sync-language-coach-version]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update marketplace.json
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, pathlib
+          version = os.environ["VERSION"]
+          path = pathlib.Path(".claude-plugin/marketplace.json")
+          data = json.loads(path.read_text())
+          for entry in data.get("plugins", []):
+              if entry.get("name") == "language-coach":
+                  entry["version"] = version
+          path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+          print(f"Updated language-coach to {version}")
+          EOF
+
+      - name: Commit & push
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .claude-plugin/marketplace.json
+          git commit -m "chore: bump language-coach to v${VERSION}" || echo "Nothing to commit"
+          git push
