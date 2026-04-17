@@ -10,7 +10,7 @@
     {
       "name": "language-coach",
       "description": "Real-time language coaching in Claude Code. Auto-corrects your writing and provides natural expressions on every prompt. Supports any language pair.",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "category": "productivity",
       "source": {
         "source": "github",
