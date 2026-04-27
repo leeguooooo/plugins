@@ -70,8 +70,8 @@
     },
     {
       "name": "claude-statusbar",
-      "description": "Lightweight Claude Code statusLine monitor with switchable styles (classic / capsule / hairline) × 7 themes (graphite / twilight / linen / nord / dracula / sakura / mono). Ships /statusbar slash commands. Backed by the cs CLI on PyPI.",
-      "version": "3.1.1",
+      "description": "Lightweight Claude Code statusLine monitor. 3 styles × 7 themes (classic/capsule/hairline × graphite/twilight/linen/nord/dracula/sakura/mono), optional session-cost segment, /statusbar slash commands, and cs doctor self-diagnostic. Backed by the cs CLI on PyPI.",
+      "version": "3.1.2",
       "category": "monitoring",
       "source": {
         "source": "github",
