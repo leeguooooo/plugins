@@ -60,6 +60,21 @@ Cloudflare Wrangler multi-account helper. AWS-style profiles with a guard hook t
 
 ---
 
+### [claude-statusbar](https://github.com/leeguooooo/claude-code-usage-bar)
+
+Lightweight Claude Code statusLine monitor. 3 styles (classic / capsule / hairline) × 7 themes (graphite / twilight / linen / nord / dracula / sakura / mono) and a multi-track time-driven pet animation. `/statusbar` slash commands included.
+
+**Claude Code:**
+```
+/plugin install claude-statusbar@leeguooooo-plugins
+pip install claude-statusbar    # or: uv tool install claude-statusbar
+cs --setup
+```
+
+The plugin only carries the slash commands; the actual statusLine renderer is the `cs` CLI from PyPI.
+
+---
+
 ## More plugins coming
 
 New plugins will be added here as they are released. Star the repo to follow updates.
