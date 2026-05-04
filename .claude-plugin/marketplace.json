@@ -71,7 +71,7 @@
     {
       "name": "claude-statusbar",
       "description": "Lightweight Claude Code statusLine monitor. 3 styles × 7 themes, optional cache-expiry countdown + session-cost segments, /statusbar slash commands, cs doctor self-diagnostic. v3.2 ships daemon fast-mode (cs --setup --fast) — at refreshInterval=1 it cuts statusline CPU from ~6% to ~2%. Backed by the cs CLI on PyPI.",
-      "version": "3.3.1",
+      "version": "3.3.2",
       "category": "monitoring",
       "source": {
         "source": "github",
