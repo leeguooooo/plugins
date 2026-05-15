@@ -70,8 +70,8 @@
     },
     {
       "name": "claude-statusbar",
-      "description": "Lightweight Claude Code statusLine monitor. 3 styles × 9 themes, per-segment color management (each metric colors itself by its own severity), per-severity color overrides (cs config set color_ok|warn|hot), cache-expiry countdown + session-cost segments, conversational claude-statusbar skill (no slash commands needed) plus the legacy /statusbar slash commands, cs doctor self-diagnostic. v3.6.0 makes daemon (fast) mode the default for cs --setup — under 1% CPU continuously instead of ~3% inline at refreshInterval=1; pass --inline to opt back. Backed by the cs CLI on PyPI.",
-      "version": "3.6.0",
+      "description": "Lightweight Claude Code statusLine monitor. 3 styles × 9 themes, per-segment color management (each metric colors itself by its own severity), per-severity color overrides (cs config set color_ok|warn|hot), cache-expiry countdown + session-cost segments, conversational claude-statusbar skill (no slash commands needed) plus the legacy /statusbar slash commands, cs doctor self-diagnostic. v3.7.0 defends against statusLine hijacking: `cs --setup --project [PATH]` writes a project-level override that survives another tool stealing the global slot, and the bar surfaces a one-line warning when displacement is detected. v3.6.0 makes daemon (fast) mode the default for cs --setup — under 1% CPU continuously instead of ~3% inline at refreshInterval=1; pass --inline to opt back. Backed by the cs CLI on PyPI.",
+      "version": "3.7.0",
       "category": "monitoring",
       "source": {
         "source": "github",
