@@ -1,18 +1,20 @@
-name: Auto-sync plugin versions
+name: Marketplace maintenance
 
-# Pull-based version sync: instead of every source repo pushing a
-# repository_dispatch (which needs a cross-repo PAT in each repo), this
-# workflow walks every github-source entry in marketplace.json and reads
-# the current version from the source repo itself. Zero per-repo setup;
-# new marketplace entries are picked up automatically.
+# Daily self-maintenance for this marketplace. marketplace.json is the single
+# source of truth; everything else derives from it automatically:
 #
-# Version source precedence (first hit wins):
-#   1. .claude-plugin/plugin.json  (authoritative for strict:true plugins)
-#   2. package.json
-#   3. Cargo.toml   (first top-level `version = "..."`)
-#   4. pyproject.toml
-#   5. latest GitHub release tag (skipped for entries with a subpath —
-#      the host repo's tags may be unrelated to the plugin)
+#   1. Version sync (pull-based): read the live version from every
+#      github-source entry's repo — no repository_dispatch, no PAT in source
+#      repos, new entries picked up automatically. Precedence:
+#      .claude-plugin/plugin.json > package.json > Cargo.toml > pyproject.toml
+#      > latest release tag (release fallback skipped for subpath entries).
+#   2. README generation: the *-use family section between the
+#      use-family:start/end markers is regenerated from marketplace.json.
+#   3. Skill health check: every declared skills path must resolve to a
+#      SKILL.md in the source repo — a repo restructure that breaks an entry
+#      turns the run red instead of shipping an empty plugin.
+#   4. New-repo detection: a public leeguooooo/*-use repo not yet listed
+#      here opens a checklist issue (deduped).
 
 on:
   schedule:
@@ -24,11 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sync versions from source repos
+      - name: Sync versions, regen README, check skill health
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -82,8 +85,10 @@ jobs:
                   if m: return m.group(1)
               return None
 
-          path = pathlib.Path(".claude-plugin/marketplace.json")
-          data = json.loads(path.read_text())
+          mp_path = pathlib.Path(".claude-plugin/marketplace.json")
+          data = json.loads(mp_path.read_text())
+
+          # ---- 1. version sync ----
           changed = []
           for entry in data.get("plugins", []):
               src = entry.get("source")
@@ -97,12 +102,53 @@ jobs:
                   changed.append(f'{entry["name"]}: {entry.get("version")} -> {v}')
                   entry["version"] = v
           if changed:
-              path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
-              summary = "; ".join(changed)
-              pathlib.Path(os.environ["GITHUB_ENV"]).open("a").write(
-                  f"SYNC_SUMMARY={summary}\n"
+              mp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+          # ---- 2. regen README *-use family section ----
+          rd_path = pathlib.Path("README.md")
+          readme = rd_path.read_text()
+          START = re.search(r"^<!-- use-family:start[^\n]*-->$", readme, re.M)
+          END = re.search(r"^<!-- use-family:end -->$", readme, re.M)
+          if START and END:
+              blocks = []
+              for entry in data.get("plugins", []):
+                  if not entry["name"].endswith("-use"):
+                      continue
+                  blocks.append(
+                      f"### [{entry['name']}]({entry.get('homepage', '')})\n\n"
+                      f"{entry.get('description', '')}\n\n"
+                      f"**Claude Code:** `/plugin install {entry['name']}@leeguooooo-plugins`\n\n---\n"
+                  )
+              new_readme = (
+                  readme[: START.end()] + "\n\n" + "\n".join(blocks) + "\n"
+                  + readme[END.start():]
               )
+              if new_readme != readme:
+                  rd_path.write_text(new_readme)
+                  changed.append("README regenerated")
+
+          # ---- 3. skill health check ----
+          errors = []
+          for entry in data.get("plugins", []):
+              src = entry.get("source")
+              if not isinstance(src, dict) or src.get("source") != "github":
+                  continue
+              repo, ref, sub = src["repo"], src.get("ref", "main"), src.get("path", "")
+              base = (sub.rstrip("/") + "/") if sub else ""
+              for sp in entry.get("skills", []):
+                  rel = sp.strip("./")
+                  skill_file = base + (rel + "/" if rel else "") + "SKILL.md"
+                  if raw(repo, ref, skill_file) is None:
+                      errors.append(f'{entry["name"]}: {skill_file} missing in {repo}@{ref}')
+
+          with pathlib.Path(os.environ["GITHUB_ENV"]).open("a") as env:
+              if changed:
+                  env.write(f"SYNC_SUMMARY={'; '.join(changed)}\n")
+              if errors:
+                  env.write(f"HEALTH_ERRORS={' | '.join(errors)}\n")
           print("\n".join(changed) if changed else "all versions up to date")
+          if errors:
+              print("HEALTH ERRORS:\n" + "\n".join(errors))
           EOF
 
       - name: Commit & push
@@ -113,6 +159,32 @@ jobs:
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .claude-plugin/marketplace.json
-          git commit -m "chore: auto-sync plugin versions ($SYNC_SUMMARY)"
+          git add .claude-plugin/marketplace.json README.md
+          git commit -m "chore: marketplace maintenance ($SYNC_SUMMARY)"
           git push
+
+      - name: Detect unlisted *-use repos
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          listed=$(python3 -c "import json; print('\n'.join(p['name'] for p in json.load(open('.claude-plugin/marketplace.json'))['plugins']))")
+          all_use=$(gh api "users/leeguooooo/repos?per_page=100" --paginate \
+            -q '.[] | select(.private == false and .archived == false) | .name' | grep -- '-use$' || true)
+          for repo in $all_use; do
+            if ! echo "$listed" | grep -qx "$repo"; then
+              title="Add $repo to the marketplace"
+              if [ -z "$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" --json number -q '.[0].number')" ]; then
+                gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body "$(printf 'New public \`*-use\` repo detected: https://github.com/leeguooooo/%s\n\nChecklist:\n- [ ] Repo has a SKILL.md (root, or skills/<name>/)\n- [ ] Add a strict:false entry to .claude-plugin/marketplace.json (version + skills path)\n- [ ] README section regenerates automatically on the next maintenance run\n' "$repo")"
+                echo "opened issue: $title"
+              else
+                echo "issue already open: $title"
+              fi
+            fi
+          done
+
+      - name: Fail on skill health errors
+        run: |
+          if [ -n "$HEALTH_ERRORS" ]; then
+            echo "::error::$HEALTH_ERRORS"
+            exit 1
+          fi

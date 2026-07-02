@@ -79,9 +79,11 @@ The plugin only carries the slash commands; the actual statusLine renderer is th
 
 Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault. Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
 
+<!-- use-family:start — this section is generated from .claude-plugin/marketplace.json by .github/workflows/auto-sync-versions.yml; edit descriptions there, not here -->
+
 ### [chrome-use](https://github.com/leeguooooo/chrome-use)
 
-Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/`@ref` structured reads, stealth, and multi-agent tab isolation. Also ships an MCP server mode (`chrome-use mcp`) for no-shell hosts.
+Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.
 
 **Claude Code:** `/plugin install chrome-use@leeguooooo-plugins`
 
@@ -89,7 +91,7 @@ Browser automation CLI for AI agents — drive a real, logged-in Chrome with sna
 
 ### [cookie-use](https://github.com/leeguooooo/cookie-use)
 
-Multi-account session manager — capture, store, switch, and apply logged-in sessions for any website, across browsers and profiles. Encrypted local vault, built on chrome-use.
+Agent-friendly multi-account session manager — capture, store, list, switch, and apply logged-in sessions for any website, across browsers and profiles. Encrypted local vault, built on chrome-use.
 
 **Claude Code:** `/plugin install cookie-use@leeguooooo-plugins`
 
@@ -105,7 +107,7 @@ Computer-use, but for the iPhone — agents see and drive a real phone over macO
 
 ### [wechat-use](https://github.com/leeguooooo/wechat-use)
 
-macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and wire WeChat into agent stacks.
+macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and expose stable HTTP/gRPC surfaces for agent integration.
 
 **Claude Code:** `/plugin install wechat-use@leeguooooo-plugins`
 
@@ -129,7 +131,7 @@ Bitwarden/Vaultwarden CLI with an ssh-agent-style background agent and FIDO2 pas
 
 ### [discord-use](https://github.com/leeguooooo/discord-use)
 
-Fast REST-only Discord CLI + MCP server in one ~6 MB Rust binary. Drop-in replacement for `mcp-discord` — no gateway, no Node.js, sub-second start.
+Fast REST-only Discord CLI + MCP server in one ~6 MB Rust binary. Drop-in replacement for mcp-discord — no gateway, no Node.js, sub-second start.
 
 **Claude Code:** `/plugin install discord-use@leeguooooo-plugins`
 
@@ -145,11 +147,13 @@ Turn a ChatGPT web subscription into a coding-agent backend — no API key, no C
 
 ### [pixcake-use](https://github.com/leeguooooo/pixcake-use)
 
-Local read-only PixCake probing CLI: snapshot/diff, SQLite inspection, verified pf-parameter codebook, RAW preview + approximate offline grade.
+Local read-only PixCake probing CLI: snapshot/diff, SQLite inspection, verified pf-parameter codebook, RAW preview + approximate offline grade. Your own account, your own photos.
 
 **Claude Code:** `/plugin install pixcake-use@leeguooooo-plugins`
 
 ---
+
+<!-- use-family:end -->
 
 ## More plugins coming
 
