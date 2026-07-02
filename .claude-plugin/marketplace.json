@@ -59,7 +59,7 @@
     {
       "name": "wrangler-accounts",
       "description": "Cloudflare Wrangler multi-account helper. AWS-style profiles for Claude Code with a guard hook that blocks raw wrangler calls.",
-      "version": "1.5.1",
+      "version": "1.7.1",
       "category": "development",
       "source": {
         "source": "github",
@@ -71,7 +71,7 @@
     {
       "name": "claude-statusbar",
       "description": "Lightweight Claude Code statusLine monitor. 3 styles × 9 themes, per-segment color management (each metric colors itself by its own severity), per-severity color overrides (cs config set color_ok|warn|hot), cache-expiry countdown + session-cost segments, conversational claude-statusbar skill (no slash commands needed) plus the legacy /statusbar slash commands, cs doctor self-diagnostic. v3.10.0 adds an opt-in live-activity line (in-progress todo, active tool, completed-tool rollup), git ahead/behind + session duration/lines on the project line, running-subagent lines, an opt-in bar_shimmer starfield on the battery bars, a self-hosted plugin marketplace, and a [worktree] marker when the checkout is a linked git worktree — plus a reliability fix so auto-update actually runs in daemon mode (detached, non-blocking) and the cache countdown is now per-session-correct. v3.9.0 makes the cache countdown auto-detect the real prompt-cache TTL (5m vs 1h) from the transcript's usage.cache_creation buckets, fixing a ~55-minute early `cache COLD` for Claude subscription (Pro/Max) users — Claude Code auto-requests the 1-hour TTL on a subscription (the deprecated cache_ttl_seconds config is no longer needed). v3.9.1 makes that countdown always show seconds (58m23s, 1h59m03s) so it visibly ticks instead of sitting on a static 58m. v3.8.1 fixes a long-standing daemon staleness bug: after `pip install -U`, the running daemon's pidfile kept lazy-spawn from restarting it, so users saw old renders until manual `cs daemon stop`; the thin client now detects the version drift via package mtime + a new `daemon_started_at` field and SIGTERMs the outdated daemon on the next tick. v3.8.0 adds a default-on second status-bar line `⤷ <project> ⎇ <branch>●` — project name from Claude Code's `workspace.repo.name` stdin field, branch read from `.git/HEAD` directly, dirty marker refreshed in the background with a 5s cache so the inline render never blocks on git (disable with `cs config set show_project_branch false`). v3.7.0 defends against statusLine hijacking via `cs --setup --project`. v3.6.0 makes daemon mode default — under 1% CPU continuously. Backed by the cs CLI on PyPI.",
-      "version": "3.10.0",
+      "version": "3.19.0",
       "category": "monitoring",
       "source": {
         "source": "github",
@@ -91,7 +91,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/chrome-use",
-      "skills": ["./skills/chrome-use"],
+      "skills": [
+        "./skills/chrome-use"
+      ],
       "strict": false
     },
     {
@@ -105,7 +107,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/cookie-use",
-      "skills": ["./skills/cookie-use"],
+      "skills": [
+        "./skills/cookie-use"
+      ],
       "strict": false
     },
     {
@@ -119,7 +123,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/iphone-use",
-      "skills": ["./skills/iphone-use"],
+      "skills": [
+        "./skills/iphone-use"
+      ],
       "strict": false
     },
     {
@@ -133,7 +139,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/wechat-use",
-      "skills": ["./"],
+      "skills": [
+        "./"
+      ],
       "strict": false
     },
     {
@@ -147,7 +155,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/profile-use",
-      "skills": ["./"],
+      "skills": [
+        "./"
+      ],
       "strict": false
     },
     {
@@ -161,7 +171,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/bitwarden-use",
-      "skills": ["./"],
+      "skills": [
+        "./"
+      ],
       "strict": false
     },
     {
@@ -175,7 +187,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/discord-use",
-      "skills": ["./"],
+      "skills": [
+        "./"
+      ],
       "strict": false
     },
     {
@@ -189,7 +203,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/chatgpt-use",
-      "skills": ["./"],
+      "skills": [
+        "./"
+      ],
       "strict": false
     },
     {
@@ -203,7 +219,9 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/pixcake-use",
-      "skills": ["./"],
+      "skills": [
+        "./"
+      ],
       "strict": false
     }
   ]
