@@ -83,7 +83,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.84",
+      "version": "1.5.86",
       "category": "development",
       "source": {
         "source": "github",
@@ -131,7 +131,7 @@
     {
       "name": "wechat-use",
       "description": "macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and expose stable HTTP/gRPC surfaces for agent integration.",
-      "version": "1.17.5",
+      "version": "1.17.8",
       "category": "productivity",
       "source": {
         "source": "github",
