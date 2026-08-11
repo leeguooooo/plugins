@@ -83,7 +83,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.88",
+      "version": "1.5.89",
       "category": "development",
       "source": {
         "source": "github",
@@ -115,7 +115,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.4.12",
+      "version": "0.5.3",
       "category": "productivity",
       "source": {
         "source": "github",
