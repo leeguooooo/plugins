@@ -223,6 +223,19 @@
         "./"
       ],
       "strict": false
+    },
+    {
+      "name": "computer-use",
+      "description": "Drive macOS Computer Use from Claude Code by brokering the official OpenAI Codex runtime — no binary patching, no code-signature or team-id spoofing. Ships the codex-computer-use MCP server.",
+      "version": "2.0.0",
+      "category": "automation",
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/computer-use",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/computer-use",
+      "strict": false
     }
   ]
 }

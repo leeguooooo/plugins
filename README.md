@@ -153,6 +153,14 @@ Local read-only PixCake probing CLI: snapshot/diff, SQLite inspection, verified 
 
 ---
 
+### [computer-use](https://github.com/leeguooooo/computer-use)
+
+Drive macOS Computer Use from Claude Code by brokering the official OpenAI Codex runtime — no binary patching, no code-signature or team-id spoofing. Ships the codex-computer-use MCP server.
+
+**Claude Code:** `/plugin install computer-use@leeguooooo-plugins`
+
+---
+
 <!-- use-family:end -->
 
 ## More plugins coming
