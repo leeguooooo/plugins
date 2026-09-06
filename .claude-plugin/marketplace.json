@@ -115,7 +115,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.5.4",
+      "version": "0.6.4",
       "category": "productivity",
       "source": {
         "source": "github",
@@ -131,7 +131,7 @@
     {
       "name": "wechat-use",
       "description": "macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and expose stable HTTP/gRPC surfaces for agent integration.",
-      "version": "1.18.1",
+      "version": "1.18.2",
       "category": "productivity",
       "source": {
         "source": "github",
@@ -163,7 +163,7 @@
     {
       "name": "bitwarden-use",
       "description": "Bitwarden/Vaultwarden CLI with an ssh-agent-style background agent and FIDO2 passkey extraction — headless passkey logins, vault lookups, and a built-in SSH agent.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "category": "security",
       "source": {
         "source": "github",
