@@ -105,6 +105,14 @@ Computer-use, but for the iPhone — agents see and drive a real phone over macO
 
 ---
 
+### [mail-use](https://github.com/leeguooooo/mail-use)
+
+Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMAP from the CLI or MCP. Part of the *-use family.
+
+**Claude Code:** `/plugin install mail-use@leeguooooo-plugins`
+
+---
+
 ### [wechat-use](https://github.com/leeguooooo/wechat-use)
 
 macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and expose stable HTTP/gRPC surfaces for agent integration.
@@ -142,14 +150,6 @@ Fast REST-only Discord CLI + MCP server in one ~6 MB Rust binary. Drop-in replac
 Turn a ChatGPT web subscription into a coding-agent backend — no API key, no Codex billing. Ask/plan/review/delegate via the logged-in web conversation; built on chrome-use.
 
 **Claude Code:** `/plugin install chatgpt-use@leeguooooo-plugins`
-
----
-
-### [pixcake-use](https://github.com/leeguooooo/pixcake-use)
-
-Local read-only PixCake probing CLI: snapshot/diff, SQLite inspection, verified pf-parameter codebook, RAW preview + approximate offline grade. Your own account, your own photos.
-
-**Claude Code:** `/plugin install pixcake-use@leeguooooo-plugins`
 
 ---
 
