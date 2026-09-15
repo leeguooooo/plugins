@@ -1,0 +1,20 @@
+{
+  "name": "use-family",
+  "version": "0.1.0",
+  "description": "The whole *-use family in one install: browser, email, chat, phone, identity, passwords and sessions. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs.",
+  "author": {
+    "name": "leeguooooo"
+  },
+  "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family",
+  "dependencies": [
+    "chrome-use",
+    "cookie-use",
+    "mail-use",
+    "wechat-use",
+    "discord-use",
+    "iphone-use",
+    "profile-use",
+    "bitwarden-use",
+    "chatgpt-use"
+  ]
+}

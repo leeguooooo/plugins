@@ -79,6 +79,15 @@ The plugin only carries the slash commands; the actual statusLine renderer is th
 
 Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault. Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
 
+## The *-use family in one install
+
+```
+/plugin marketplace add leeguooooo/plugins
+/plugin install use-family@leeguooooo-plugins
+```
+
+`use-family` installs every `*-use` plugin below as a dependency, adds a `use-family` skill that tells the agent which one to reach for and how they combine, and checks at session start for any missing CLI (it only names the one-line installer; nothing runs without asking).
+
 <!-- use-family:start — this section is generated from .claude-plugin/marketplace.json by .github/workflows/auto-sync-versions.yml; edit descriptions there, not here -->
 
 ### [chrome-use](https://github.com/leeguooooo/chrome-use)

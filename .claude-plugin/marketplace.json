@@ -81,6 +81,14 @@
       "homepage": "https://github.com/leeguooooo/claude-code-usage-bar"
     },
     {
+      "name": "use-family",
+      "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "source": "./plugins/use-family",
+      "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
+    },
+    {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
       "version": "1.5.123",
