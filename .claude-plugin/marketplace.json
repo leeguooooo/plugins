@@ -129,6 +129,22 @@
       "strict": false
     },
     {
+      "name": "mail-use",
+      "description": "Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMAP from the CLI or MCP. Part of the *-use family.",
+      "version": "3.3.2",
+      "category": "productivity",
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/mail-use",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/mail-use",
+      "skills": [
+        "./skills/mail-use"
+      ],
+      "strict": false
+    },
+    {
       "name": "wechat-use",
       "description": "macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and expose stable HTTP/gRPC surfaces for agent integration.",
       "version": "1.18.12",
