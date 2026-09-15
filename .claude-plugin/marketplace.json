@@ -209,22 +209,6 @@
       "strict": false
     },
     {
-      "name": "pixcake-use",
-      "description": "Local read-only PixCake probing CLI: snapshot/diff, SQLite inspection, verified pf-parameter codebook, RAW preview + approximate offline grade. Your own account, your own photos.",
-      "version": "0.1.0",
-      "category": "development",
-      "source": {
-        "source": "github",
-        "repo": "leeguooooo/pixcake-use",
-        "ref": "main"
-      },
-      "homepage": "https://github.com/leeguooooo/pixcake-use",
-      "skills": [
-        "./"
-      ],
-      "strict": false
-    },
-    {
       "name": "computer-use",
       "description": "Drive macOS Computer Use from Claude Code by brokering the official OpenAI Codex runtime — no binary patching, no code-signature or team-id spoofing. Ships the codex-computer-use MCP server.",
       "version": "2.0.0",
