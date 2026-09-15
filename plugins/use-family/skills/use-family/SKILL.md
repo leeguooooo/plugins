@@ -1,6 +1,6 @@
 ---
 name: use-family
-description: Routing guide for the *-use family (chrome-use, mail-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
+description: Routing guide for the *-use family (chrome-use, mail-use, image-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
 ---
 
 # use-family
@@ -20,6 +20,7 @@ Each `*-use` does one thing well. This skill says which one to reach for, and ho
 | Voice | `mail-use` | Every mailbox: search, read, send; verification codes and receipts. |
 | | `wechat-use`, `discord-use` | Messages and history on WeChat and Discord. |
 | Second brain | `chatgpt-use` | The user's ChatGPT web subscription as an extra reviewer or planner. Built on chrome-use. |
+| | `image-use` | Image generation on the user's own subscriptions: ChatGPT web first, Codex fallback, optional Gemini. |
 
 Pick by target:
 

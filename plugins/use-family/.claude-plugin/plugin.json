@@ -1,6 +1,6 @@
 {
   "name": "use-family",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The whole *-use family in one install: browser, email, chat, phone, identity, passwords and sessions. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs.",
   "author": {
     "name": "leeguooooo"
@@ -15,6 +15,7 @@
     "iphone-use",
     "profile-use",
     "bitwarden-use",
-    "chatgpt-use"
+    "chatgpt-use",
+    "image-use"
   ]
 }
