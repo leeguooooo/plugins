@@ -114,6 +114,14 @@ Computer-use, but for the iPhone — agents see and drive a real phone over macO
 
 ---
 
+### [image-use](https://github.com/leeguooooo/image-use)
+
+Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.
+
+**Claude Code:** `/plugin install image-use@leeguooooo-plugins`
+
+---
+
 ### [mail-use](https://github.com/leeguooooo/mail-use)
 
 Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMAP from the CLI or MCP. Part of the *-use family.

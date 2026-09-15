@@ -139,7 +139,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.27.0",
+      "version": "0.28.0",
       "category": "productivity",
       "source": {
         "source": "github",
@@ -203,7 +203,7 @@
     {
       "name": "bitwarden-use",
       "description": "Bitwarden/Vaultwarden CLI with an ssh-agent-style background agent and FIDO2 passkey extraction — headless passkey logins, vault lookups, and a built-in SSH agent.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "category": "security",
       "source": {
         "source": "github",
