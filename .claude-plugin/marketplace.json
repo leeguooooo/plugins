@@ -91,7 +91,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.123",
+      "version": "1.5.124",
       "category": "development",
       "source": {
         "source": "github",
@@ -139,7 +139,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.29.0",
+      "version": "0.29.1",
       "category": "productivity",
       "source": {
         "source": "github",
