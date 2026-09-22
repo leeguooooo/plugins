@@ -91,7 +91,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.131",
+      "version": "1.5.133",
       "category": "development",
       "source": {
         "source": "github",
@@ -123,7 +123,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.6.5",
+      "version": "0.6.6",
       "category": "productivity",
       "source": {
         "source": "github",
@@ -139,7 +139,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.29.1",
+      "version": "0.29.2",
       "category": "productivity",
       "source": {
         "source": "github",
@@ -235,7 +235,7 @@
     {
       "name": "chatgpt-use",
       "description": "Turn a ChatGPT web subscription into a coding-agent backend — no API key, no Codex billing. Ask/plan/review/delegate via the logged-in web conversation; built on chrome-use.",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "category": "development",
       "source": {
         "source": "github",
