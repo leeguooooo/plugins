@@ -102,6 +102,14 @@ irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family
 
 A skill that already exists as a real folder is left alone and reported. Some uses (wechat-use, iphone-use) have installers that keep their skill folder in step with the CLI they install; leave those. A copy from `npx skills add` can be deleted so the installer links an updatable checkout instead. A link you made yourself (to your own checkout) is kept. The installer doesn't install CLIs; it lists the missing ones with their one-line installers.
 
+**Upgrading.** Every CLI in the family has `<name> upgrade` (updates the CLI and its skill, `--check` to only look) and prints one line on stderr when a newer release exists, at most once a day; see [docs/upgrade.md](docs/upgrade.md). To upgrade everything at once:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/upgrade-use-family.sh | sh
+```
+
+Claude Code plugins alone: `claude plugin update <name>@leeguooooo-plugins`, then `/reload-plugins`.
+
 ChatGPT on the web and mobile can't use these: the uses drive your own browser, mailbox and chat apps, and ChatGPT only installs plugins from OpenAI's directory.
 
 <!-- use-family:start — this section is generated from .claude-plugin/marketplace.json by .github/workflows/auto-sync-versions.yml; edit descriptions there, not here -->

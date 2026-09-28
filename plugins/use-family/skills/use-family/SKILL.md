@@ -47,6 +47,10 @@ Use the channel the user named. Draft first; send only after a yes. Never paste 
 **New computer**
 `memory-use` holds the setup guide (`setup-new-computer.md`); `profile-use restore --identity-rbw "profile-use age key"` brings the encrypted profile back.
 
+## Upgrade
+
+Each CLI prints `<name> X is available` on stderr when a newer release exists (at most once a day). Tell the user and offer `<name> upgrade`, which updates the CLI and its skill; `<name> upgrade --check` only looks. When the user says "升级 use 全家" / "upgrade everything", run `curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/upgrade-use-family.sh | sh` after they agree.
+
 ## Rules that hold across the family
 
 1. Consent before anything outward-facing: submit, send, pay, upload a document.
