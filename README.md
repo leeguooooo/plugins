@@ -88,6 +88,22 @@ Agent-native CLIs that let coding agents drive real, logged-in surfaces — a br
 
 `use-family` installs every `*-use` plugin below as a dependency, adds a `use-family` skill that tells the agent which one to reach for and how they combine, and checks at session start for any missing CLI (it only names the one-line installer; nothing runs without asking).
 
+**Codex, or any agent that reads `~/.agents/skills`.** Codex marketplaces only take plugins stored inside the marketplace repo and don't install dependencies, so the bundle above brings in `use-family` alone. Use the installer instead. It clones every `*-use` into `~/.agents/use-family` and links each skill into `~/.agents/skills`; run it again to update.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.sh | sh
+```
+
+Windows (PowerShell; skips the macOS-only uses):
+
+```powershell
+irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.ps1 | iex
+```
+
+A skill directory that already exists as a real folder (for example from `npx skills add`) is left alone and reported. The installer doesn't install CLIs; it lists the missing ones with their one-line installers.
+
+ChatGPT on the web and mobile can't use these: the uses drive your own browser, mailbox and chat apps, and ChatGPT only installs plugins from OpenAI's directory.
+
 <!-- use-family:start — this section is generated from .claude-plugin/marketplace.json by .github/workflows/auto-sync-versions.yml; edit descriptions there, not here -->
 
 ### [chrome-use](https://github.com/leeguooooo/chrome-use)
