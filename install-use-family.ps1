@@ -33,7 +33,8 @@ function Get-Repo([string]$Repo, [string]$Dir) {
 function Add-SkillLink([string]$Target, [string]$Name) {
   $dest = Join-Path $Skills $Name
   $item = Get-Item $dest -Force -ErrorAction SilentlyContinue
-  if ($item -and -not $item.LinkType) { "skip   ${Name}: $dest is a real directory; remove it to use the updatable copy"; return }
+  if ($item -and -not $item.LinkType) { "skip   ${Name}: left alone (a real directory, possibly kept current by that uses own installer)"; return }
+  if ($item -and -not ("$($item.Target)" -like "$Base\*")) { "keep   ${Name}: already linked to $($item.Target)"; return }
   if ($item) { $item.Delete() }
   New-Item -ItemType Junction -Path $dest -Target $Target | Out-Null
   "linked $Name"

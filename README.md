@@ -100,7 +100,7 @@ Windows (PowerShell; skips the macOS-only uses):
 irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.ps1 | iex
 ```
 
-A skill directory that already exists as a real folder (for example from `npx skills add`) is left alone and reported. The installer doesn't install CLIs; it lists the missing ones with their one-line installers.
+A skill that already exists as a real folder is left alone and reported. Some uses (wechat-use, iphone-use) have installers that keep their skill folder in step with the CLI they install; leave those. A copy from `npx skills add` can be deleted so the installer links an updatable checkout instead. A link you made yourself (to your own checkout) is kept. The installer doesn't install CLIs; it lists the missing ones with their one-line installers.
 
 ChatGPT on the web and mobile can't use these: the uses drive your own browser, mailbox and chat apps, and ChatGPT only installs plugins from OpenAI's directory.
 

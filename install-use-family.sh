@@ -27,11 +27,17 @@ fetch() {  # fetch <repo> <dir>
   fi
 }
 
-link() {  # link <target dir> <skill name>; never replaces a real directory
+link() {  # link <target dir> <skill name>; never replaces a real directory or your own link
   dest="$SKILLS/$2"
   if [ -e "$dest" ] && [ ! -L "$dest" ]; then
-    echo "skip   $2: $dest is a real directory; remove it to use the updatable copy"
+    echo "skip   $2: left alone (a real directory, possibly kept current by $2's own installer)"
     return
+  fi
+  if [ -L "$dest" ]; then
+    case "$(readlink "$dest")" in
+      "$BASE"/*) ;;
+      *) echo "keep   $2: already linked to $(readlink "$dest")"; return ;;
+    esac
   fi
   ln -sfn "$1" "$dest" && echo "linked $2"
 }
