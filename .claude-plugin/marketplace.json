@@ -86,7 +86,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.7.1",
+      "version": "0.7.2",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -134,7 +134,7 @@
     {
       "name": "message-use",
       "description": "iMessage & SMS for AI agents through macOS Messages — read, search, watch and send texts, and pull verification codes (短信验证码) out of incoming messages with `message-use code --wait`. Read-only database access; sending previews until confirmed.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "productivity",
       "source": {
         "source": "url",
