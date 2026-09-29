@@ -1,6 +1,7 @@
 name: Marketplace maintenance
 
-# Daily self-maintenance for this marketplace. marketplace.json is the single
+# Hourly self-maintenance for this marketplace (source repos' release scripts also
+# dispatch it right after publishing). marketplace.json is the single
 # source of truth; everything else derives from it automatically:
 #
 #   1. Version sync (pull-based): read the live version from every
@@ -18,8 +19,12 @@ name: Marketplace maintenance
 
 on:
   schedule:
-    - cron: "17 3 * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
+
+concurrency:
+  group: marketplace-maintenance
+  cancel-in-progress: false
 
 jobs:
   sync:
