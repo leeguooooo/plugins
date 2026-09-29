@@ -45,8 +45,8 @@
     },
     {
       "name": "use-family",
-      "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs.",
-      "version": "0.6.0",
+      "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
+      "version": "0.7.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"

@@ -1,7 +1,7 @@
 {
   "name": "use-family",
-  "version": "0.6.0",
-  "description": "The whole *-use family in one install: browser, email, texts (iMessage/SMS), chat, phone, identity, passwords, sessions, notes and the other agents on your machines. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs.",
+  "version": "0.7.0",
+  "description": "The whole *-use family in one install: browser, email, texts (iMessage/SMS), chat, phone, identity, passwords, sessions, notes and the other agents on your machines. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs and one that upgrades a CLI older than its plugin.",
   "author": {
     "name": "leeguooooo"
   },

@@ -36,7 +36,8 @@ download failed (network, GitHub API). An update being available is not an error
   with a short timeout; honour `GITHUB_TOKEN` if set.
 - If a use already has an equivalent command (`update`), keep it and add `upgrade` as the
   name the docs use. Do not break existing commands.
-- Never ask for or handle credentials. Never upgrade without being invoked.
+- Never ask for or handle credentials. Never upgrade without being invoked — except that a
+  Claude Code plugin install keeps its CLI at the plugin's version (section 6).
 
 ## 2. Daily "new version" notice
 
@@ -90,3 +91,23 @@ If the skill came from somewhere `upgrade` can't refresh:
 
 `upgrade-use-family.sh` in this repo runs `<name> upgrade` for every installed use and
 refreshes skills installed by `install-use-family.sh` and Claude Code plugins.
+
+## 6. Plugin installs: the CLI follows the plugin
+
+Claude Code auto-updates plugins (turn it on per marketplace: `/plugin` → Marketplaces →
+leeguooooo-plugins → Enable auto-update; it is off by default for third-party marketplaces).
+That only moves SKILL.md, so at session start the CLI is brought to the plugin's version:
+
+- **use-family** (`plugins/use-family/scripts/sync-clis.sh`): for every installed
+  `<name>@leeguooooo-plugins` whose CLI reports an older version than the plugin, runs
+  `<name> upgrade`. A CLI without `upgrade` is only named with its installer, never run: some
+  installers do more than swap a binary. Log: `~/.cache/use-family/auto-upgrade.log`; a version
+  that did not install is retried at most hourly.
+- **A use may carry its own hook** when it must work without use-family; it then installs
+  exactly the plugin's version. bitwarden-use does this (`hooks/sync-cli.sh`, declared inline in
+  its marketplace entry, since a `strict: false` entry with `skills` cannot load a hooks file),
+  and use-family skips it.
+- Output: one line on stdout per CLI upgraded or failed (the agent sees it); nothing when all
+  are current.
+- Off: `USE_NO_AUTO_UPGRADE` or `CI`; per use `<NAME>_NO_AUTO_UPGRADE`
+  (e.g. `MAIL_USE_NO_AUTO_UPGRADE`, `BITWARDEN_USE_NO_AUTO_UPGRADE`).
