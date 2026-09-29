@@ -222,7 +222,21 @@
       "skills": [
         "./"
       ],
-      "strict": false
+      "strict": false,
+      "hooks": {
+        "SessionStart": [
+          {
+            "matcher": "startup",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/sync-cli.sh\"",
+                "timeout": 120
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "name": "discord-use",
