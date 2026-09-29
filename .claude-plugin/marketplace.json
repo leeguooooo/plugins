@@ -133,8 +133,8 @@
     },
     {
       "name": "wechat-use",
-      "description": "macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and expose stable HTTP/gRPC surfaces for agent integration.",
-      "version": "1.18.13",
+      "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
+      "version": "1.18.14",
       "category": "productivity",
       "source": {
         "source": "url",
