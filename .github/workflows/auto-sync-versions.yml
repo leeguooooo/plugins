@@ -181,7 +181,12 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .claude-plugin/marketplace.json README.md
           git commit -m "chore: marketplace maintenance ($SYNC_SUMMARY)"
-          git push
+          # another run (or a human) may have pushed meanwhile: rebase and retry
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase -q origin main || { git rebase --abort; git reset -q --hard origin/main; echo "rebase conflict; next run will redo the sync"; exit 0; }
+          done
+          exit 1
 
       - name: Detect unlisted *-use repos
         env:
