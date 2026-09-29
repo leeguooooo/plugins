@@ -134,7 +134,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.18.14",
+      "version": "1.18.15",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -142,10 +142,7 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/wechat-use",
-      "skills": [
-        "./"
-      ],
-      "strict": false
+      "strict": true
     },
     {
       "name": "profile-use",
