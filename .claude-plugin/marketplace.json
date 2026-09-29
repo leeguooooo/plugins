@@ -46,7 +46,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs.",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -128,6 +128,22 @@
       "homepage": "https://github.com/leeguooooo/mail-use",
       "skills": [
         "./skills/mail-use"
+      ],
+      "strict": false
+    },
+    {
+      "name": "message-use",
+      "description": "iMessage & SMS for AI agents through macOS Messages — read, search, watch and send texts, and pull verification codes (短信验证码) out of incoming messages with `message-use code --wait`. Read-only database access; sending previews until confirmed.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/leeguooooo/message-use.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/message-use",
+      "skills": [
+        "./"
       ],
       "strict": false
     },

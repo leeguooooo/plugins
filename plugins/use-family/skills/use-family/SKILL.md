@@ -1,6 +1,6 @@
 ---
 name: use-family
-description: Routing guide for the *-use family (chrome-use, mail-use, image-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use, ocs). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
+description: Routing guide for the *-use family (chrome-use, mail-use, image-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use, ocs, message-use). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
 ---
 
 # use-family
@@ -18,6 +18,7 @@ Each `*-use` does one thing well. This skill says which one to reach for, and ho
 | Hands | `chrome-use` | The user's real, logged-in Chrome: navigate, read, fill, click, screenshot. |
 | | `iphone-use` | A real iPhone through iPhone Mirroring: apps with no API. |
 | Voice | `mail-use` | Every mailbox: search, read, send; verification codes and receipts. |
+| | `message-use` | iMessage and SMS through macOS Messages: read, search, watch, send; `message-use code --wait` returns the next SMS verification code. |
 | | `wechat-use`, `discord-use` | Messages and history on WeChat and Discord. |
 | Teammates | `ocs` | The other AI agents: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN (`<address>@<peer>`). Message, wake, delegate, get notified when one goes idle. |
 | Second brain | `chatgpt-use` | The user's ChatGPT web subscription as an extra reviewer or planner. Built on chrome-use. |
@@ -35,7 +36,7 @@ Pick by target:
 **Sign up for a site**
 1. `chrome-use` opens the signup page. Check the real domain first.
 2. `profile-use values <fields>` for name, email, phone, address; ask before any high-sensitivity field.
-3. `mail-use` finds the verification mail and extracts the code.
+3. The code: by email → `mail-use` finds the mail and extracts it; by SMS → trigger it, then `message-use code --wait 120` (`--from <brand>` if several arrive).
 4. Generate and store the new password in `bitwarden-use`; never echo it.
 5. Stop before the final submit and get the user's explicit yes.
 6. `cookie-use` saves the session if the user juggles accounts there. Any gotcha → `memory-use`.
@@ -44,7 +45,7 @@ Pick by target:
 `profile-use login --domain <host>` matches the vault entry by its stored URI without revealing; add `--reveal` only at the moment of filling (one Touch ID). Several matches → ask which, using `--name`/`--user`.
 
 **Reach someone**
-A person: use the channel the user named. Another agent (a Claude, Codex or Pi session): `ocs`, never the user's chat apps. Draft first; send only after a yes. Never paste profile or vault values into a message unless the user asked for exactly that.
+A person: use the channel the user named (a text → `message-use send`, which previews until you add `--yes` after the user confirms). Another agent (a Claude, Codex or Pi session): `ocs`, never the user's chat apps. Draft first; send only after a yes. Never paste profile or vault values into a message unless the user asked for exactly that.
 
 **New computer**
 On the old computer, `memory-use migrate` first. On the new one:

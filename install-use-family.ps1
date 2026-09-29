@@ -2,7 +2,7 @@
 #   irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.ps1 | iex
 # Re-run to update: every use is a git checkout under ~\.agents\use-family, linked into
 # ~\.agents\skills with directory junctions (no admin rights needed).
-# macOS-only uses (wechat-use, iphone-use, cookie-use, bitwarden-use) are skipped.
+# macOS-only uses (wechat-use, iphone-use, cookie-use, bitwarden-use, message-use) are skipped.
 $ErrorActionPreference = 'Stop'
 $Base = if ($env:USE_FAMILY_DIR) { $env:USE_FAMILY_DIR } else { Join-Path $HOME '.agents\use-family' }
 $Skills = if ($env:AGENTS_SKILLS_DIR) { $env:AGENTS_SKILLS_DIR } else { Join-Path $HOME '.agents\skills' }

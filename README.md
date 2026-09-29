@@ -120,6 +120,14 @@ Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMA
 
 ---
 
+### [message-use](https://github.com/leeguooooo/message-use)
+
+iMessage & SMS for AI agents through macOS Messages — read, search, watch and send texts, and pull verification codes (短信验证码) out of incoming messages with `message-use code --wait`. Read-only database access; sending previews until confirmed.
+
+**Claude Code:** `/plugin install message-use@leeguooooo-plugins`
+
+---
+
 ### [wechat-use](https://github.com/leeguooooo/wechat-use)
 
 WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.
