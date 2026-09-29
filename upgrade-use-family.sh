@@ -9,8 +9,8 @@ PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
 NAMES="chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use"
 failed=""
 
-has_upgrade() {  # the CLI lists an `upgrade` subcommand in its help
-  "$1" --help 2>&1 | grep -qE '^[[:space:]]+upgrade([[:space:]]|$)'
+has_upgrade() {  # the CLI lists an `upgrade` subcommand in its help (text, or JSON when piped, e.g. mail-use)
+  "$1" --help 2>&1 | grep -qE '^[[:space:]]+upgrade([[:space:]]|$)|"name":[[:space:]]*"upgrade"'
 }
 
 echo "== CLIs"
