@@ -47,6 +47,17 @@ if command -v claude >/dev/null 2>&1 && [ -f "$PLUGINS" ]; then
     printf -- "-- %s: " "$name"
     claude plugin update "$name@leeguooooo-plugins" 2>&1 | tail -1
   done
+  # use-family is a bundle: it fails to load while any plugin it depends on is missing, and a
+  # manual update does not install dependencies a new version added (auto-update does).
+  if grep -q '"use-family@leeguooooo-plugins"' "$PLUGINS"; then
+    manifest="$HOME/.claude/plugins/marketplaces/leeguooooo-plugins/plugins/use-family/.claude-plugin/plugin.json"
+    deps=$(python3 -c 'import json,sys; print(" ".join(d if isinstance(d, str) else d["name"] for d in json.load(open(sys.argv[1])).get("dependencies", [])))' "$manifest" 2>/dev/null)
+    for dep in $deps; do
+      grep -q "\"$dep@leeguooooo-plugins\"" "$PLUGINS" && continue
+      printf -- "-- %s (needed by use-family): " "$dep"
+      claude plugin install "$dep@leeguooooo-plugins" 2>&1 | tail -1
+    done
+  fi
   echo "Restart Claude Code (or /reload-plugins) to load updated plugins."
 fi
 

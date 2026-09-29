@@ -91,6 +91,10 @@ If the skill came from somewhere `upgrade` can't refresh:
 
 `upgrade-use-family.sh` in this repo runs `<name> upgrade` for every installed use and
 refreshes skills installed by `install-use-family.sh` and Claude Code plugins.
+use-family is a bundle plugin: it fails to load while any plugin it depends on is missing
+(Claude Code has no optional dependencies). Marketplace auto-update installs dependencies a new
+version adds; a manual `claude plugin update` does not, so the script installs any that are
+missing.
 
 ## 6. Plugin installs: the CLI follows the plugin
 
