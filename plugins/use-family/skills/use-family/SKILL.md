@@ -14,7 +14,7 @@ Each `*-use` does one thing well. This skill says which one to reach for, and ho
 | Who I am | `profile-use` | Name, address, phone, IDs, bank details, family, document scans. Redacted by default. |
 | | `bitwarden-use` | Passwords, passkeys, TOTP, secret keys. Reads prompt Touch ID outside its reveal folders. |
 | | `cookie-use` | Logged-in sessions per site; many accounts on one site. Built on chrome-use. |
-| How we did it | `memory-use` | Infra notes: NAS, VPN, servers, decisions, rollbacks. Private repo; not in this bundle. |
+| How we did it | `memory-use` | Infra notes: NAS, VPN, servers, decisions, rollbacks — in the user's own private git repo, synced across computers. |
 | Hands | `chrome-use` | The user's real, logged-in Chrome: navigate, read, fill, click, screenshot. |
 | | `iphone-use` | A real iPhone through iPhone Mirroring: apps with no API. |
 | Voice | `mail-use` | Every mailbox: search, read, send; verification codes and receipts. |
@@ -45,7 +45,9 @@ Pick by target:
 Use the channel the user named. Draft first; send only after a yes. Never paste profile or vault values into a message unless the user asked for exactly that.
 
 **New computer**
-`memory-use` holds the setup guide (`setup-new-computer.md`); `profile-use restore --identity-rbw "profile-use age key"` brings the encrypted profile back.
+On the old computer, `memory-use migrate` first. On the new one:
+1. `curl -fsSL https://raw.githubusercontent.com/leeguooooo/memory-use/main/install.sh | sh -s -- --repo <owner>/<notes>` brings back the notes and `setup-new-computer.md`; follow that guide.
+2. `profile-use restore --identity-rbw "profile-use age key"` brings the encrypted profile back.
 
 ## Upgrade
 

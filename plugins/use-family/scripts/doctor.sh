@@ -6,13 +6,18 @@ PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
 
 # iphone-use runs as a daemon and profile-use ships its script inside the skill,
 # so neither has a CLI on PATH to look for.
-names="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use"
+names="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use"
 [ "$(uname -s)" = Darwin ] && names="$names wechat-use"
 
 missing=""
 for name in $names; do
   command -v "$name" >/dev/null 2>&1 || missing="$missing $name"
 done
+
+# memory-use is only useful once it knows which private repo holds the notes.
+if command -v memory-use >/dev/null 2>&1 && [ ! -f "$HOME/.config/memory-use/config.json" ]; then
+  echo "memory-use: no notes repo configured yet — run \`memory-use init --repo <owner>/<name>\` (add --create for a new private one), after asking the user."
+fi
 [ -z "$missing" ] && exit 0
 
 echo "use-family: these CLIs are not installed:$missing"

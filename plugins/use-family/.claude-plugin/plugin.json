@@ -1,7 +1,7 @@
 {
   "name": "use-family",
-  "version": "0.3.0",
-  "description": "The whole *-use family in one install: browser, email, chat, phone, identity, passwords and sessions. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs.",
+  "version": "0.4.0",
+  "description": "The whole *-use family in one install: browser, email, chat, phone, identity, passwords, sessions and notes. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs.",
   "author": {
     "name": "leeguooooo"
   },
@@ -14,6 +14,7 @@
     "discord-use",
     "iphone-use",
     "profile-use",
+    "memory-use",
     "bitwarden-use",
     "chatgpt-use",
     "image-use"

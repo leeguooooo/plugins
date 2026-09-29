@@ -18,6 +18,7 @@ $Uses = [ordered]@{
   'profile-use' = '.'
   'chatgpt-use' = '.'
   'image-use'   = '.'
+  'memory-use'  = '.'
 }
 
 function Get-Repo([string]$Repo, [string]$Dir) {

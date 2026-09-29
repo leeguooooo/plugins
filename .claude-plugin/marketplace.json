@@ -83,7 +83,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -195,6 +195,22 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/profile-use",
+      "skills": [
+        "./"
+      ],
+      "strict": false
+    },
+    {
+      "name": "memory-use",
+      "description": "Portable long-term memory for AI coding agents — Markdown notes in a private git repo you own. Recall before work, write back after, background autosync, secret-scan hook, one-line new-computer setup.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "source": {
+        "source": "github",
+        "repo": "leeguooooo/memory-use",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/memory-use",
       "skills": [
         "./"
       ],

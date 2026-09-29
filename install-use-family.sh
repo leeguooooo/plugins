@@ -14,9 +14,9 @@ mkdir -p "$BASE" "$SKILLS"
 # Keep in step with .claude-plugin/marketplace.json.
 USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use
 mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:.
-chatgpt-use:. image-use:."
+chatgpt-use:. image-use:. memory-use:."
 # Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill).
-CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use"
+CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use"
 [ "$(uname -s)" = Darwin ] && CLIS="$CLIS wechat-use"
 
 fetch() {  # fetch <repo> <dir>

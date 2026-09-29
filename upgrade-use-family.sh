@@ -6,7 +6,7 @@
 set -u
 BASE="${USE_FAMILY_DIR:-$HOME/.agents/use-family}"
 PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
-NAMES="chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use"
+NAMES="chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use"
 failed=""
 
 has_upgrade() {  # the CLI lists an `upgrade` subcommand in its help

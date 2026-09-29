@@ -77,7 +77,7 @@ The plugin only carries the slash commands; the actual statusLine renderer is th
 
 ## The `*-use` family
 
-Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault. Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
+Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo. Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
 
 ## The *-use family in one install
 
@@ -100,7 +100,7 @@ Windows (PowerShell; skips the macOS-only uses):
 irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.ps1 | iex
 ```
 
-A skill that already exists as a real folder is left alone and reported. Some uses (wechat-use, iphone-use) have installers that keep their skill folder in step with the CLI they install; leave those. A copy from `npx skills add` can be deleted so the installer links an updatable checkout instead. A link you made yourself (to your own checkout) is kept. The installer doesn't install CLIs; it lists the missing ones with their one-line installers.
+A skill that already exists as a real folder is left alone and reported. Some uses (wechat-use, iphone-use) have installers that keep their skill folder in step with the CLI they install; leave those. A copy from `npx skills add` can be deleted so the installer links an updatable checkout instead. A link you made yourself (to your own checkout) is kept. The installer doesn't install CLIs; it lists the missing ones with their one-line installers. memory-use also needs `memory-use init --repo <owner>/<notes>` once (`--create` for a new private notes repo).
 
 **Upgrading.** Every CLI in the family has `<name> upgrade` (updates the CLI and its skill, `--check` to only look) and prints one line on stderr when a newer release exists, at most once a day; see [docs/upgrade.md](docs/upgrade.md). To upgrade everything at once:
 
@@ -167,6 +167,14 @@ macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send mess
 Safely fill registration, signup, checkout, banking, KYC, and onboarding forms from a private local personal profile — privacy-first, consent before submission.
 
 **Claude Code:** `/plugin install profile-use@leeguooooo-plugins`
+
+---
+
+### [memory-use](https://github.com/leeguooooo/memory-use)
+
+Portable long-term memory for AI coding agents — Markdown notes in a private git repo you own. Recall before work, write back after, background autosync, secret-scan hook, one-line new-computer setup.
+
+**Claude Code:** `/plugin install memory-use@leeguooooo-plugins`
 
 ---
 
