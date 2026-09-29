@@ -1,50 +1,16 @@
 # leeguooooo/plugins
 
-Developer plugins for Claude Code and Cursor.
+Developer plugins for Claude Code.
 
 ## Add this marketplace
 
-**Claude Code:**
 ```
 /plugin marketplace add leeguooooo/plugins
 ```
 
-**Cursor:** Open Settings → Plugins → Marketplace, then add `leeguooooo/plugins`.
-
 ---
 
 ## Plugins
-
-### [language-coach](https://github.com/leeguooooo/prompt-language-coach)
-
-Real-time language coaching in every prompt. Corrects your writing and provides natural, native-like expressions automatically. Supports any language pair.
-
-**Claude Code:**
-```
-/plugin install language-coach@leeguooooo-plugins
-/reload-plugins
-/language-coach:language-coach setup
-```
-
-**Cursor:** Install **language-coach** from the marketplace, then run `/language-coach setup` in the AI panel.
-
----
-
-### [zentao-plugin](https://github.com/leeguooooo/zentao-plugin)
-
-Use ZenTao from Claude Code via the local zentao CLI. Inspect products, bugs, tasks, stories, and run self-test workflows.
-
-**Claude Code:** `/plugin install zentao-plugin@leeguooooo-plugins`
-
----
-
-### [yapi-plugin](https://github.com/leeguooooo/yapi-plugin)
-
-Use YApi from Claude Code via the local yapi CLI. Inspect interfaces and sync API docs automatically.
-
-**Claude Code:** `/plugin install yapi-plugin@leeguooooo-plugins`
-
----
 
 ### [curl-crypto-plugin](https://github.com/leeguooooo/curl-crypto-plugin)
 

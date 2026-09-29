@@ -5,7 +5,7 @@ name: Marketplace maintenance
 # source of truth; everything else derives from it automatically:
 #
 #   1. Version sync (pull-based): read the live version from every
-#      github-source entry's repo — no repository_dispatch, no PAT in source
+#      GitHub-hosted entry's repo — no repository_dispatch, no PAT in source
 #      repos, new entries picked up automatically. Precedence:
 #      .claude-plugin/plugin.json > package.json > Cargo.toml > pyproject.toml
 #      > latest release tag (release fallback skipped for subpath entries).
@@ -90,6 +90,19 @@ jobs:
                   if m: return m.group(1)
               return None
 
+          def gh_repo(src):
+              # "url" sources carry https://github.com/<owner>/<repo>.git — plugin
+              # sources use them instead of "github", which Claude Code clones over
+              # SSH only (no HTTPS fallback), failing on machines without GitHub SSH keys.
+              if not isinstance(src, dict):
+                  return None
+              if src.get("source") == "github":
+                  return src["repo"]
+              if src.get("source") == "url":
+                  m = re.match(r"https://github\.com/([^/]+/[^/]+?)(?:\.git)?/?$", src.get("url", ""))
+                  return m.group(1) if m else None
+              return None
+
           mp_path = pathlib.Path(".claude-plugin/marketplace.json")
           data = json.loads(mp_path.read_text())
 
@@ -97,9 +110,10 @@ jobs:
           changed = []
           for entry in data.get("plugins", []):
               src = entry.get("source")
-              if not isinstance(src, dict) or src.get("source") != "github":
+              repo = gh_repo(src)
+              if not repo:
                   continue
-              repo, ref, sub = src["repo"], src.get("ref", "main"), src.get("path", "")
+              ref, sub = src.get("ref", "main"), src.get("path", "")
               v = manifest_version(repo, ref, sub)
               if not v and not sub:
                   v = release_version(repo)
@@ -136,9 +150,10 @@ jobs:
           errors = []
           for entry in data.get("plugins", []):
               src = entry.get("source")
-              if not isinstance(src, dict) or src.get("source") != "github":
+              repo = gh_repo(src)
+              if not repo:
                   continue
-              repo, ref, sub = src["repo"], src.get("ref", "main"), src.get("path", "")
+              ref, sub = src.get("ref", "main"), src.get("path", "")
               base = (sub.rstrip("/") + "/") if sub else ""
               for sp in entry.get("skills", []):
                   rel = sp.strip("./")
