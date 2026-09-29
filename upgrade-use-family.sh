@@ -6,11 +6,16 @@
 set -u
 BASE="${USE_FAMILY_DIR:-$HOME/.agents/use-family}"
 PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
-NAMES="chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use"
+NAMES="chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs"
 failed=""
 
-has_upgrade() {  # the CLI lists an `upgrade` subcommand in its help (text, or JSON when piped, e.g. mail-use)
-  "$1" --help 2>&1 | grep -qE '^[[:space:]]+upgrade([[:space:]]|$)|"name":[[:space:]]*"upgrade"'
+repo_of() {  # repo_of <name>: the GitHub repo a use lives in
+  case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac
+}
+
+has_upgrade() {  # the CLI lists an `upgrade` subcommand in its help (text, or JSON when piped, e.g. mail-use);
+  # usage lines may repeat the program name ("  ocs upgrade [--check]")
+  "$1" --help 2>&1 | grep -qE "^[[:space:]]+($1[[:space:]]+)?upgrade([[:space:]]|\$)|\"name\":[[:space:]]*\"upgrade\""
 }
 
 echo "== CLIs"
@@ -21,7 +26,7 @@ for name in $NAMES; do
     "$name" upgrade || failed="$failed $name"
   else
     echo "-- $name: no upgrade command in this version; reinstall to get it:"
-    echo "   curl -fsSL https://raw.githubusercontent.com/leeguooooo/$name/main/install.sh | sh"
+    echo "   curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh"
   fi
 done
 

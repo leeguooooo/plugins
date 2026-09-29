@@ -6,7 +6,7 @@ PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
 
 # iphone-use runs as a daemon and profile-use ships its script inside the skill,
 # so neither has a CLI on PATH to look for.
-names="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use"
+names="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs"
 [ "$(uname -s)" = Darwin ] && names="$names wechat-use"
 
 missing=""
@@ -23,5 +23,6 @@ fi
 echo "use-family: these CLIs are not installed:$missing"
 echo "Install one when a task needs it, after asking the user:"
 for name in $missing; do
-  echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$name/main/install.sh | sh"
+  repo=$name; [ "$name" = ocs ] && repo=open-cross-session
+  echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$repo/main/install.sh | sh"
 done

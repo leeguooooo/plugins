@@ -43,7 +43,7 @@ The plugin only carries the slash commands; the actual statusLine renderer is th
 
 ## The `*-use` family
 
-Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo. Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
+Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo — and talk to each other (`ocs`, from [open-cross-session](https://github.com/leeguooooo/open-cross-session)). Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
 
 ## The *-use family in one install
 
@@ -141,6 +141,14 @@ Safely fill registration, signup, checkout, banking, KYC, and onboarding forms f
 Portable long-term memory for AI coding agents — Markdown notes in a private git repo you own. Recall before work, write back after, background autosync, secret-scan hook, one-line new-computer setup.
 
 **Claude Code:** `/plugin install memory-use@leeguooooo-plugins`
+
+---
+
+### [ocs](https://github.com/leeguooooo/open-cross-session)
+
+open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.
+
+**Claude Code:** `/plugin install ocs@leeguooooo-plugins`
 
 ---
 

@@ -129,9 +129,13 @@ jobs:
           START = re.search(r"^<!-- use-family:start[^\n]*-->$", readme, re.M)
           END = re.search(r"^<!-- use-family:end -->$", readme, re.M)
           if START and END:
+              # Family members: every *-use, plus anything the use-family bundle depends on
+              # (ocs keeps its own name — it ships from leeguooooo/open-cross-session).
+              bundle = json.loads(pathlib.Path("plugins/use-family/.claude-plugin/plugin.json").read_text())
+              members = set(bundle.get("dependencies", []))
               blocks = []
               for entry in data.get("plugins", []):
-                  if not entry["name"].endswith("-use"):
+                  if not (entry["name"].endswith("-use") or entry["name"] in members):
                       continue
                   blocks.append(
                       f"### [{entry['name']}]({entry.get('homepage', '')})\n\n"

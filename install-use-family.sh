@@ -10,13 +10,18 @@ SKILLS="${AGENTS_SKILLS_DIR:-$HOME/.agents/skills}"
 command -v git >/dev/null 2>&1 || { echo "error: git is required" >&2; exit 1; }
 mkdir -p "$BASE" "$SKILLS"
 
-# <repo>:<skill directory inside the repo>; "." means SKILL.md sits at the repo root.
+# <name>[=<repo>]:<skill directory inside the repo>; "." means SKILL.md sits at the repo root.
+# The repo defaults to the name; ocs lives in leeguooooo/open-cross-session.
 # Keep in step with .claude-plugin/marketplace.json.
 USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use
 mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:.
-chatgpt-use:. image-use:. memory-use:."
+chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs"
 # Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill).
-CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use"
+CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs"
+
+repo_of() {  # repo_of <name>: the GitHub repo a use lives in
+  case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac
+}
 [ "$(uname -s)" = Darwin ] && CLIS="$CLIS wechat-use"
 
 fetch() {  # fetch <repo> <dir>
@@ -46,8 +51,8 @@ fetch plugins "$BASE/plugins"
 link "$BASE/plugins/plugins/use-family/skills/use-family" use-family
 
 for entry in $USES; do
-  name=${entry%%:*}; sub=${entry#*:}
-  fetch "$name" "$BASE/$name"
+  head=${entry%%:*}; sub=${entry#*:}; name=${head%%=*}
+  fetch "$(repo_of "$name")" "$BASE/$name"
   target="$BASE/$name"; [ "$sub" = . ] || target="$target/$sub"
   if [ -f "$target/SKILL.md" ]; then link "$target" "$name"; else echo "warn   $name: no SKILL.md at $sub"; fi
 done
@@ -59,6 +64,6 @@ echo "Skills are in $SKILLS. Start a new Codex session to pick them up."
 if [ -n "$missing" ]; then
   echo "CLIs not installed yet:$missing"
   for name in $missing; do
-    echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$name/main/install.sh | sh"
+    echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh"
   done
 fi

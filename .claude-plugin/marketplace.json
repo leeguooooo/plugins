@@ -46,7 +46,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -173,6 +173,22 @@
       "homepage": "https://github.com/leeguooooo/memory-use",
       "skills": [
         "./"
+      ],
+      "strict": false
+    },
+    {
+      "name": "ocs",
+      "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
+      "version": "0.6.2",
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/leeguooooo/open-cross-session.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/open-cross-session",
+      "skills": [
+        "./skills/ocs"
       ],
       "strict": false
     },

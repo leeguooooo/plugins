@@ -19,7 +19,10 @@ $Uses = [ordered]@{
   'chatgpt-use' = '.'
   'image-use'   = '.'
   'memory-use'  = '.'
+  'ocs'         = 'skills/ocs'
 }
+# Uses whose repo name differs from the use name.
+$Repos = @{ 'ocs' = 'open-cross-session' }
 
 function Get-Repo([string]$Repo, [string]$Dir) {
   if (Test-Path (Join-Path $Dir '.git')) {
@@ -46,12 +49,12 @@ Add-SkillLink (Join-Path $Base 'plugins\plugins\use-family\skills\use-family') '
 
 foreach ($name in $Uses.Keys) {
   $dir = Join-Path $Base $name
-  Get-Repo $name $dir
+  Get-Repo $(if ($Repos[$name]) { $Repos[$name] } else { $name }) $dir
   $target = if ($Uses[$name] -eq '.') { $dir } else { Join-Path $dir $Uses[$name] }
   if (Test-Path (Join-Path $target 'SKILL.md')) { Add-SkillLink $target $name } else { Write-Warning "$name has no SKILL.md at $($Uses[$name])" }
 }
 
 ''
 "Skills are in $Skills. Start a new Codex session to pick them up."
-$missing = @('chrome-use', 'mail-use', 'discord-use', 'chatgpt-use') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
+$missing = @('chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
 if ($missing) { "CLIs not installed yet: $($missing -join ', '). See each repo's README for the Windows install." }

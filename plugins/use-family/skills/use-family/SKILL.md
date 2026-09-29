@@ -1,6 +1,6 @@
 ---
 name: use-family
-description: Routing guide for the *-use family (chrome-use, mail-use, image-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
+description: Routing guide for the *-use family (chrome-use, mail-use, image-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use, ocs). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
 ---
 
 # use-family
@@ -19,6 +19,7 @@ Each `*-use` does one thing well. This skill says which one to reach for, and ho
 | | `iphone-use` | A real iPhone through iPhone Mirroring: apps with no API. |
 | Voice | `mail-use` | Every mailbox: search, read, send; verification codes and receipts. |
 | | `wechat-use`, `discord-use` | Messages and history on WeChat and Discord. |
+| Teammates | `ocs` | The other AI agents: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN (`<address>@<peer>`). Message, wake, delegate, get notified when one goes idle. |
 | Second brain | `chatgpt-use` | The user's ChatGPT web subscription as an extra reviewer or planner. Built on chrome-use. |
 | | `image-use` | Image generation on the user's own subscriptions: ChatGPT web first, Codex fallback, optional Gemini. |
 
@@ -26,6 +27,7 @@ Pick by target:
 
 - A web page → `chrome-use`. A native macOS app → the host's own computer use (Claude Code: enable `computer-use` in `/mcp`; Codex: its built-in computer use); `peekaboo` for scripted or non-interactive runs. A phone app → `iphone-use`.
 - A personal value to type into a form → `profile-use values`. A password or TOTP → `bitwarden-use` (via `profile-use login --domain`). Never the other way round.
+- Another agent session — hand off work, ask a question, wait for it to finish → `ocs` (`ocs who`, then `ocs dm <name> "…"`; `--notify-when-idle` instead of polling). An agent on another computer the user paired → `ocs dm <address>@<peer>`; pairing (`ocs lan pair`) lets that machine prompt this one's agents, so only when the user asks.
 - A durable fact about the person → `profile-use`. A durable fact about how a machine or service is set up → `memory-use`, which stores only pointers to profile-use, never the values.
 
 ## Recipes
@@ -42,7 +44,7 @@ Pick by target:
 `profile-use login --domain <host>` matches the vault entry by its stored URI without revealing; add `--reveal` only at the moment of filling (one Touch ID). Several matches → ask which, using `--name`/`--user`.
 
 **Reach someone**
-Use the channel the user named. Draft first; send only after a yes. Never paste profile or vault values into a message unless the user asked for exactly that.
+A person: use the channel the user named. Another agent (a Claude, Codex or Pi session): `ocs`, never the user's chat apps. Draft first; send only after a yes. Never paste profile or vault values into a message unless the user asked for exactly that.
 
 **New computer**
 On the old computer, `memory-use migrate` first. On the new one:
