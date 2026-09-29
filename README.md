@@ -122,7 +122,7 @@ Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMA
 
 ### [wechat-use](https://github.com/leeguooooo/wechat-use)
 
-macOS WeChat CLI + local HTTP bridge + Wechaty Puppet gRPC gateway — send messages, query sessions/contacts/chat history/images, and expose stable HTTP/gRPC surfaces for agent integration.
+WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.
 
 **Claude Code:** `/plugin install wechat-use@leeguooooo-plugins`
 

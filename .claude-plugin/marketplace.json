@@ -70,7 +70,7 @@
     {
       "name": "cookie-use",
       "description": "Agent-friendly multi-account session manager — capture, store, list, switch, and apply logged-in sessions for any website, across browsers and profiles. Encrypted local vault, built on chrome-use.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -118,7 +118,7 @@
     {
       "name": "mail-use",
       "description": "Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMAP from the CLI or MCP. Part of the *-use family.",
-      "version": "3.4.0",
+      "version": "3.5.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -211,7 +211,7 @@
     {
       "name": "chatgpt-use",
       "description": "Turn a ChatGPT web subscription into a coding-agent backend — no API key, no Codex billing. Ask/plan/review/delegate via the logged-in web conversation; built on chrome-use.",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "category": "development",
       "source": {
         "source": "url",
