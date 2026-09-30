@@ -195,7 +195,7 @@
     {
       "name": "ocs",
       "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
-      "version": "0.6.6",
+      "version": "0.7.1",
       "category": "productivity",
       "source": {
         "source": "url",
