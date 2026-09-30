@@ -7,7 +7,7 @@ PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
 # iphone-use runs as a daemon and profile-use ships its script inside the skill,
 # so neither has a CLI on PATH to look for.
 names="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs"
-[ "$(uname -s)" = Darwin ] && names="$names wechat-use message-use"
+[ "$(uname -s)" = Darwin ] && names="$names wechat-use message-use paste-use"
 
 missing=""
 for name in $names; do

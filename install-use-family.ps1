@@ -20,6 +20,7 @@ $Uses = [ordered]@{
   'image-use'   = '.'
   'memory-use'  = '.'
   'ocs'         = 'skills/ocs'
+  'paste-use'   = '.'
 }
 # Uses whose repo name differs from the use name.
 $Repos = @{ 'ocs' = 'open-cross-session' }
@@ -56,5 +57,5 @@ foreach ($name in $Uses.Keys) {
 
 ''
 "Skills are in $Skills. Start a new Codex session to pick them up."
-$missing = @('chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
+$missing = @('chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs', 'paste-use') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
 if ($missing) { "CLIs not installed yet: $($missing -join ', '). See each repo's README for the Windows install." }

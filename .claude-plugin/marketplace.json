@@ -46,7 +46,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -142,6 +142,22 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/message-use",
+      "skills": [
+        "./"
+      ],
+      "strict": false
+    },
+    {
+      "name": "paste-use",
+      "description": "Pastyx clipboard history for AI agents — list, search and read what you copied (text, links, code, images with recognised text, files), re-copy an old clip, or put text on the clipboard. Reads the app's local database read-only (no sign-in, works offline); secret-looking values are masked by default. macOS and Windows.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/leeguooooo/paste-use.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/paste-use",
       "skills": [
         "./"
       ],

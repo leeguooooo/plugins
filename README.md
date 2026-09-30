@@ -43,7 +43,7 @@ The plugin only carries the slash commands; the actual statusLine renderer is th
 
 ## The `*-use` family
 
-Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo — and talk to each other (`ocs`, from [open-cross-session](https://github.com/leeguooooo/open-cross-session)). Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
+Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo, the clipboard history — and talk to each other (`ocs`, from [open-cross-session](https://github.com/leeguooooo/open-cross-session)). Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
 
 ## The *-use family in one install
 
@@ -125,6 +125,14 @@ Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMA
 iMessage & SMS for AI agents through macOS Messages — read, search, watch and send texts, and pull verification codes (短信验证码) out of incoming messages with `message-use code --wait`. Read-only database access; sending previews until confirmed.
 
 **Claude Code:** `/plugin install message-use@leeguooooo-plugins`
+
+---
+
+### [paste-use](https://github.com/leeguooooo/paste-use)
+
+Pastyx clipboard history for AI agents — list, search and read what you copied (text, links, code, images with recognised text, files), re-copy an old clip, or put text on the clipboard. Reads the app's local database read-only (no sign-in, works offline); secret-looking values are masked by default. macOS and Windows.
+
+**Claude Code:** `/plugin install paste-use@leeguooooo-plugins`
 
 ---
 

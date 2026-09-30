@@ -11,7 +11,7 @@ PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
 plugins="$HOME/.claude/plugins/installed_plugins.json"
 [ -f "$plugins" ] && command -v python3 >/dev/null 2>&1 || exit 0
 
-names="chrome-use cookie-use iphone-use mail-use wechat-use discord-use chatgpt-use memory-use ocs message-use image-use"
+names="chrome-use cookie-use iphone-use mail-use wechat-use discord-use chatgpt-use memory-use ocs message-use image-use paste-use"
 
 # "<name> <plugin version>" for each installed plugin of the family (newest install per name)
 installed=$(python3 - "$plugins" $names <<'EOF'
