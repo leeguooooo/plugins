@@ -86,7 +86,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.7.5",
+      "version": "0.8.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -118,7 +118,7 @@
     {
       "name": "mail-use",
       "description": "Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMAP from the CLI or MCP. Part of the *-use family.",
-      "version": "3.6.0",
+      "version": "3.7.0",
       "category": "productivity",
       "source": {
         "source": "url",
