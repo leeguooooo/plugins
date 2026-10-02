@@ -70,7 +70,7 @@
     {
       "name": "cookie-use",
       "description": "Agent-friendly multi-account session manager — capture, store, list, switch, and apply logged-in sessions for any website, across browsers and profiles. Encrypted local vault, built on chrome-use.",
-      "version": "0.11.2",
+      "version": "0.11.3",
       "category": "productivity",
       "source": {
         "source": "url",
