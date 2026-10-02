@@ -195,7 +195,7 @@
     {
       "name": "memory-use",
       "description": "Portable long-term memory for AI coding agents — Markdown notes in a private git repo you own. Recall before work, write back after, background autosync, secret-scan hook, one-line new-computer setup.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "category": "productivity",
       "source": {
         "source": "url",
