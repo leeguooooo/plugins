@@ -273,7 +273,7 @@
     {
       "name": "chatgpt-use",
       "description": "Turn a ChatGPT web subscription into a coding-agent backend — no API key, no Codex billing. Ask/plan/review/delegate via the logged-in web conversation; built on chrome-use.",
-      "version": "0.0.6",
+      "version": "0.0.7",
       "category": "development",
       "source": {
         "source": "url",
