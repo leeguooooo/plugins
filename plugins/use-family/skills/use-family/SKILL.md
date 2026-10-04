@@ -1,6 +1,6 @@
 ---
 name: use-family
-description: Routing guide for the *-use family (chrome-use, mail-use, image-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use, ocs, message-use, paste-use). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
+description: Routing guide for the *-use family (chrome-use, mail-use, image-use, wechat-use, discord-use, iphone-use, profile-use, bitwarden-use, cookie-use, chatgpt-use, memory-use, ocs, message-use, paste-use, motion-use). Use when a task spans more than one of them or it is unclear which to pick — signing up for a site, logging in, fetching a verification code, filling a form with personal data, switching accounts, messaging someone, setting up a new computer — or when the user asks "用哪个 use", "use 家族", "这些 use 怎么配合".
 ---
 
 # use-family
@@ -24,6 +24,7 @@ Each `*-use` does one thing well. This skill says which one to reach for, and ho
 | Teammates | `ocs` | The other AI agents: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN (`<address>@<peer>`). Message, wake, delegate, get notified when one goes idle. |
 | Second brain | `chatgpt-use` | The user's ChatGPT web subscription as an extra reviewer or planner. Built on chrome-use. |
 | | `image-use` | Image generation on the user's own subscriptions: ChatGPT web first, Codex fallback, optional Gemini. |
+| Make | `motion-use` | Promo and explainer videos from a JSON brief: zh/en, 16:9 and 9:16, timed to the user's own voiceover, rendered locally to MP4. |
 
 Pick by target:
 
@@ -34,6 +35,12 @@ Pick by target:
 - A durable fact about the person → `profile-use`. A durable fact about how a machine or service is set up → `memory-use`, which stores only pointers to profile-use, never the values.
 
 ## Recipes
+
+**Make a promo or explainer video**
+1. Read the product's README or `--help` for real commands and facts; never invent them.
+2. `motion-use init <dir> --style promo|explainer`, then write the scenes into `brief.json`.
+3. Illustrations: generate with `image-use` and copy the file into `<dir>`; screenshots from whichever browser or screen tool the user already uses work too. Voiceover: the user's own recordings in `<dir>/voiceover/<lang>/<scene-id>.mp3`.
+4. `motion-use validate <dir>/brief.json`, then `motion-use still <dir>/brief.json` and look at the contact sheet, then `motion-use render <dir>/brief.json`. Upload nowhere unless the user asks. motion-use runs on macOS and Linux; it does not support Windows yet.
 
 **Sign up for a site**
 1. `chrome-use` opens the signup page. Check the real domain first.
