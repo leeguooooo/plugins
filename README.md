@@ -54,7 +54,17 @@ Agent-native CLIs that let coding agents drive real, logged-in surfaces — a br
 
 `use-family` installs every `*-use` plugin below as a dependency, adds a `use-family` skill that tells the agent which one to reach for and how they combine, and checks at session start for any missing CLI (it only names the one-line installer; nothing runs without asking).
 
-**Codex, or any agent that reads `~/.agents/skills`.** Codex marketplaces only take plugins stored inside the marketplace repo and don't install dependencies, so the bundle above brings in `use-family` alone. Use the installer instead. It clones every `*-use` into `~/.agents/use-family` and links each skill into `~/.agents/skills`; run it again to update.
+**Codex and the ChatGPT desktop app.** Add the same marketplace, then add the uses you want. Codex doesn't install plugin dependencies, so `use-family` there brings in the routing skill alone; add each `*-use` by name:
+
+```sh
+codex plugin marketplace add leeguooooo/plugins
+codex plugin add use-family@leeguooooo-plugins
+codex plugin add chrome-use@leeguooooo-plugins   # and mail-use, memory-use, …
+```
+
+The marketplace also shows up in the ChatGPT desktop app's Plugins Directory. `codex plugin marketplace upgrade leeguooooo-plugins` refreshes it.
+
+**Any other agent that reads `~/.agents/skills`.** Use the installer. It clones every `*-use` into `~/.agents/use-family` and links each skill into `~/.agents/skills`; run it again to update.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.sh | sh
