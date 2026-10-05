@@ -122,6 +122,14 @@ Use your ChatGPT subscription to generate images from the command line — no OP
 
 ---
 
+### [motion-use](https://github.com/leeguooooo/motion-use)
+
+Promo and explainer videos from a JSON brief for AI agents: zh/en, landscape/vertical, timed to your own voiceover, rendered locally and reproducibly to MP4 (HyperFrames engine). Node.js CLI + agent skill. Part of the *-use family.
+
+**Claude Code:** `/plugin install motion-use@leeguooooo-plugins`
+
+---
+
 ### [mail-use](https://github.com/leeguooooo/mail-use)
 
 Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMAP from the CLI or MCP. Part of the *-use family.

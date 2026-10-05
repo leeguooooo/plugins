@@ -46,7 +46,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -114,6 +114,18 @@
         "./"
       ],
       "strict": false
+    },
+    {
+      "name": "motion-use",
+      "description": "Promo and explainer videos from a JSON brief for AI agents: zh/en, landscape/vertical, timed to your own voiceover, rendered locally and reproducibly to MP4 (HyperFrames engine). Node.js CLI + agent skill. Part of the *-use family.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/leeguooooo/motion-use.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/motion-use"
     },
     {
       "name": "mail-use",
