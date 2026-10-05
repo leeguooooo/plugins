@@ -18,7 +18,7 @@ mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:
 chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs message-use:. motion-use:.
 paste-use:."
 # Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill).
-CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use"
+CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use image-use"
 
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
   case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac
@@ -65,6 +65,10 @@ echo "Skills are in $SKILLS. Start a new Codex session to pick them up."
 if [ -n "$missing" ]; then
   echo "CLIs not installed yet:$missing"
   for name in $missing; do
-    echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh"
+    case "$name" in
+      # image-use has no install.sh: the CLI is the single file at the root of the checkout above.
+      image-use) echo "  sudo install \"$BASE/image-use/image-use\" /usr/local/bin/image-use" ;;
+      *) echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh" ;;
+    esac
   done
 fi
