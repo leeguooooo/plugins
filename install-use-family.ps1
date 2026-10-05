@@ -58,5 +58,9 @@ foreach ($name in $Uses.Keys) {
 
 ''
 "Skills are in $Skills. Start a new Codex session to pick them up."
-$missing = @('chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs', 'paste-use') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
-if ($missing) { "CLIs not installed yet: $($missing -join ', '). See each repo's README for the Windows install." }
+$missing = @('chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs', 'paste-use', 'image-use') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
+if ($missing) {
+  "CLIs not installed yet: $($missing -join ', '). See each repo's README for the Windows install."
+  # image-use has no installer: the CLI is a single Python file at the root of its checkout.
+  if ($missing -contains 'image-use') { "  image-use: run it as  py `"$(Join-Path $Base 'image-use\image-use')`"" }
+}
