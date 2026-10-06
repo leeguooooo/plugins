@@ -118,7 +118,7 @@
     {
       "name": "motion-use",
       "description": "Promo and explainer videos from a JSON brief for AI agents: zh/en, landscape/vertical, timed to your own voiceover, rendered locally and reproducibly to MP4 (HyperFrames engine). Node.js CLI + agent skill. Part of the *-use family.",
-      "version": "0.1.0",
+      "version": "0.3.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -207,7 +207,7 @@
     {
       "name": "memory-use",
       "description": "Portable long-term memory for AI coding agents — Markdown notes in a private git repo you own. Recall before work, write back after, background autosync, secret-scan hook, one-line new-computer setup.",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "category": "productivity",
       "source": {
         "source": "url",
