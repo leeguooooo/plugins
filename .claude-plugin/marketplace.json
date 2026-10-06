@@ -54,7 +54,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.158",
+      "version": "1.5.159",
       "category": "development",
       "source": {
         "source": "url",
@@ -223,7 +223,7 @@
     {
       "name": "ocs",
       "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
-      "version": "0.7.1",
+      "version": "0.7.3",
       "category": "productivity",
       "source": {
         "source": "url",
