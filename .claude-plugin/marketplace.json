@@ -191,7 +191,7 @@
     {
       "name": "profile-use",
       "description": "Safely fill registration, signup, checkout, banking, KYC, and onboarding forms from a private local personal profile — privacy-first, consent before submission.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "productivity",
       "source": {
         "source": "url",
