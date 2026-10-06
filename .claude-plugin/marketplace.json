@@ -86,7 +86,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.13.2",
+      "version": "0.13.3",
       "category": "productivity",
       "source": {
         "source": "url",
