@@ -121,7 +121,7 @@ Use your ChatGPT subscription to generate images from the command line — no OP
 
 ### [motion-use](https://github.com/leeguooooo/motion-use)
 
-Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.
+Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, default narration, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.
 
 **Claude Code:** `/plugin install motion-use@leeguooooo-plugins`
 
