@@ -105,8 +105,8 @@
     },
     {
       "name": "motion-use",
-      "description": "Promo and explainer videos from a JSON brief for AI agents: zh/en, landscape/vertical, timed to your own voiceover, rendered locally and reproducibly to MP4 (HyperFrames engine). Node.js CLI + agent skill. Part of the *-use family.",
-      "version": "0.3.0",
+      "description": "Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.",
+      "version": "0.4.0",
       "category": "productivity",
       "source": {
         "source": "url",
