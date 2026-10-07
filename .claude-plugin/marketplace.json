@@ -90,7 +90,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.30.2",
+      "version": "0.31.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -211,7 +211,7 @@
     {
       "name": "ocs",
       "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
-      "version": "0.7.4",
+      "version": "0.7.5",
       "category": "productivity",
       "source": {
         "source": "url",
