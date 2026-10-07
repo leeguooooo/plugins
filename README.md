@@ -12,12 +12,6 @@ Developer plugins for Claude Code.
 
 ## Plugins
 
-### [curl-crypto-plugin](https://github.com/leeguooooo/curl-crypto-plugin)
-
-Decrypt encrypted curl request parameters and encrypt payloads for test-service calls.
-
-**Claude Code:** `/plugin install curl-crypto-plugin@leeguooooo-plugins`
-
 ### [wrangler-accounts](https://github.com/leeguooooo/wrangler-accounts)
 
 Cloudflare Wrangler multi-account helper. AWS-style profiles with a guard hook that blocks raw `wrangler` calls when local profiles are configured.
@@ -54,13 +48,16 @@ Agent-native CLIs that let coding agents drive real, logged-in surfaces — a br
 
 `use-family` installs every `*-use` plugin below as a dependency, adds a `use-family` skill that tells the agent which one to reach for and how they combine, and checks at session start for any missing CLI (it only names the one-line installer; nothing runs without asking).
 
-**Codex and the ChatGPT desktop app.** Add the same marketplace, then add the uses you want. Codex doesn't install plugin dependencies, so `use-family` there brings in the routing skill alone; add each `*-use` by name:
+**Codex and the ChatGPT desktop app.** Codex doesn't install plugin dependencies, so `use-family` there brings in the routing skill alone and every `*-use` has to be added by name. To add the whole family:
 
 ```sh
 codex plugin marketplace add leeguooooo/plugins
-codex plugin add use-family@leeguooooo-plugins
-codex plugin add chrome-use@leeguooooo-plugins   # and mail-use, memory-use, …
+for plugin in use-family chrome-use cookie-use mail-use message-use paste-use wechat-use discord-use iphone-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use; do
+  codex plugin add "$plugin@leeguooooo-plugins" || break
+done
 ```
+
+The list is `use-family`'s `dependencies` in [plugins/use-family/.claude-plugin/plugin.json](plugins/use-family/.claude-plugin/plugin.json); drop the ones you don't want. This installs the plugins (skills) only. The CLIs still install themselves on first use or with the one-line installers below, and a few uses need a one-time setup of their own (for example `memory-use init`, adding a mailbox to `mail-use`).
 
 The marketplace also shows up in the ChatGPT desktop app's Plugins Directory. `codex plugin marketplace upgrade leeguooooo-plugins` refreshes it.
 
@@ -211,6 +208,10 @@ Turn a ChatGPT web subscription into a coding-agent backend — no API key, no C
 ---
 
 <!-- use-family:end -->
+
+## Retired
+
+**curl-crypto-plugin** is no longer offered here: it needs a private runtime that the plugin doesn't ship, so a fresh install can't run. The source stays at [leeguooooo/curl-crypto-plugin](https://github.com/leeguooooo/curl-crypto-plugin). To remove an existing install: `/plugin uninstall curl-crypto-plugin@leeguooooo-plugins`.
 
 ## More plugins coming
 
