@@ -90,7 +90,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.33.0",
+      "version": "0.34.0",
       "category": "productivity",
       "source": {
         "source": "url",
