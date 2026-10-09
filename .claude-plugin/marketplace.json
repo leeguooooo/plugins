@@ -257,7 +257,7 @@
     {
       "name": "discord-use",
       "description": "Fast REST-only Discord CLI + MCP server in one ~6 MB Rust binary. Drop-in replacement for mcp-discord — no gateway, no Node.js, sub-second start.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "category": "development",
       "source": {
         "source": "url",
