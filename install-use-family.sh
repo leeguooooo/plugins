@@ -66,17 +66,10 @@ echo
 echo "Skills are in $SKILLS. Start a new Codex session to pick them up."
 if [ -n "$missing" ]; then
   echo "CLIs not installed yet:$missing"
+  echo "Install them all at once:"
+  echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-clis.sh | sh"
+  echo "Or one at a time:"
   for name in $missing; do
-    case "$name" in
-      # image-use has no install.sh: the CLI is the single file at the root of the checkout above.
-      image-use) echo "  sudo install \"$BASE/image-use/image-use\" /usr/local/bin/image-use" ;;
-      # No prebuilt binary for Intel Macs; the installer only says to build from source.
-      discord-use) if [ "$(uname -s)-$(uname -m)" = Darwin-x86_64 ]; then
-                     echo "  cargo install --git https://github.com/leeguooooo/discord-use --root ~/.local   # Intel Mac: builds from source, needs Rust (rustup.rs)"
-                   else
-                     echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/discord-use/main/install.sh | sh"
-                   fi ;;
-      *) echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh" ;;
-    esac
+    echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh"
   done
 fi

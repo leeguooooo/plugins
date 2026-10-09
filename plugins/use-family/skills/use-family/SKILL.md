@@ -71,4 +71,4 @@ Each CLI prints `<name> X is available` on stderr when a newer release exists (a
 2. Redacted by default. Raw values only at the moment of use, never in the final reply.
 3. Never bypass a Touch ID or unlock prompt, and never handle the master password.
 4. Before committing to any repo that could echo personal data, run `profile-use leak-scan --staged --all-profiles`.
-5. A CLI is missing → this plugin's session-start check names the one-line installer; ask the user before running it.
+5. A CLI is missing → this plugin's session-start check names its installer, plus `install-clis.sh` for all missing ones at once; ask the user before running either.

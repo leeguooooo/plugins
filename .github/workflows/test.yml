@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: sh tests/install-use-family.test.sh
       - run: sh tests/doctor.test.sh
+      - run: sh tests/install-clis.test.sh
       - run: sh tests/readme-codex-list.test.sh
       - name: install-use-family.ps1 parses
         shell: pwsh

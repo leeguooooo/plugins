@@ -46,7 +46,15 @@ Agent-native CLIs that let coding agents drive real, logged-in surfaces — a br
 /plugin install use-family@leeguooooo-plugins
 ```
 
-`use-family` installs every `*-use` plugin below as a dependency, adds a `use-family` skill that tells the agent which one to reach for and how they combine, and checks at session start for any missing CLI (it only names the one-line installer; nothing runs without asking).
+`use-family` installs every `*-use` plugin below as a dependency, adds a `use-family` skill that tells the agent which one to reach for and how they combine, and checks at session start for any missing CLI (it only names the installers; nothing runs without asking).
+
+Then install every CLI this machine is missing in one go. It runs each use's own installer, skips the ones that don't run here (wechat-use on Intel Macs, for example) and the ones already installed, and lists the one-time setup some of them need:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-clis.sh | sh
+```
+
+`… | sh -s -- mail-use ocs` installs just those, including iphone-use, which isn't in the default set because it needs an iPhone.
 
 **Codex and the ChatGPT desktop app.** Codex doesn't install plugin dependencies, so `use-family` there brings in the routing skill alone and every `*-use` has to be added by name. To add the whole family:
 
@@ -57,7 +65,7 @@ for plugin in use-family chrome-use cookie-use mail-use message-use paste-use we
 done
 ```
 
-The list is `use-family`'s `dependencies` in [plugins/use-family/.claude-plugin/plugin.json](plugins/use-family/.claude-plugin/plugin.json); drop the ones you don't want. This installs the plugins (skills) only. The CLIs still install themselves on first use or with the one-line installers below, and a few uses need a one-time setup of their own (for example `memory-use init`, adding a mailbox to `mail-use`).
+The list is `use-family`'s `dependencies` in [plugins/use-family/.claude-plugin/plugin.json](plugins/use-family/.claude-plugin/plugin.json); drop the ones you don't want. This installs the plugins (skills) only. The CLIs still install themselves on first use, or all at once with `install-clis.sh` (above), and a few uses need a one-time setup of their own (for example `memory-use init`, adding a mailbox to `mail-use`).
 
 The marketplace also shows up in the ChatGPT desktop app's Plugins Directory. `codex plugin marketplace upgrade leeguooooo-plugins` refreshes it.
 
@@ -73,7 +81,7 @@ Windows (PowerShell; skips the macOS-only uses):
 irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.ps1 | iex
 ```
 
-A skill that already exists as a real folder is left alone and reported. Some uses (wechat-use, iphone-use) have installers that keep their skill folder in step with the CLI they install; leave those. A copy from `npx skills add` can be deleted so the installer links an updatable checkout instead. A link you made yourself (to your own checkout) is kept. The installer doesn't install CLIs; it lists the missing ones with their one-line installers. memory-use also needs `memory-use init --repo <owner>/<notes>` once (`--create` for a new private notes repo).
+A skill that already exists as a real folder is left alone and reported. Some uses (wechat-use, iphone-use) have installers that keep their skill folder in step with the CLI they install; leave those. A copy from `npx skills add` can be deleted so the installer links an updatable checkout instead. A link you made yourself (to your own checkout) is kept. The installer doesn't install CLIs; it lists the missing ones, and `install-clis.sh` (above) installs them all. memory-use also needs `memory-use init --repo <owner>/<notes>` once (`--create` for a new private notes repo).
 
 **Upgrading.** Every CLI in the family has `<name> upgrade` (updates the CLI and its skill, `--check` to only look) and prints one line on stderr when a newer release exists, at most once a day; see [docs/upgrade.md](docs/upgrade.md). To upgrade everything at once:
 
