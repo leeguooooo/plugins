@@ -23,7 +23,9 @@ CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memor
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
   case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac
 }
-[ "$(uname -s)" = Darwin ] && CLIS="$CLIS wechat-use message-use paste-use"
+[ "$(uname -s)" = Darwin ] && CLIS="$CLIS message-use paste-use"
+# wechat-use's macOS installer stops with "Apple Silicon only" on Intel, so don't suggest it there.
+[ "$(uname -s)-$(uname -m)" = Darwin-arm64 ] && CLIS="$CLIS wechat-use"
 
 fetch() {  # fetch <repo> <dir>
   if [ -d "$2/.git" ]; then
@@ -68,6 +70,12 @@ if [ -n "$missing" ]; then
     case "$name" in
       # image-use has no install.sh: the CLI is the single file at the root of the checkout above.
       image-use) echo "  sudo install \"$BASE/image-use/image-use\" /usr/local/bin/image-use" ;;
+      # No prebuilt binary for Intel Macs; the installer only says to build from source.
+      discord-use) if [ "$(uname -s)-$(uname -m)" = Darwin-x86_64 ]; then
+                     echo "  cargo install --git https://github.com/leeguooooo/discord-use --root ~/.local   # Intel Mac: builds from source, needs Rust (rustup.rs)"
+                   else
+                     echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/discord-use/main/install.sh | sh"
+                   fi ;;
       *) echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh" ;;
     esac
   done
