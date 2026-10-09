@@ -21,14 +21,13 @@ fail() { echo "FAIL: $1"; echo "$out"; exit 1; }
 
 out=$(run x86_64)
 echo "$out" | grep -q 'not installed:.* wechat-use' && fail "Intel: suggests wechat-use, whose installer is Apple Silicon only"
-echo "$out" | grep -qF 'cargo install --git https://github.com/leeguooooo/discord-use' || fail "Intel: no build-from-source hint for discord-use"
-echo "$out" | grep -q 'discord-use/main/install.sh' && fail "Intel: points at discord-use's install.sh, which has no Intel binary"
+echo "$out" | grep -qF 'leeguooooo/plugins/main/install-clis.sh | sh' || fail "no all-at-once install-clis.sh line"
+echo "$out" | grep -qF 'leeguooooo/discord-use/main/install.sh | sh' || fail "Intel: no discord-use installer (it has an Intel binary since v0.2.1)"
 echo "$out" | grep -q 'not installed:.* image-use' || fail "image-use not checked"
-echo "$out" | grep -q 'image-use/main/install.sh' && fail "points at an install.sh image-use does not have"
-echo "$out" | grep -qF 'ln -sf ~/.agents/use-family/image-use/image-use ~/.local/bin/image-use' || fail "no single-file install hint for image-use"
+echo "$out" | grep -qF 'leeguooooo/image-use/main/install.sh | sh' || fail "no image-use installer line"
+echo "$out" | grep -qF 'leeguooooo/open-cross-session/main/install.sh | sh' || fail "ocs not mapped to its repo"
 
 out=$(run arm64)
 echo "$out" | grep -q 'not installed:.* wechat-use' || fail "Apple Silicon: wechat-use not checked"
-echo "$out" | grep -qF 'leeguooooo/discord-use/main/install.sh | sh' || fail "Apple Silicon: lost discord-use's install.sh hint"
 
 echo "ok doctor.sh"

@@ -35,20 +35,16 @@ fail() { echo "FAIL: $1"; echo "$out"; exit 1; }
 
 out=$(run)
 echo "$out" | grep -q '^CLIs not installed yet:.* image-use' || fail "image-use missing from the not-installed list"
-echo "$out" | grep -qF "sudo install \"$TMP/home/.agents/use-family/image-use/image-use\" /usr/local/bin/image-use" \
-  || fail "no single-file install hint for image-use"
-echo "$out" | grep -q 'leeguooooo/image-use/main/install.sh' && fail "points at an install.sh image-use does not have"
+echo "$out" | grep -qF 'leeguooooo/image-use/main/install.sh | sh' || fail "no image-use installer line"
 echo "$out" | grep -qF 'leeguooooo/mail-use/main/install.sh | sh' || fail "generic install.sh hint lost"
-
+echo "$out" | grep -qF 'leeguooooo/plugins/main/install-clis.sh | sh' || fail "no all-at-once install-clis.sh line"
 echo "$out" | grep -q '^CLIs not installed yet:.* wechat-use' || fail "Apple Silicon: wechat-use missing from the not-installed list"
-echo "$out" | grep -qF 'leeguooooo/discord-use/main/install.sh | sh' || fail "Apple Silicon: lost discord-use's install.sh hint"
 
 out=$(FAKE_ARCH=x86_64 run)
 echo "$out" | grep -q '^CLIs not installed yet:.* wechat-use' && fail "Intel: suggests wechat-use, whose installer is Apple Silicon only"
-echo "$out" | grep -qF 'cargo install --git https://github.com/leeguooooo/discord-use' || fail "Intel: no build-from-source hint for discord-use"
 
 printf '#!/bin/sh\n' > "$TMP/bin/image-use"; chmod +x "$TMP/bin/image-use"
 out=$(run)
-echo "$out" | grep -q 'image-use/image-use\|not installed yet:.* image-use' && fail "image-use reported although it is on PATH"
+echo "$out" | grep -q 'not installed yet:.* image-use' && fail "image-use reported although it is on PATH"
 
 echo "ok install-use-family.sh"
