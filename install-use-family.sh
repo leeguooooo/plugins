@@ -16,14 +16,14 @@ mkdir -p "$BASE" "$SKILLS"
 USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use
 mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:.
 chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs message-use:. motion-use:.
-paste-use:."
+paste-use:. thermo-use:."
 # Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill).
 CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use image-use"
 
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
   case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac
 }
-[ "$(uname -s)" = Darwin ] && CLIS="$CLIS message-use paste-use"
+[ "$(uname -s)" = Darwin ] && CLIS="$CLIS message-use paste-use thermo-use"
 # wechat-use's macOS installer stops with "Apple Silicon only" on Intel, so don't suggest it there.
 [ "$(uname -s)-$(uname -m)" = Darwin-arm64 ] && CLIS="$CLIS wechat-use"
 

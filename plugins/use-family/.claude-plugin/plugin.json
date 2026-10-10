@@ -1,7 +1,7 @@
 {
   "name": "use-family",
-  "version": "0.10.0",
-  "description": "The whole *-use family in one install: browser, email, texts (iMessage/SMS), chat, phone, identity, passwords, sessions, notes, clipboard history, promo and explainer videos, and the other agents on your machines. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs and one that upgrades a CLI older than its plugin.",
+  "version": "0.11.0",
+  "description": "The whole *-use family in one install: browser, email, texts (iMessage/SMS), chat, phone, identity, passwords, sessions, notes, clipboard history, how this Mac is doing, promo and explainer videos, and the other agents on your machines. Adds a routing skill that tells the agent which use to reach for and how they combine, plus a session-start check for missing CLIs and one that upgrades a CLI older than its plugin.",
   "author": {
     "name": "leeguooooo"
   },
@@ -21,6 +21,7 @@
     "bitwarden-use",
     "chatgpt-use",
     "image-use",
-    "motion-use"
+    "motion-use",
+    "thermo-use"
   ]
 }

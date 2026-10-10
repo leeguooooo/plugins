@@ -10,7 +10,7 @@ PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
 os=$(uname -s); arch=$(uname -m)
 names="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs image-use"
 case "$os" in MINGW*|MSYS*|CYGWIN*) ;; *) names="$names motion-use" ;; esac  # motion-use: macOS and Linux only
-[ "$os" = Darwin ] && names="$names message-use paste-use"
+[ "$os" = Darwin ] && names="$names message-use paste-use thermo-use"
 # wechat-use's macOS installer stops with "Apple Silicon only" on Intel, so don't suggest it there.
 [ "$os-$arch" = Darwin-arm64 ] && names="$names wechat-use"
 

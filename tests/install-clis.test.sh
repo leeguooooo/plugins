@@ -40,7 +40,7 @@ has() { [ -x "$TMP/home/.local/bin/$1" ]; }
 
 fresh; run x86_64
 [ "$rc" = 0 ] || fail "Intel: exit $rc"
-for n in chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs image-use motion-use message-use paste-use; do
+for n in chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs image-use motion-use message-use paste-use thermo-use; do
   has "$n" || fail "Intel: $n not installed"
 done
 [ -f "$TMP/home/.agents/use-family/profile-use/SKILL.md" ] || fail "Intel: profile-use not installed"

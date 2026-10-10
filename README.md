@@ -60,7 +60,7 @@ curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-cli
 
 ```sh
 codex plugin marketplace add leeguooooo/plugins
-for plugin in use-family chrome-use cookie-use mail-use message-use paste-use wechat-use discord-use iphone-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use; do
+for plugin in use-family chrome-use cookie-use mail-use message-use paste-use thermo-use wechat-use discord-use iphone-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use; do
   codex plugin add "$plugin@leeguooooo-plugins" || break
 done
 ```
@@ -156,6 +156,14 @@ iMessage & SMS for AI agents through macOS Messages — read, search, watch and 
 Pastyx clipboard history for AI agents — list, search and read what you copied (text, links, code, images with recognised text, files), re-copy an old clip, or put text on the clipboard. Reads the app's local database read-only (no sign-in, works offline); secret-looking values are masked by default. macOS and Windows.
 
 **Claude Code:** `/plugin install paste-use@leeguooooo-plugins`
+
+---
+
+### [thermo-use](https://github.com/leeguooooo/thermo-use)
+
+How this Mac is doing, for AI agents — `thermo pulse --json` says why it is slow (load, memory pressure and swap, thermal throttling, and which program), plus temperatures, fans, power, battery and the disk space held by AI tools (old Claude Code / Codex / Gemini sessions, models, agent worktrees). The CLI ships inside the [Thermo](https://app.leeguoo.com/thermo) app and updates with it. macOS.
+
+**Claude Code:** `/plugin install thermo-use@leeguooooo-plugins`
 
 ---
 

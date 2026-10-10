@@ -34,7 +34,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -158,6 +158,22 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/paste-use",
+      "skills": [
+        "./"
+      ],
+      "strict": false
+    },
+    {
+      "name": "thermo-use",
+      "description": "How this Mac is doing, for AI agents — `thermo pulse --json` says why it is slow (load, memory pressure and swap, thermal throttling, which program), plus temperatures, fans, power, battery, and the disk space held by AI tools (old Claude Code / Codex / Gemini sessions, models, agent worktrees). The CLI of the Thermo app; reading is free, cleaning and fan control only when the user asks. macOS.",
+      "version": "0.1.0",
+      "category": "monitoring",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/leeguooooo/thermo-use.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/thermo-use",
       "skills": [
         "./"
       ],
