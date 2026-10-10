@@ -161,7 +161,7 @@ Pastyx clipboard history for AI agents — list, search and read what you copied
 
 ### [thermo-use](https://github.com/leeguooooo/thermo-use)
 
-How this Mac is doing, for AI agents — `thermo pulse --json` says why it is slow (load, memory pressure and swap, thermal throttling, and which program), plus temperatures, fans, power, battery and the disk space held by AI tools (old Claude Code / Codex / Gemini sessions, models, agent worktrees). The CLI ships inside the [Thermo](https://app.leeguoo.com/thermo) app and updates with it. macOS.
+How this Mac is doing, for AI agents — `thermo pulse --json` says why it is slow (load, memory pressure and swap, thermal throttling, which program), plus temperatures, fans, power, battery, and the disk space held by AI tools (old Claude Code / Codex / Gemini sessions, models, agent worktrees). The CLI of the Thermo app; reading is free, cleaning and fan control only when the user asks. macOS.
 
 **Claude Code:** `/plugin install thermo-use@leeguooooo-plugins`
 
