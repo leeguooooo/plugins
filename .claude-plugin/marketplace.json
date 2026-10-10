@@ -10,7 +10,7 @@
     {
       "name": "wrangler-accounts",
       "description": "Cloudflare Wrangler multi-account helper. AWS-style profiles for Claude Code with a guard hook that blocks raw wrangler (and Cloudflare cf) calls. 1.9.0 builds on wrangler's native profiles and can encrypt OAuth credentials in the OS keychain.",
-      "version": "1.9.1",
+      "version": "1.9.2",
       "category": "development",
       "source": {
         "source": "url",
