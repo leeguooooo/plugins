@@ -25,7 +25,7 @@ Each `*-use` does one thing well. This skill says which one to reach for, and ho
 | Teammates | `ocs` | The other AI agents: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN (`<address>@<peer>`). Message, wake, delegate, get notified when one goes idle. |
 | Second brain | `chatgpt-use` | The user's ChatGPT web subscription as an extra reviewer or planner. Built on chrome-use. |
 | | `image-use` | Image generation on the user's own subscriptions: ChatGPT web first, Codex fallback, optional Gemini. |
-| Make | `motion-use` | Promo and explainer videos from a JSON brief: zh/en, 16:9 and 9:16, timed to the user's own voiceover, rendered locally to MP4. |
+| Make | `motion-use` | Directed videos rendered locally to MP4: launch films, explainers, data stories, kinetic type, graphics over footage; zh/en, landscape/portrait/square, narration, cut to a song; checks the delivered file. |
 
 Pick by target:
 
@@ -38,11 +38,11 @@ Pick by target:
 
 ## Recipes
 
-**Make a promo or explainer video**
+**Make a video**
 1. Read the product's README or `--help` for real commands and facts; never invent them.
-2. `motion-use init <dir> --style promo|explainer`, then write the scenes into `brief.json`.
-3. Illustrations: generate with `image-use` and copy the file into `<dir>`; screenshots from whichever browser or screen tool the user already uses work too. Voiceover: the user's own recordings in `<dir>/voiceover/<lang>/<scene-id>.mp3`.
-4. `motion-use validate <dir>/brief.json`, then `motion-use still <dir>/brief.json` and look at the contact sheet, then `motion-use render <dir>/brief.json`. Upload nowhere unless the user asks. motion-use runs on macOS and Linux; it does not support Windows yet.
+2. `motion-use init <dir>` writes `film.json`, `composition/draw.js` and `DIRECTOR.md`; follow the motion-use skill for planning and drawing. Quick factual cards instead: `motion-use init <dir> --mode template --style explainer` and a `brief.json`.
+3. Material: screenshots and recordings from whichever browser or screen tool the user already uses go in full frame; illustrations from `image-use` are copied into `<dir>`. A song the user may use → `motion-use beats song.wav` prints the `music` line that starts the film on a downbeat. Narration is written per shot, then `motion-use voiceover <dir>`.
+4. `motion-use validate <dir>`, `motion-use still <dir> --allow-code` (contact sheet; `--beats 4` for one frame per bar), then `motion-use render <dir> --allow-code`; the report is measured on the delivered MP4. Upload nowhere unless the user asks. motion-use runs on macOS and Linux; it does not support Windows yet.
 
 **Sign up for a site**
 1. `chrome-use` opens the signup page. Check the real domain first.
