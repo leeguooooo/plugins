@@ -106,7 +106,7 @@
     {
       "name": "motion-use",
       "description": "Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, default narration, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -182,7 +182,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.18.16",
+      "version": "1.18.18",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -243,7 +243,7 @@
     {
       "name": "bitwarden-use",
       "description": "Bitwarden/Vaultwarden CLI with an ssh-agent-style background agent and FIDO2 passkey extraction — headless passkey logins, vault lookups, and a built-in SSH agent.",
-      "version": "0.9.1",
+      "version": "0.9.2",
       "category": "security",
       "source": {
         "source": "url",
