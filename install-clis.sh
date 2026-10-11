@@ -2,7 +2,8 @@
 # Install every *-use CLI this machine is missing, each through its own install.sh, in one go.
 #   curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-clis.sh | sh
 #   curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-clis.sh | sh -s -- mail-use ocs
-# With names, installs just those (iphone-use too, which needs an iPhone and isn't in the default set).
+# With names, installs just those (iphone-use and switch-use too, which need an iPhone or a homebrew
+# Switch and aren't in the default set).
 # Installed CLIs are left alone: `<name> upgrade`, or upgrade-use-family.sh, updates them.
 # The plugins / skills come from `/plugin install use-family@leeguooooo-plugins` or
 # install-use-family.sh; this only puts the CLIs on PATH. One failure doesn't stop the rest.

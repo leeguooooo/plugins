@@ -54,13 +54,13 @@ Then install every CLI this machine is missing in one go. It runs each use's own
 curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-clis.sh | sh
 ```
 
-`… | sh -s -- mail-use ocs` installs just those, including iphone-use, which isn't in the default set because it needs an iPhone.
+`… | sh -s -- mail-use ocs` installs just those, including iphone-use and switch-use, which aren't in the default set because they need an iPhone or a homebrew Switch.
 
 **Codex and the ChatGPT desktop app.** Codex doesn't install plugin dependencies, so `use-family` there brings in the routing skill alone and every `*-use` has to be added by name. To add the whole family:
 
 ```sh
 codex plugin marketplace add leeguooooo/plugins
-for plugin in use-family chrome-use cookie-use mail-use message-use paste-use thermo-use wechat-use discord-use iphone-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use; do
+for plugin in use-family chrome-use cookie-use mail-use message-use paste-use thermo-use wechat-use discord-use iphone-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use switch-use; do
   codex plugin add "$plugin@leeguooooo-plugins" || break
 done
 ```
@@ -156,6 +156,14 @@ iMessage & SMS for AI agents through macOS Messages — read, search, watch and 
 Pastyx clipboard history for AI agents — list, search and read what you copied (text, links, code, images with recognised text, files), re-copy an old clip, or put text on the clipboard. Reads the app's local database read-only (no sign-in, works offline); secret-looking values are masked by default. macOS and Windows.
 
 **Claude Code:** `/plugin install paste-use@leeguooooo-plugins`
+
+---
+
+### [switch-use](https://github.com/leeguooooo/switch-use)
+
+Drive a homebrew Nintendo Switch (Atmosphère + sys-botbase) from an AI agent over the LAN — read the on-screen text with touch points (macOS Vision OCR), tap a label, wait for text, press buttons and sticks, type, screenshot. Single Rust binary, no daemon.
+
+**Claude Code:** `/plugin install switch-use@leeguooooo-plugins`
 
 ---
 

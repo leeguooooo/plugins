@@ -16,8 +16,9 @@ mkdir -p "$BASE" "$SKILLS"
 USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use
 mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:.
 chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs message-use:. motion-use:.
-paste-use:. thermo-use:."
-# Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill).
+paste-use:. thermo-use:. switch-use:."
+# Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill;
+# switch-use needs a homebrew Switch, so it is installed only by name).
 CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use image-use"
 
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
