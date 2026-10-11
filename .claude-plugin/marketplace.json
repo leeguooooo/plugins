@@ -166,7 +166,7 @@
     {
       "name": "switch-use",
       "description": "Let AI agents drive a real Nintendo Switch (Atmosphère + sys-botbase) over the LAN — computer-use for the Switch: on-screen text with touch points (macOS Vision OCR), tap a label, wait for a screen, settled-screen observation, buttons, sticks, touch, typing, screenshots. 让 AI 操作任天堂 Switch。Single Rust binary, no daemon.",
-      "version": "0.2.1",
+      "version": "0.2.3",
       "category": "productivity",
       "source": {
         "source": "url",
