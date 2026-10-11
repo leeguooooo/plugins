@@ -161,7 +161,7 @@ Pastyx clipboard history for AI agents — list, search and read what you copied
 
 ### [switch-use](https://github.com/leeguooooo/switch-use)
 
-Drive a homebrew Nintendo Switch (Atmosphère + sys-botbase) from an AI agent over the LAN — read the on-screen text with touch points (macOS Vision OCR), tap a label, wait for text, press buttons and sticks, type, screenshot. Single Rust binary, no daemon.
+Let AI agents drive a real Nintendo Switch (Atmosphère + sys-botbase) over the LAN — computer-use for the Switch: on-screen text with touch points (macOS Vision OCR), tap a label, wait for a screen, settled-screen observation, buttons, sticks, touch, typing, screenshots. 让 AI 操作任天堂 Switch。Single Rust binary, no daemon.
 
 **Claude Code:** `/plugin install switch-use@leeguooooo-plugins`
 
