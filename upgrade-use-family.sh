@@ -6,7 +6,7 @@
 set -u
 BASE="${USE_FAMILY_DIR:-$HOME/.agents/use-family}"
 PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
-NAMES="chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs message-use paste-use motion-use switch-use"
+NAMES="android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs message-use paste-use motion-use switch-use"
 failed=""
 
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
