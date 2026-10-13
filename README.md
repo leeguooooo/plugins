@@ -111,19 +111,19 @@ Agent-friendly multi-account session manager — capture, store, list, switch, a
 
 ---
 
-### [android-use](https://github.com/leeguooooo/android-use)
-
-Agent control of Android apps through ADB: read the screen, tap, type Unicode, swipe and execute batches through CLI or MCP.
-
-**Claude Code:** `/plugin install android-use@leeguooooo-plugins`
-
-**CLI:** `curl -fsSL https://raw.githubusercontent.com/leeguooooo/android-use/main/install.sh | sh`
-
 ### [iphone-use](https://github.com/leeguooooo/iphone-use)
 
 Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.
 
 **Claude Code:** `/plugin install iphone-use@leeguooooo-plugins`
+
+---
+
+### [android-use](https://github.com/leeguooooo/android-use)
+
+Agent control of real Android devices: native Unicode input, screen reads, semantic waits and batch actions through CLI and MCP.
+
+**Claude Code:** `/plugin install android-use@leeguooooo-plugins`
 
 ---
 
