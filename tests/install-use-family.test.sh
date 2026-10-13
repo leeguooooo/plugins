@@ -13,7 +13,7 @@ cat > "$TMP/bin/git" <<'GIT'
 for dest; do :; done
 case "$*" in
   *clone*) mkdir -p "$dest/.git"; touch "$dest/SKILL.md"
-           for sub in chrome-use cookie-use iphone-use mail-use ocs; do mkdir -p "$dest/skills/$sub"; touch "$dest/skills/$sub/SKILL.md"; done
+           for sub in chrome-use cookie-use iphone-use android-use mail-use ocs; do mkdir -p "$dest/skills/$sub"; touch "$dest/skills/$sub/SKILL.md"; done
            mkdir -p "$dest/plugins/use-family/skills/use-family" ;;
 esac
 GIT
@@ -34,6 +34,8 @@ run() {  # run: the installer's stdout, with only $TMP/bin on PATH
 fail() { echo "FAIL: $1"; echo "$out"; exit 1; }
 
 out=$(run)
+echo "$out" | grep -qF "linked android-use" || fail "Android skill missing"
+echo "$out" | grep -qF "leeguooooo/android-use/main/install.sh | sh" || fail "Android installer hint missing"
 echo "$out" | grep -q '^CLIs not installed yet:.* image-use' || fail "image-use missing from the not-installed list"
 echo "$out" | grep -qF 'leeguooooo/image-use/main/install.sh | sh' || fail "no image-use installer line"
 echo "$out" | grep -qF 'leeguooooo/mail-use/main/install.sh | sh' || fail "generic install.sh hint lost"

@@ -34,7 +34,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
-      "version": "0.12.0",
+      "version": "0.13.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -84,6 +84,22 @@
       "homepage": "https://github.com/leeguooooo/iphone-use",
       "skills": [
         "./skills/iphone-use"
+      ],
+      "strict": false
+    },
+    {
+      "name": "android-use",
+      "description": "Agent control of real Android devices: native Unicode input, screen reads, semantic waits and batch actions through CLI and MCP.",
+      "version": "0.1.0",
+      "category": "development",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/leeguooooo/android-use.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/android-use",
+      "skills": [
+        "./skills/android-use"
       ],
       "strict": false
     },

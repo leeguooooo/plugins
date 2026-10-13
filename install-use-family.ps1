@@ -13,6 +13,7 @@ New-Item -ItemType Directory -Force -Path $Base, $Skills | Out-Null
 # <repo> = <skill directory inside the repo>; '.' means SKILL.md sits at the repo root.
 # Keep in step with .claude-plugin/marketplace.json.
 $Uses = [ordered]@{
+  'android-use' = 'skills/android-use'
   'chrome-use'  = 'skills/chrome-use'
   'mail-use'    = 'skills/mail-use'
   'discord-use' = '.'
@@ -58,7 +59,7 @@ foreach ($name in $Uses.Keys) {
 
 ''
 "Skills are in $Skills. Start a new Codex session to pick them up."
-$missing = @('chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs', 'paste-use', 'image-use') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
+$missing = @('android-use', 'chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs', 'paste-use', 'image-use') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
 if ($missing) {
   "CLIs not installed yet: $($missing -join ', '). See each repo's README for the Windows install."
   # image-use has no installer: the CLI is a single Python file at the root of its checkout.

@@ -13,13 +13,13 @@ mkdir -p "$BASE" "$SKILLS"
 # <name>[=<repo>]:<skill directory inside the repo>; "." means SKILL.md sits at the repo root.
 # The repo defaults to the name; ocs lives in leeguooooo/open-cross-session.
 # Keep in step with .claude-plugin/marketplace.json.
-USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use
+USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use android-use:skills/android-use
 mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:.
 chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs message-use:. motion-use:.
 paste-use:. thermo-use:. switch-use:."
 # Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill;
 # switch-use needs a homebrew Switch, so it is installed only by name).
-CLIS="chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use image-use"
+CLIS="android-use chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use image-use"
 
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
   case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac

@@ -60,7 +60,7 @@ curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-cli
 
 ```sh
 codex plugin marketplace add leeguooooo/plugins
-for plugin in use-family chrome-use cookie-use mail-use message-use paste-use thermo-use wechat-use discord-use iphone-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use switch-use; do
+for plugin in use-family chrome-use cookie-use mail-use message-use paste-use thermo-use wechat-use discord-use iphone-use android-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use switch-use; do
   codex plugin add "$plugin@leeguooooo-plugins" || break
 done
 ```
@@ -110,6 +110,14 @@ Agent-friendly multi-account session manager — capture, store, list, switch, a
 **Claude Code:** `/plugin install cookie-use@leeguooooo-plugins`
 
 ---
+
+### [android-use](https://github.com/leeguooooo/android-use)
+
+Agent control of Android apps through ADB: read the screen, tap, type Unicode, swipe and execute batches through CLI or MCP.
+
+**Claude Code:** `/plugin install android-use@leeguooooo-plugins`
+
+**CLI:** `curl -fsSL https://raw.githubusercontent.com/leeguooooo/android-use/main/install.sh | sh`
 
 ### [iphone-use](https://github.com/leeguooooo/iphone-use)
 
