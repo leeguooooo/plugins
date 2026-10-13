@@ -101,7 +101,8 @@
       "skills": [
         "./skills/android-use"
       ],
-      "strict": false
+      "strict": false,
+      "license": "PolyForm-Shield-1.0.0"
     },
     {
       "name": "image-use",
