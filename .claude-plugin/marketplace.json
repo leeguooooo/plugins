@@ -135,7 +135,7 @@
     {
       "name": "mail-use",
       "description": "Email for AI agents — read, search, send and triage Gmail / QQ / 163 / any IMAP from the CLI or MCP. Part of the *-use family.",
-      "version": "3.8.2",
+      "version": "4.0.0",
       "category": "productivity",
       "source": {
         "source": "url",
