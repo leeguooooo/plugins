@@ -90,7 +90,7 @@
     {
       "name": "android-use",
       "description": "Agent control of real Android devices: native Unicode input, screen reads, semantic waits and batch actions through CLI and MCP.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "development",
       "source": {
         "source": "url",
