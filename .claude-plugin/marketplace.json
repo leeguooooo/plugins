@@ -276,7 +276,7 @@
     {
       "name": "sflow",
       "description": "Session Flow — run one JSON workflow across separate Claude Code, Codex, Pi and Antigravity (agy) sessions: each step in its own native TUI, a dependency graph with parallel steps, results passed and hash-checked over OCS, never auto-committed or resent. Trust and approval prompts are asked in your conversation and answered with your choice. macOS/Linux; needs tmux and ocs.",
-      "version": "0.2.0",
+      "version": "0.2.4",
       "category": "productivity",
       "source": {
         "source": "url",
