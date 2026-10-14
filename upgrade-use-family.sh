@@ -6,16 +6,16 @@
 set -u
 BASE="${USE_FAMILY_DIR:-$HOME/.agents/use-family}"
 PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
-NAMES="android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs message-use paste-use motion-use switch-use"
+NAMES="android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use switch-use"
 failed=""
 
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
-  case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac
+  case "$1" in ocs) echo open-cross-session ;; sflow) echo session-flow ;; *) echo "$1" ;; esac
 }
 
 has_upgrade() {  # the CLI lists an `upgrade` subcommand in its help (text, or JSON when piped, e.g. mail-use);
-  # usage lines may repeat the program name ("  ocs upgrade [--check]")
-  "$1" --help 2>&1 | grep -qE "^[[:space:]]+($1[[:space:]]+)?upgrade([[:space:]]|\$)|\"name\":[[:space:]]*\"upgrade\""
+  # usage lines may repeat the program name ("  ocs upgrade [--check]", or unindented "sflow upgrade")
+  "$1" --help 2>&1 | grep -qE "^([[:space:]]*$1[[:space:]]+|[[:space:]]+)upgrade([[:space:]]|\$)|\"name\":[[:space:]]*\"upgrade\""
 }
 
 echo "== CLIs"

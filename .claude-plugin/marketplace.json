@@ -34,7 +34,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
-      "version": "0.13.0",
+      "version": "0.14.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -270,6 +270,22 @@
       "homepage": "https://github.com/leeguooooo/open-cross-session",
       "skills": [
         "./skills/ocs"
+      ],
+      "strict": false
+    },
+    {
+      "name": "sflow",
+      "description": "Session Flow — run one JSON workflow across separate Claude Code, Codex, Pi and Antigravity (agy) sessions: each step in its own native TUI, a dependency graph with parallel steps, results passed and hash-checked over OCS, never auto-committed or resent. Trust and approval prompts are asked in your conversation and answered with your choice. macOS/Linux; needs tmux and ocs.",
+      "version": "0.1.7",
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/leeguooooo/session-flow.git",
+        "ref": "main"
+      },
+      "homepage": "https://github.com/leeguooooo/session-flow",
+      "skills": [
+        "./skills/sflow"
       ],
       "strict": false
     },

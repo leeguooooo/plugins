@@ -11,7 +11,7 @@ PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
 plugins="$HOME/.claude/plugins/installed_plugins.json"
 [ -f "$plugins" ] && command -v python3 >/dev/null 2>&1 || exit 0
 
-names="android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use chatgpt-use memory-use ocs message-use image-use paste-use motion-use switch-use"
+names="android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use chatgpt-use memory-use ocs sflow message-use image-use paste-use motion-use switch-use"
 
 # "<name> <plugin version>" for each installed plugin of the family (newest install per name)
 installed=$(python3 - "$plugins" $names <<'EOF'
@@ -43,9 +43,9 @@ cli_version() {
     grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1
 }
 has_upgrade() {  # same test as upgrade-use-family.sh
-  "$1" --help 2>&1 | grep -qE "^[[:space:]]+($1[[:space:]]+)?upgrade([[:space:]]|\$)|\"name\":[[:space:]]*\"upgrade\""
+  "$1" --help 2>&1 | grep -qE "^([[:space:]]*$1[[:space:]]+|[[:space:]]+)upgrade([[:space:]]|\$)|\"name\":[[:space:]]*\"upgrade\""
 }
-repo_of() { case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac; }
+repo_of() { case "$1" in ocs) echo open-cross-session ;; sflow) echo session-flow ;; *) echo "$1" ;; esac; }
 # Bound each upgrade when a timeout command exists (coreutils); the hook has its own limit too.
 bounded() { if command -v timeout >/dev/null 2>&1; then timeout 240 "$@"; else "$@"; fi; }
 

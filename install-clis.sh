@@ -14,13 +14,13 @@ RAW="${USE_FAMILY_RAW:-https://raw.githubusercontent.com/leeguooooo}"
 # Keep in step with plugins/use-family/scripts/doctor.sh.
 os=$(uname -s); arch=$(uname -m)
 names="android-use chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs image-use profile-use"
-case "$os" in MINGW*|MSYS*|CYGWIN*) ;; *) names="$names motion-use" ;; esac  # motion-use: macOS and Linux only
+case "$os" in MINGW*|MSYS*|CYGWIN*) ;; *) names="$names motion-use sflow" ;; esac  # motion-use, sflow: macOS and Linux only
 [ "$os" = Darwin ] && names="$names message-use paste-use thermo-use"
 # wechat-use's macOS installer stops with "Apple Silicon only" on Intel.
 [ "$os-$arch" = Darwin-arm64 ] && names="$names wechat-use"
 [ $# -gt 0 ] && names="$*"
 
-repo_of() { case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac; }
+repo_of() { case "$1" in ocs) echo open-cross-session ;; sflow) echo session-flow ;; *) echo "$1" ;; esac; }
 installed() {  # installed <name>: already set up here
   case "$1" in
     # profile-use is a skill with a script, not a CLI; iphone-use is a daemon with an app.
