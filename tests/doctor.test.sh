@@ -26,6 +26,7 @@ echo "$out" | grep -qF 'leeguooooo/discord-use/main/install.sh | sh' || fail "In
 echo "$out" | grep -q 'not installed:.* image-use' || fail "image-use not checked"
 echo "$out" | grep -qF 'leeguooooo/image-use/main/install.sh | sh' || fail "no image-use installer line"
 echo "$out" | grep -qF 'leeguooooo/open-cross-session/main/install.sh | sh' || fail "ocs not mapped to its repo"
+echo "$out" | grep -qF 'leeguooooo/session-flow/main/install.sh | sh' || fail "sflow not mapped to its repo"
 
 out=$(run arm64)
 echo "$out" | grep -q 'not installed:.* wechat-use' || fail "Apple Silicon: wechat-use not checked"

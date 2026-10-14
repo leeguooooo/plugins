@@ -37,7 +37,7 @@ The plugin only carries the slash commands; the actual statusLine renderer is th
 
 ## The `*-use` family
 
-Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo, the clipboard history — and talk to each other (`ocs`, from [open-cross-session](https://github.com/leeguooooo/open-cross-session)). Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
+Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo, the clipboard history — and talk to each other (`ocs`, from [open-cross-session](https://github.com/leeguooooo/open-cross-session)) or work through one multi-step workflow together (`sflow`, from [session-flow](https://github.com/leeguooooo/session-flow)). Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
 
 ## The *-use family in one install
 
@@ -60,7 +60,7 @@ curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-cli
 
 ```sh
 codex plugin marketplace add leeguooooo/plugins
-for plugin in use-family chrome-use cookie-use mail-use message-use paste-use thermo-use wechat-use discord-use iphone-use android-use profile-use memory-use ocs bitwarden-use chatgpt-use image-use motion-use switch-use; do
+for plugin in use-family chrome-use cookie-use mail-use message-use paste-use thermo-use wechat-use discord-use iphone-use android-use profile-use memory-use ocs sflow bitwarden-use chatgpt-use image-use motion-use switch-use; do
   codex plugin add "$plugin@leeguooooo-plugins" || break
 done
 ```
@@ -212,6 +212,14 @@ Portable long-term memory for AI coding agents — Markdown notes in a private g
 open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.
 
 **Claude Code:** `/plugin install ocs@leeguooooo-plugins`
+
+---
+
+### [sflow](https://github.com/leeguooooo/session-flow)
+
+Session Flow — run one JSON workflow across separate Claude Code, Codex, Pi and Antigravity (agy) sessions: each step in its own native TUI, a dependency graph with parallel steps, results passed and hash-checked over OCS, never auto-committed or resent. Trust and approval prompts are asked in your conversation and answered with your choice. macOS/Linux; needs tmux and ocs.
+
+**Claude Code:** `/plugin install sflow@leeguooooo-plugins`
 
 ---
 

@@ -18,7 +18,7 @@ out=""; url=""
 while [ $# -gt 0 ]; do case "$1" in -o) out=$2; shift 2 ;; -*) shift ;; *) url=$1; shift ;; esac; done
 repo=${url#*/leeguooooo/}; repo=${repo%%/*}
 [ "$repo" = "${FAIL_REPO:-}" ] && exit 22
-name=$repo; [ "$repo" = open-cross-session ] && name=ocs
+name=$repo; [ "$repo" = open-cross-session ] && name=ocs; [ "$repo" = session-flow ] && name=sflow
 if [ "$name" = profile-use ]; then
   printf 'mkdir -p "$HOME/.agents/use-family/profile-use"; touch "$HOME/.agents/use-family/profile-use/SKILL.md"\n' > "$out"
 else
@@ -40,7 +40,7 @@ has() { [ -x "$TMP/home/.local/bin/$1" ]; }
 
 fresh; run x86_64
 [ "$rc" = 0 ] || fail "Intel: exit $rc"
-for n in android-use chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs image-use motion-use message-use paste-use thermo-use; do
+for n in android-use chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs sflow image-use motion-use message-use paste-use thermo-use; do
   has "$n" || fail "Intel: $n not installed"
 done
 [ -f "$TMP/home/.agents/use-family/profile-use/SKILL.md" ] || fail "Intel: profile-use not installed"

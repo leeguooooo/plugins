@@ -11,20 +11,22 @@ command -v git >/dev/null 2>&1 || { echo "error: git is required" >&2; exit 1; }
 mkdir -p "$BASE" "$SKILLS"
 
 # <name>[=<repo>]:<skill directory inside the repo>; "." means SKILL.md sits at the repo root.
-# The repo defaults to the name; ocs lives in leeguooooo/open-cross-session.
+# The repo defaults to the name; ocs lives in leeguooooo/open-cross-session, sflow in leeguooooo/session-flow.
 # Keep in step with .claude-plugin/marketplace.json.
 USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use android-use:skills/android-use
 mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:.
-chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs message-use:. motion-use:.
+chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs sflow=session-flow:skills/sflow message-use:. motion-use:.
 paste-use:. thermo-use:. switch-use:."
 # Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill;
 # switch-use needs a homebrew Switch, so it is installed only by name).
 CLIS="android-use chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use image-use"
 
 repo_of() {  # repo_of <name>: the GitHub repo a use lives in
-  case "$1" in ocs) echo open-cross-session ;; *) echo "$1" ;; esac
+  case "$1" in ocs) echo open-cross-session ;; sflow) echo session-flow ;; *) echo "$1" ;; esac
 }
 [ "$(uname -s)" = Darwin ] && CLIS="$CLIS message-use paste-use thermo-use"
+# sflow drives tmux sessions: macOS and Linux.
+case "$(uname -s)" in Darwin|Linux) CLIS="$CLIS sflow" ;; esac
 # wechat-use's macOS installer stops with "Apple Silicon only" on Intel, so don't suggest it there.
 [ "$(uname -s)-$(uname -m)" = Darwin-arm64 ] && CLIS="$CLIS wechat-use"
 
