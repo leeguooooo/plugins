@@ -177,7 +177,7 @@ Let AI agents drive a real Nintendo Switch (Atmosphère + sys-botbase) over the 
 
 ### [thermo-use](https://github.com/leeguooooo/thermo-use)
 
-How this Mac is doing, and fixing it, for AI agents — performance, temperatures, fans, battery, disk cleanup and agent diagnostics through the Thermo CLI. Also manages browser-tab overload: preview and create native Chrome groups, opt in to continuous organization, save and close reviewed background tabs, restore saved batches and undo grouping. Protected and agent tabs stay untouched. macOS.
+How this Mac is doing, and fixing it, for AI agents — performance, temperatures, fans, battery, disk cleanup and agent diagnostics through the Thermo CLI. Undo cleanups, cleanup whitelist, keep a closed laptop awake, app uninstall/leftovers, startup items and Homebrew app updates. Also manages browser-tab overload: preview and create native Chrome groups, opt in to continuous organization, save and close reviewed background tabs, restore saved batches and undo grouping. Protected and agent tabs stay untouched. macOS.
 
 **Claude Code:** `/plugin install thermo-use@leeguooooo-plugins`
 
