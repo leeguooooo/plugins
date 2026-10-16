@@ -42,7 +42,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.231",
+      "version": "1.5.232",
       "category": "development",
       "source": {
         "source": "url",
@@ -276,7 +276,7 @@
     {
       "name": "sflow",
       "description": "Session Flow — run one JSON workflow across separate Claude Code, Codex, Pi and Antigravity (agy) sessions: each step in its own native TUI, a dependency graph with parallel steps, results passed and hash-checked over OCS, never auto-committed or resent. Trust and approval prompts are asked in your conversation and answered with your choice. macOS/Linux; needs tmux and ocs.",
-      "version": "0.7.1",
+      "version": "0.8.0",
       "category": "productivity",
       "source": {
         "source": "url",
