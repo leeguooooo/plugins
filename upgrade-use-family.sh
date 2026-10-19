@@ -35,7 +35,14 @@ if [ -d "$BASE" ]; then
   for dir in "$BASE"/*/; do
     [ -d "$dir.git" ] || continue
     name=$(basename "$dir")
-    if git -C "$dir" pull -q --ff-only; then echo "-- $name updated"; else echo "-- $name: not updated (local changes?)"; failed="$failed $name-skill"; fi
+    if git -C "$dir" pull -q --ff-only; then echo "-- $name updated"; continue; fi
+    failed="$failed $name-skill"
+    if [ -n "$(git -C "$dir" status --porcelain 2>/dev/null)" ]; then
+      echo "-- $name: not updated, $dir has local changes; commit or stash them and re-run"
+    else
+      echo "-- $name: not updated (network, or its history no longer fast-forwards to origin)"
+      echo "   if the history was rewritten, back the checkout up and re-run install-use-family.sh:  mv \"${dir%/}\" \"${dir%/}.bak\""
+    fi
   done
 fi
 

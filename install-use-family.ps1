@@ -27,13 +27,23 @@ $Uses = [ordered]@{
 # Uses whose repo name differs from the use name.
 $Repos = @{ 'ocs' = 'open-cross-session' }
 
+$Failed = @()
+# A failure is reported and recorded, never fixed by force.
 function Get-Repo([string]$Repo, [string]$Dir) {
-  if (Test-Path (Join-Path $Dir '.git')) {
-    git -C $Dir pull -q --ff-only
-    if ($LASTEXITCODE) { Write-Warning "$Repo not updated (local changes?)" }
-  } else {
+  if (-not (Test-Path (Join-Path $Dir '.git'))) {
     git clone -q --depth 1 "https://github.com/leeguooooo/$Repo.git" $Dir
-    if ($LASTEXITCODE) { throw "clone failed: $Repo" }
+    if ($LASTEXITCODE) { Write-Warning "${Repo}: clone failed"; $script:Failed += $Repo }
+    return
+  }
+  git -C $Dir fetch -q
+  if ($LASTEXITCODE) { Write-Warning "${Repo}: not updated, fetch failed (network?)"; $script:Failed += $Repo; return }
+  git -C $Dir merge -q --ff-only '@{u}'
+  if (-not $LASTEXITCODE) { return }
+  $script:Failed += $Repo
+  if (git -C $Dir status --porcelain) {
+    Write-Warning "${Repo}: not updated, $Dir has local changes; commit or stash them and re-run"
+  } else {
+    Write-Warning "${Repo}: not updated, its history no longer fast-forwards to origin (upstream was rewritten). Your checkout is untouched; to recover, back it up and re-run:  Rename-Item `"$Dir`" `"$Dir.bak`""
   }
 }
 
@@ -48,11 +58,12 @@ function Add-SkillLink([string]$Target, [string]$Name) {
 }
 
 Get-Repo 'plugins' (Join-Path $Base 'plugins')
-Add-SkillLink (Join-Path $Base 'plugins\plugins\use-family\skills\use-family') 'use-family'
+if (Test-Path (Join-Path $Base 'plugins\.git')) { Add-SkillLink (Join-Path $Base 'plugins\plugins\use-family\skills\use-family') 'use-family' }
 
 foreach ($name in $Uses.Keys) {
   $dir = Join-Path $Base $name
   Get-Repo $(if ($Repos[$name]) { $Repos[$name] } else { $name }) $dir
+  if (-not (Test-Path (Join-Path $dir '.git'))) { continue }
   $target = if ($Uses[$name] -eq '.') { $dir } else { Join-Path $dir $Uses[$name] }
   if (Test-Path (Join-Path $target 'SKILL.md')) { Add-SkillLink $target $name } else { Write-Warning "$name has no SKILL.md at $($Uses[$name])" }
 }
@@ -65,3 +76,5 @@ if ($missing) {
   # image-use has no installer: the CLI is a single Python file at the root of its checkout.
   if ($missing -contains 'image-use') { "  image-use: run it as  py `"$(Join-Path $Base 'image-use\image-use')`"" }
 }
+# throw rather than exit: under `irm | iex`, exit would close the caller's PowerShell window.
+if ($Failed) { throw "Not updated: $($Failed -join ', ') (each one's reason is above; their old skills stay linked)" }

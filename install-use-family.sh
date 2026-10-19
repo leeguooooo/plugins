@@ -30,11 +30,22 @@ case "$(uname -s)" in Darwin|Linux) CLIS="$CLIS sflow" ;; esac
 # wechat-use's macOS installer stops with "Apple Silicon only" on Intel, so don't suggest it there.
 [ "$(uname -s)-$(uname -m)" = Darwin-arm64 ] && CLIS="$CLIS wechat-use"
 
-fetch() {  # fetch <repo> <dir>
-  if [ -d "$2/.git" ]; then
-    git -C "$2" pull -q --ff-only || echo "warn   $1: not updated (local changes?)"
+failed=""
+fetch() {  # fetch <repo> <dir>; a failure is reported and recorded, never fixed by force
+  if [ ! -d "$2/.git" ]; then
+    git clone -q --depth 1 "https://github.com/leeguooooo/$1.git" "$2" && return
+    echo "warn   $1: clone failed"; failed="$failed $1"; return
+  fi
+  if ! git -C "$2" fetch -q; then
+    echo "warn   $1: not updated, fetch failed (network?)"; failed="$failed $1"; return
+  fi
+  git -C "$2" merge -q --ff-only '@{u}' && return
+  failed="$failed $1"
+  if [ -n "$(git -C "$2" status --porcelain 2>/dev/null)" ]; then
+    echo "warn   $1: not updated, $2 has local changes; commit or stash them and re-run"
   else
-    git clone -q --depth 1 "https://github.com/leeguooooo/$1.git" "$2"
+    echo "warn   $1: not updated, its history no longer fast-forwards to origin (upstream was rewritten)"
+    echo "       your checkout is untouched; to recover, back it up and re-run:  mv \"$2\" \"$2.bak\""
   fi
 }
 
@@ -54,11 +65,12 @@ link() {  # link <target dir> <skill name>; never replaces a real directory or y
 }
 
 fetch plugins "$BASE/plugins"
-link "$BASE/plugins/plugins/use-family/skills/use-family" use-family
+[ -d "$BASE/plugins/.git" ] && link "$BASE/plugins/plugins/use-family/skills/use-family" use-family
 
 for entry in $USES; do
   head=${entry%%:*}; sub=${entry#*:}; name=${head%%=*}
   fetch "$(repo_of "$name")" "$BASE/$name"
+  [ -d "$BASE/$name/.git" ] || continue
   target="$BASE/$name"; [ "$sub" = . ] || target="$target/$sub"
   if [ -f "$target/SKILL.md" ]; then link "$target" "$name"; else echo "warn   $name: no SKILL.md at $sub"; fi
 done
@@ -75,4 +87,9 @@ if [ -n "$missing" ]; then
   for name in $missing; do
     echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh"
   done
+fi
+if [ -n "$failed" ]; then
+  echo
+  echo "Not updated:$failed  (each one's reason is above; their old skills stay linked)"
+  exit 1
 fi
