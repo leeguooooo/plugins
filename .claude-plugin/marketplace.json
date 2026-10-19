@@ -74,7 +74,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.19.2",
+      "version": "0.19.3",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -260,7 +260,7 @@
     {
       "name": "ocs",
       "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
-      "version": "0.9.2",
+      "version": "0.9.3",
       "category": "productivity",
       "source": {
         "source": "url",
