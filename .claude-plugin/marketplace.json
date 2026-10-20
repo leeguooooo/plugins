@@ -98,10 +98,7 @@
         "ref": "main"
       },
       "homepage": "https://github.com/leeguooooo/android-use",
-      "skills": [
-        "./skills/android-use"
-      ],
-      "strict": false,
+      "strict": true,
       "license": "PolyForm-Shield-1.0.0"
     },
     {
