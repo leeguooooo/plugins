@@ -203,7 +203,7 @@ jobs:
             if ! echo "$listed" | grep -qx "$repo"; then
               title="Add $repo to the marketplace"
               if [ -z "$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" --json number -q '.[0].number')" ]; then
-                gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body "$(printf 'New public \`*-use\` repo detected: https://github.com/leeguooooo/%s\n\nChecklist:\n- [ ] Repo has a SKILL.md (root, or skills/<name>/)\n- [ ] Add a strict:false entry to .claude-plugin/marketplace.json (version + skills path)\n- [ ] README section regenerates automatically on the next maintenance run\n' "$repo")"
+                gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body "$(printf 'New public \`*-use\` repo detected: https://github.com/leeguooooo/%s\n\nChecklist:\n- [ ] Repo has a SKILL.md (root, or skills/<name>/)\n- [ ] Add an entry to .claude-plugin/marketplace.json with the version. If the repo has .claude-plugin/plugin.json, set strict:true and leave skills out (plugin.json defines them; declaring both stops it loading). Otherwise set strict:false with the skills path\n- [ ] README section regenerates automatically on the next maintenance run\n' "$repo")"
                 echo "opened issue: $title"
               else
                 echo "issue already open: $title"
