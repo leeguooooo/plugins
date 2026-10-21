@@ -212,7 +212,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.19.0",
+      "version": "1.19.1",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -241,7 +241,7 @@
     {
       "name": "memory-use",
       "description": "Portable long-term memory for AI coding agents — Markdown notes in a private git repo you own. Recall before work, write back after, background autosync, secret-scan hook, one-line new-computer setup.",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "category": "productivity",
       "source": {
         "source": "url",
