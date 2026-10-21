@@ -21,7 +21,7 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.1'
+VERSION = '0.15.2'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 ALIASES = {'thermo-use':['thermo-use','thermo'], 'bitwarden-use':['bitwarden-use','bwu']}
@@ -39,6 +39,138 @@ BASE = setting('USE_FAMILY_DIR',HOME/'.agents/use-family')
 CONFIG = STATE/'config.json'
 INSTALL = setting('USE_MANAGER_HOME',HOME/'.local/share/use-family')
 BIN = setting('USE_MANAGER_BIN',HOME/'.local/bin')
+
+
+def choose_language(explicit=None):
+    value=explicit or os.environ.get('USE_LANG') or 'auto'
+    if value=='auto':
+        locale=next((os.environ[k] for k in ('LC_ALL','LC_MESSAGES','LANG') if os.environ.get(k)), '')
+        if locale.split('.')[0] in ('C','POSIX'):return 'en'
+        value=os.environ.get('LANGUAGE') or locale or 'en'
+    return 'zh' if value.lower().startswith('zh') else 'en'
+
+
+UI_LANG=choose_language()
+TEXT={
+    'description':('Upgrade installed use tools and plugins.','升级已安装的 use 工具和插件。'),
+    'scan':('Reading installed tools…','读取已安装的工具…'),
+    'copies':('Checking skill copies…','核对技能副本…'),
+    'check_tool':('Checking {name}…','检查 {name}…'),
+    'upgrade_tool':('Checking and upgrading {name}…','检查并升级 {name}…'),
+    'skill_progress':('Updating skill: {name}…','更新技能：{name}…'),
+    'codex_progress':('Updating Codex plugins: {name}…','更新 Codex 插件：{name}…'),
+    'claude_progress':('Updating Claude plugin: {name}…','更新 Claude 插件：{name}…'),
+    'verify':('Verifying results and retained skill copies…','核对升级结果和保留的技能副本…'),
+    'not_due':('The next automatic upgrade is not due yet.','尚未到下次自动升级时间。'),
+    'disabled':('Automatic upgrades are disabled or suppressed by the environment.','自动升级未启用或已被环境设置暂停。'),
+    'checked':('Checked {count} tools','已检查 {count} 个工具'),
+    'updated':('{count} updated','{count} 个已更新'),
+    'available':('{count} updates available','{count} 个可更新'),
+    'failed':('{count} failed','{count} 个失败'),
+    'waiting':('{count} awaiting verification','{count} 个等待确认'),
+    'deferred':('{count} deferred','{count} 个暂缓'),
+    'manual':('{count} need review','{count} 个需检查'),
+    'no_updates':('No updates needed','暂无更新'),
+    'preserved':('Kept {copies} skill copies for {tools} tools; they do not match a known owner snapshot:','保留 {tools} 个工具的 {copies} 份技能副本，未确认与原版一致，未覆盖：'),
+    'details':('Details: {command}; log: {path}','详情：{command}；日志：{path}'),
+    'diverged_tip':('Review local commits before resolving the Git divergence.','Git 分叉需先检查本地提交后再处理。'),
+    'new_session':('Plugin updates take effect in a new session.','插件更新在新会话中生效。'),
+    'full_details':('Full details:','完整明细：'),
+    'no_report':('No upgrade report yet; run use upgrade first','尚无升级报告，请先运行 use upgrade'),
+    'fallback_reason':('Further inspection is required','需要进一步检查'),
+    'failed_reason':('Command failed; see the private log','命令失败，详见私有日志'),
+    'rate_group':('GitHub version checks are rate limited; {count} CLI upgrades deferred:','GitHub 版本检查被限流，暂缓 {count} 个 CLI 升级：'),
+    'rate_tip':('Installed versions were preserved. Retry after GitHub resets the limit.','已保留安装版本，等待 GitHub 限额恢复后再试。'),
+    'blocked_group':('Remote version checks unavailable for {count} CLIs:','{count} 个 CLI 的远端版本检查不可用：'),
+    'cli':('CLI','CLI'),'app':('App','App'),'manager':('manager','管理器'),
+    'plugin':('Claude plugin','Claude 插件'),'codex-plugin':('Codex plugin','Codex 插件'),
+    'skill':('skill','技能'),'marketplace':('marketplace','插件市场'),
+    'status_updated':('updated','已更新'),'status_available':('update available','可更新'),
+    'status_current':('up to date','已是最新'),'status_completed':('completed','已完成'),
+    'status_failed':('failed','失败'),'status_manual':('retained; review required','已保留，需检查'),
+    'status_unverified':('not verified','未确认'),'status_pending':('pending','等待完成'),
+    'status_owner-managed':('installer managed','由安装器维护'),'status_installed':('installed','已安装'),
+    'help':('show this help message and exit','显示帮助并退出'),
+    'help_version':('show the manager version and exit','显示管理器版本并退出'),
+    'help_lang':('output language (default: USE_LANG or terminal locale)','输出语言（默认跟随 USE_LANG 或终端语言）'),
+    'help_install':('install the manager without installing missing family tools','安装管理器，不补装其他家族工具'),
+    'help_local':('install from this trusted checkout or plugin','从这个可信工作区或插件安装'),
+    'help_auto_flag':('enable daily automatic upgrades after installation','安装后开启每日自动升级'),
+    'help_upgrade':('upgrade installed family CLIs, skills and plugins','升级已安装的家族 CLI、技能和插件'),
+    'help_names':('optional family members; default: all installed members','可选的成员名称，默认处理所有已安装成员'),
+    'help_check':('check versions without running upgrades','仅检查版本，不执行升级'),
+    'help_json':('write stable machine-readable JSON','输出字段稳定的机器可读 JSON'),
+    'help_verbose':('show every channel result and preserved path','显示各渠道结果和保留目录'),
+    'help_report':('read the last result without running another upgrade','查看上次结果，不重新执行升级'),
+    'help_status':('show installed versions and recorded state as JSON','以 JSON 显示已安装版本和记录状态'),
+    'help_auto':('enable, disable or inspect daily background upgrades','开启、关闭或查看每日后台升级'),
+    'help_hours':('minimum hours between automatic attempts (default: 24)','自动升级的最短间隔小时数（默认 24）'),
+    'help_action':('enable, disable or status','enable 开启，disable 关闭，status 查看'),
+    'error':('Error: {message}','错误：{message}'),
+}
+
+
+def tr(key,**values):
+    text=TEXT[key][UI_LANG=='zh'].format(**values)
+    if UI_LANG=='en':
+        if values.get('count')==1:
+            for plural,singular in (('tools','tool'),('updates available','update available'),('need review','needs review'),('CLI upgrades','CLI upgrade'),('CLIs','CLI')):text=text.replace(plural,singular)
+        if values.get('copies')==1:text=text.replace('skill copies','skill copy')
+        if values.get('tools')==1:text=text.replace('tools;','tool;')
+    return text
+
+
+class Parser(argparse.ArgumentParser):
+    def __init__(self,*args,**kwargs):
+        kwargs['add_help']=False
+        super().__init__(*args,**kwargs)
+        self.add_argument('-h','--help',action='help',help=tr('help'))
+        if UI_LANG=='zh':self._positionals.title='命令和参数';self._optionals.title='选项'
+    def format_usage(self):return super().format_usage().replace('usage:', '用法:' if UI_LANG=='zh' else 'usage:')
+    def format_help(self):return super().format_help().replace('usage:', '用法:' if UI_LANG=='zh' else 'usage:')
+    def error(self,message):
+        self.print_usage(sys.stderr)
+        self.exit(2,tr('error',message=human_error(message))+'\n')
+
+
+def human_error(message):
+    if UI_LANG=='en':return message
+    translations={
+        'No upgrade report yet; run use upgrade first':tr('no_report'),
+        'No stable use manager release found':'未找到稳定版管理器发布包',
+        'Use archive checksum mismatch; nothing installed':'发布包校验失败，未安装任何内容',
+        'Use archive version/owner mismatch':'发布包版本或来源不符',
+        'Cannot read installed Claude plugins; no plugin changes attempted':'无法读取 Claude 已安装插件，未修改插件',
+        'Unsupported Codex plugin inventory schema':'无法识别 Codex 插件清单格式',
+        'Invalid scheduler context':'后台任务上下文无效',
+        'Invalid scheduler environment':'后台任务环境无效',
+        'Cannot read the use release metadata':'无法读取管理器发布信息',
+        'Use release is missing its archive/checksum':'发布包缺少文件或校验值',
+        'Invalid use archive member':'发布包内容格式无效',
+        'Another unmanaged use command is already on PATH; left it untouched':'PATH 中已有其他来源的 use 命令，未覆盖',
+        'Refusing to replace an unmanaged use executable: ':'已保留非本管理器维护的程序：',
+        'Codex plugin inventory unavailable; native refresh not attempted':'无法读取 Codex 插件清单，未执行刷新',
+        'Another use upgrade is running; no second upgrade started':'已有升级任务正在运行，未重复启动',
+        'Thermo appcast has no release version':'Thermo 更新源未提供版本',
+        'Unknown family member: ':'未知的家族成员：',
+        'Install use before enabling a persistent schedule':'请先安装 use，再开启后台任务',
+        'Scheduler context requires absolute manager paths':'后台任务的管理器路径必须是绝对路径',
+        'Thermo App needs its owner update path; CLI is unavailable':'Thermo App 需要官方更新入口，但未找到 CLI',
+        'Registered scheduler belongs to another installation; disable it there before changing paths':'已有后台任务属于另一套安装，请先在那套安装中关闭',
+        'Cannot enable launch agent: ':'无法启用 launchd 任务：',
+        'Automatic scheduling is unsupported on ':'此系统不支持自动调度：',
+        'Scheduler context is only for automatic runs':'后台任务上下文仅供自动升级使用',
+        'Cannot reload user systemd: ':'无法重新加载用户 systemd：',
+        'Installed use, but automatic scheduling failed: ':'use 已安装，但后台任务注册失败：',
+        'Scheduler operation failed; configuration is not enabled: ':'后台任务操作失败，未开启配置：',
+        '--automatic cannot be combined with --check':'--automatic 不能与 --check 一起使用',
+        '--hours must be at least 1':'--hours 必须至少为 1',
+        'unrecognized arguments: ':'无法识别的参数：',
+        'the following arguments are required: ':'缺少必需参数：',
+    }
+    for source,target in translations.items():
+        if message.startswith(source):return target+message[len(source):]
+    return message
 
 
 def fetch(url):
@@ -105,7 +237,7 @@ def self_upgrade(report,check):
     if SCRIPT != INSTALL/'use.py': return  # source checkout/plugin bootstrap; do not edit development code.
     try:
         latest,data=release()
-        if check: status='available' if latest!=VERSION else 'current'
+        if check: status='available' if tuple(map(int,latest.split('.')))>tuple(map(int,VERSION.split('.'))) else 'current'
         elif tuple(map(int,latest.split('.')))>tuple(map(int,VERSION.split('.'))):
             install_bytes(release_script(data),latest); status='updated'
         else: status='current'
@@ -137,8 +269,37 @@ def version(text):
     return m.group(1) if m else None
 
 
+UPGRADE_AUTH={}
+
+
+def github_token():return os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN') or UPGRADE_AUTH.get('GH_TOKEN')
+
+
+def redact(text):
+    secrets=set(UPGRADE_AUTH.values())|{os.environ.get(k,'') for k in ('GH_TOKEN','GITHUB_TOKEN')}
+    for secret in sorted((s for s in secrets if s),key=len,reverse=True):text=text.replace(secret,'[redacted]')
+    return text
+
+
+@contextlib.contextmanager
+def github_auth():
+    previous=dict(UPGRADE_AUTH)
+    try:
+        token=github_token()
+        if not token and shutil.which('gh'):
+            code,text=run([shutil.which('gh'),'auth','token','--hostname','github.com'],timeout=5)
+            candidate=text.strip()
+            if code==0 and re.fullmatch(r'[A-Za-z0-9_]{20,256}',candidate):token=candidate
+        if token:UPGRADE_AUTH.update(GH_TOKEN=token,GITHUB_TOKEN=token)
+        yield
+    finally:
+        PROBES.clear()
+        UPGRADE_AUTH.clear();UPGRADE_AUTH.update(previous)
+
+
 def env():
     e = dict(os.environ, USE_NO_UPDATE_CHECK='1', USE_MANAGER_RUNNING='1', GIT_TERMINAL_PROMPT='0')
+    for key,value in UPGRADE_AUTH.items():e.setdefault(key,value)
     for n in NAMES: e[n.upper().replace('-','_')+'_NO_UPDATE_CHECK']='1'
     return e
 
@@ -206,7 +367,7 @@ def run(argv,cwd=None,timeout=240):
         try:
             output,_=process.communicate(timeout=timeout)
             if job: job.close(success=True)
-            return process.returncode,output
+            return process.returncode,redact(output)
         except subprocess.TimeoutExpired:
             if job: job.terminate()
             else:
@@ -282,7 +443,7 @@ def codex_upgrade(report,names,check):
     allowed=set(names+(['use-family'] if set(names)==set(NAMES) else []))
     selected=[p for p in entries if p['name'] in allowed]
     for market in sorted({p['marketplaceName'] for p in selected}):
-        progress(report,'更新 Codex 插件：'+market+'…')
+        progress(report,tr('codex_progress',name=market))
         group=[p for p in entries if p['marketplaceName']==market]
         chosen=[p for p in selected if p['marketplaceName']==market]
         if check:
@@ -334,6 +495,7 @@ def busy():
 
 
 def write_log(text):
+    text=redact(text)
     STATE.mkdir(parents=True,exist_ok=True)
     p=STATE/'upgrade.log'
     if p.exists() and p.stat().st_size>5_000_000: os.replace(p,STATE/'upgrade.previous.log')
@@ -351,7 +513,8 @@ def failure_reason(code,text,channel):
     if code==124: return 'command timed out; inspect before retrying'
     if channel=='skill' and re.search(r'fast.forward|diverging branches|divergent branches',text,re.I):
         return 'Git history diverged; local checkout preserved'
-    if re.search(r'403|rate.limit',text,re.I): return 'remote access denied or rate limited'
+    if re.search(r'rate.limit|rate_limit',text,re.I): return 'GitHub API rate limit reached; CLI upgrade deferred'
+    if re.search(r'403',text,re.I): return 'remote access denied (HTTP 403)'
     if re.search(r'authentication failed|permission denied|could not read.*[Uu]sername',text,re.I): return 'repository authentication required'
     return 'owner command failed; see private upgrade log'
 
@@ -375,8 +538,31 @@ def step(report,name,channel,argv,cwd=None,before=None,after=None,target=None):
     return row
 
 
+PROBES={}
+
+
+def github_limit_reached():
+    authenticated=bool(github_token())
+    cache=STATE/'github-api-limit.json'
+    cached=read(cache).get('reset',0)
+    if not authenticated and isinstance(cached,(int,float)) and time.time()<cached<time.time()+86400:return True
+    try:
+        headers={'User-Agent':'use-family/'+VERSION}
+        token=github_token()
+        if token:headers['Authorization']='Bearer '+token
+        request=urllib.request.Request('https://api.github.com/rate_limit',headers=headers)
+        with urllib.request.urlopen(request,timeout=5) as response:data=json.load(response)
+        core=data.get('resources',{}).get('core',{})
+        reset=core.get('reset',0)
+        limited=core.get('remaining')==0 and isinstance(reset,(int,float)) and time.time()<reset<time.time()+86400
+        if limited and not authenticated:save(cache,{'reset':reset})
+        return limited
+    except (OSError,ValueError):return False  # Unknown is not a confirmed rate limit.
+
+
 def upgrade_probe(exe):
     code,text=run([exe,'upgrade','--check'],timeout=40)
+    PROBES[str(exe)]=(code,redact(text))
     if code: return None,None
     try:
         d=json.loads(text)
@@ -566,8 +752,8 @@ def upgrade(args):
         if time.time()-last < hours*3600:
             return dict(ok=True,skipped='not due'),0
     report=dict(ok=False,started=time.time(),automatic=automatic,check=args.check,json=args.json,items=[])
-    with lock():
-        progress(report,'读取已安装的 use 工具…')
+    with lock(),github_auth():
+        progress(report,tr('scan'))
         if automatic: save(STATE/'last-attempt.json',{'at':time.time()})
         names=list(args.names) if args.names else NAMES+['use-family']
         if automatic: names=[n for n in names if not os.environ.get(n.upper().replace('-','_')+'_NO_AUTO_UPGRADE')]
@@ -576,12 +762,14 @@ def upgrade(args):
         except (OSError,ValueError,RuntimeError): initial_codex=[]
         unknown=set(names)-set(NAMES+['use-family'])
         if unknown: raise RuntimeError('Unknown family member: '+', '.join(sorted(unknown)))
-        progress(report,'核对技能副本…')
+        progress(report,tr('copies'))
         copy_baselines=canonical_sources(names) if not args.check else {}
         if 'use-family' in names: self_upgrade(report,args.check)
+        limited=github_limit_reached() if any(installed_cli(n) for n in names if n not in ('thermo-use','use-family')) else False
+        PROBES.clear()
         # Each installed CLI owns its installer, native apps and skill refresh. Do not install missing tools.
         for name in names:
-            progress(report,('检查 ' if args.check else '检查并升级 ')+name+'…')
+            progress(report,tr('check_tool' if args.check else 'upgrade_tool',name=name))
             if automatic and not read(CONFIG).get('enabled'): break
             if automatic and os.environ.get(name.upper().replace('-','_')+'_NO_AUTO_UPGRADE'): continue
             if name=='thermo-use':
@@ -590,20 +778,33 @@ def upgrade(args):
                 continue
             exe=installed_cli(name)
             if not exe: continue
+            if limited:
+                report['items'].append(dict(name=name,channel='cli',status='pending',before=cli_version(exe),target=None,reason='GitHub API rate limit reached; CLI upgrade deferred'));continue
             code,help_text=run([exe,'--help'],timeout=15)
+            if code:
+                report['items'].append(dict(name=name,channel='cli',status='unverified',reason='CLI help could not be read; upgrade support not determined'));continue
             probe=upgrade_probe(exe) if name=='wechat-use' else (None,None)
-            if (code or not re.search(r'\bupgrade\b',help_text)) and not probe[1]:
+            if not re.search(r'\bupgrade\b',help_text) and name!='wechat-use':
                 report['items'].append(dict(name=name,channel='cli',status='manual',reason='installed version has no upgrade command')); continue
             before=probe[0] or cli_version(exe)
-            target=probe[1] or expected_cli(exe)
+            target=probe[1] if name=='wechat-use' else expected_cli(exe)
+            if not target:
+                probe_code,probe_text=PROBES.get(str(exe),(0,''))
+                reason=failure_reason(probe_code,probe_text,'cli') if probe_code else 'latest version could not be checked; installer not run'
+                if reason=='owner command failed; see private upgrade log':reason='latest version could not be checked; installer not run'
+                if 'GitHub API rate limit' in reason:limited=True
+                report['items'].append(dict(name=name,channel='cli',status='pending' if limited else 'unverified',before=before,target=None,reason=reason));continue
             if not args.check and before and target and tuple(map(int,before.split('.')))>tuple(map(int,target.split('.'))):
                 report['items'].append(dict(name=name,channel='cli',status='current',before=before,target=target,reason='newer installed version retained')); continue
             if args.check:
-                report['items'].append(dict(name=name,channel='cli',status='available' if target and target!=before else 'current' if target else 'unverified',before=before,target=target)); continue
+                newer=not before or tuple(map(int,target.split('.')))>tuple(map(int,before.split('.')))
+                report['items'].append(dict(name=name,channel='cli',status='available' if newer else 'current',before=before,target=target)); continue
+            if before==target:
+                report['items'].append(dict(name=name,channel='cli',status='current',before=before,target=target));continue
             step(report,name,'cli',[exe,'upgrade'],before=before,after=(lambda e=exe:upgrade_probe(e)[0] or cli_version(e)) if name=='wechat-use' else (lambda e=exe:cli_version(e)),target=target)
         unmanaged=[]
         for root in git_roots(names,unmanaged):
-            progress(report,'更新技能：'+root.name+'…')
+            progress(report,tr('skill_progress',name=root.name))
             code,dirty=run(['git','-C',root,'status','--porcelain'],timeout=15)
             if code or dirty.strip():
                 report['items'].append(dict(name=root.name,channel='skill',status='manual',reason='checkout is dirty or unreadable',path=str(root))); continue
@@ -619,7 +820,7 @@ def upgrade(args):
                 markets=sorted({e['key'].split('@',1)[1] for e in entries if '@' in e['key']})
                 for market in markets: step(report,market,'marketplace',[claude,'plugin','marketplace','update',market])
                 for e in entries:
-                    progress(report,'更新 Claude 插件：'+e['key'].split('@')[0]+'…')
+                    progress(report,tr('claude_progress',name=e['key'].split('@')[0]))
                     if automatic and not read(CONFIG).get('enabled'): break
                     scope=e.get('scope','user'); cwd=e.get('projectPath') if scope in ('project','local') else None
                     if scope in ('project','local') and (not cwd or not Path(cwd).is_dir()):
@@ -629,7 +830,7 @@ def upgrade(args):
                     step(report,e['key'],'plugin',[claude,'plugin','update',e['key'],'--scope',scope],cwd=cwd,before=e.get('version'),after=after,target=plugin_target(e['key']))
         else:
             report['items'].extend(dict(name=e['key'],channel='plugin',status='installed',before=e.get('version')) for e in plugin_entries() if e['key'].split('@')[0] in names)
-        progress(report,'核对升级结果和保留的技能副本…')
+        progress(report,tr('verify'))
         refresh_copies(report,unmanaged,copy_baselines,names,args.check)
         report['ok']=all(i['status'] not in ('failed','manual','unverified','pending') for i in report['items'])
         report['finished']=time.time(); report.pop('json')
@@ -649,6 +850,7 @@ def human_reason(item):
         'Git history diverged; local checkout preserved':'技能仓库历史已分叉，无法安全快进；已保留本地内容',
         'command timed out; inspect before retrying':'命令超时，请检查工具状态后再重试',
         'remote access denied or rate limited':'远端拒绝访问或触发限流，请稍后重试',
+        'remote access denied (HTTP 403)':'远端拒绝访问（HTTP 403），请检查访问权限或服务限制',
         'repository authentication required':'仓库需要认证，请先检查 Git 登录',
         'installed version did not reach the expected target':'实际安装版本未达到目标版本',
         'local copy differs from known owner baseline; preserved':'技能副本与已知原版不同，已保留',
@@ -659,13 +861,34 @@ def human_reason(item):
         'native marketplace refresh would include plugins outside the requested family scope':'市场更新会涉及所选范围以外的插件，已跳过',
         'native Codex plugin inventory unavailable':'无法读取 Codex 已安装插件，已跳过',
         'plugin version, installed set or enabled state could not be verified':'无法确认插件版本、安装列表或启用状态',
+        'latest version could not be checked; installer not run':'无法获取最新版本，未运行安装器；现有版本已保留',
+        'CLI help could not be read; upgrade support not determined':'无法读取 CLI 帮助，尚未确认升级入口',
+        'GitHub API rate limit reached; CLI upgrade deferred':'GitHub API 被限流，已暂缓 CLI 升级',
+        'latest version could not be checked; installed version retained':'无法获取最新版本，现有安装版本未变',
+        'Claude CLI not installed':'未安装 Claude CLI，插件暂未更新',
+        'Thermo owner installer/update could not be verified; see official thermo-use installation guide':'无法确认 Thermo 官方安装或更新结果，请查看 thermo-use 安装说明',
+        'copy update could not be completed; original/backup retained':'未能完成技能副本更新，原目录或备份已保留',
+        'local/managed marketplace is owned by its host; no Git upgrade path':'本地或托管市场由宿主管理，没有 Git 自动升级路径',
+        'newer CLI retained; owner installer would replace its alias':'现有 CLI 版本较新，已保留；官方安装器会替换它的别名',
+        'newer installed app retained':'现有 App 版本较新，已保留',
+        'newer installed version retained':'现有版本较新，已保留',
+        'project directory unavailable':'项目目录不可用，已跳过',
+        'verified owner baseline refreshed':'已核对原版并刷新技能',
+        'cross-filesystem skill replacement needs manual review':'技能目录跨文件系统，需确认后再替换',
+        'skill changed while preparing update; preserved':'准备更新时技能内容发生变化，已保留',
+        'newer managed skill retained':'现有技能版本较新，已保留',
+        'matches installed owner skill':'与已安装的原版技能一致',
+        'copied/unmanaged skill preserved; no ownership baseline for automatic overwrite':'无法核对来源的技能副本已保留，未自动覆盖',
     }
-    return messages.get(reason,reason or ('命令失败，详见私有日志' if item.get('exitCode') else '需要进一步检查'))
+    if not reason and item.get('status')=='unverified' and not item.get('target'):
+        reason='latest version could not be checked; installed version retained'
+    if UI_LANG=='en':return reason or tr('failed_reason' if item.get('exitCode') else 'fallback_reason')
+    return messages.get(reason,reason or tr('failed_reason' if item.get('exitCode') else 'fallback_reason'))
 
 
 def load_report():
     report=read(STATE/'last-report.json')
-    if not report:raise RuntimeError('尚无升级报告，请先运行 use upgrade')
+    if not report:raise RuntimeError('No upgrade report yet; run use upgrade first')
     # Older reports omitted failure reasons. Recover only a matching log entry
     # from this report's time interval, never echoing raw owner output.
     missing=[i for i in report.get('items',[]) if i['status']=='failed' and not i.get('reason')]
@@ -686,7 +909,7 @@ def load_report():
 def print_report(report,verbose=False):
     items=report.get('items',[])
     if report.get('skipped'):
-        print({'not due':'尚未到下次自动升级时间。','automatic upgrades disabled':'自动升级未启用或已被环境设置暂停。'}.get(report['skipped'],report['skipped'])); return
+        print({'not due':tr('not_due'),'automatic upgrades disabled':tr('disabled')}.get(report['skipped'],report['skipped'])); return
     known=set(NAMES+['use-family'])
     tools={tool_name(i) for i in items if tool_name(i) in known}
     changes={}
@@ -694,19 +917,23 @@ def print_report(report,verbose=False):
     for i in items:
         if i['status']==wanted: changes.setdefault(tool_name(i),[]).append(i)
     problems=[i for i in items if i['status'] in ('failed','pending','unverified')]
+    limited=[i for i in problems if i.get('channel')=='cli' and i.get('reason')=='GitHub API rate limit reached; CLI upgrade deferred']
+    blocked=[i for i in problems if i.get('channel')=='cli' and i.get('reason') in ('remote access denied or rate limited','remote access denied (HTTP 403)')]
     manuals=[i for i in items if i['status']=='manual']
     copied=[i for i in manuals if i.get('channel')=='skill' and i.get('path') and ('baseline' in i.get('reason','') or 'copied/unmanaged' in i.get('reason',''))]
     other_manual=[i for i in manuals if i not in copied]
-    parts=[f'已检查 {len(tools)} 个工具']
-    if changes: parts.append(f'{len(changes)} 个'+('可更新' if report.get('check') else '已更新'))
+    parts=[tr('checked',count=len(tools))]
+    if changes: parts.append(tr('available' if report.get('check') else 'updated',count=len(changes)))
     failed={tool_name(i) for i in problems if i['status']=='failed'}
-    waiting={tool_name(i) for i in problems if i['status']!='failed'}
-    if failed:parts.append(f'{len(failed)} 个失败')
-    if waiting:parts.append(f'{len(waiting)} 个等待确认')
-    if other_manual:parts.append(f'{len({tool_name(i) for i in other_manual})} 个需检查')
-    if not changes and not problems and not manuals: parts.append('暂无更新')
-    print('；'.join(parts)+'。')
-    channels={'cli':'CLI','app':'App','manager':'管理器','plugin':'Claude 插件','codex-plugin':'Codex 插件','skill':'技能','marketplace':'插件市场'}
+    waiting={tool_name(i) for i in problems if i['status']!='failed' and i not in limited}
+    deferred={tool_name(i) for i in limited if i['status']=='pending'}
+    if failed:parts.append(tr('failed',count=len(failed)))
+    if waiting:parts.append(tr('waiting',count=len(waiting)))
+    if deferred:parts.append(tr('deferred',count=len(deferred)))
+    if other_manual:parts.append(tr('manual',count=len({tool_name(i) for i in other_manual})))
+    if not changes and not problems and not manuals: parts.append(tr('no_updates'))
+    print(('；' if UI_LANG=='zh' else '; ').join(parts)+('。' if UI_LANG=='zh' else '.'))
+    channels={k:tr(k) for k in ('cli','app','manager','plugin','codex-plugin','skill','marketplace')}
     for name,rows in changes.items():
         versions=[]
         for i in rows:
@@ -714,25 +941,36 @@ def print_report(report,verbose=False):
             label=(str(i.get('before'))+' → '+str(after)) if i.get('before') and after else str(after or '')
             text=channels.get(i.get('channel'),i.get('channel',''))+(' '+label if label else '')
             if text not in versions:versions.append(text)
-        print('  '+('↑' if report.get('check') else '✓')+' '+name+'：'+'；'.join(versions))
+        print('  '+('↑' if report.get('check') else '✓')+' '+name+('：' if UI_LANG=='zh' else ': ')+('；' if UI_LANG=='zh' else '; ').join(versions))
+    if limited:
+        names=list(dict.fromkeys(tool_name(i) for i in limited))
+        print('  ! '+tr('rate_group',count=len(names)))
+        print('    '+(', '.join(names)))
+        print('    '+tr('rate_tip'))
+    if blocked:
+        names=list(dict.fromkeys(tool_name(i) for i in blocked))
+        print('  ! '+tr('blocked_group',count=len(names)))
+        print('    '+', '.join(names))
+        print('    '+human_reason(blocked[0]))
     seen=set()
     for i in problems+other_manual:
+        if i in limited or i in blocked:continue
         key=(tool_name(i),human_reason(i))
         if key in seen:continue
         seen.add(key)
-        print('  ! '+key[0]+'：'+key[1])
+        print('  ! '+key[0]+('：' if UI_LANG=='zh' else ': ')+key[1])
     if copied:
         names=list(dict.fromkeys(tool_name(i) for i in copied))
-        print(f'  保留 {len(names)} 个工具的 {len(copied)} 份技能副本，与已知原版不一致，未覆盖：')
-        print('  '+ '、'.join(names))
+        print('  '+tr('preserved',tools=len(names),copies=len(copied)))
+        print('  '+ ('、' if UI_LANG=='zh' else ', ').join(names))
     if problems or manuals:
-        print('详情：'+('use upgrade --check --verbose' if report.get('check') else 'use report --verbose')+'；日志：'+str(STATE/'upgrade.log'))
-        if any('diverged' in i.get('reason','') for i in problems):print('Git 分叉需先检查本地提交；请勿直接重置或强制覆盖。')
+        print(tr('details',command='use upgrade --check --verbose' if report.get('check') else 'use report --verbose',path=STATE/'upgrade.log'))
+        if any('diverged' in i.get('reason','') for i in problems):print(tr('diverged_tip'))
     if not report.get('check') and any(i['status']=='updated' and i.get('channel') in ('plugin','codex-plugin') for i in items):
-        print('插件更新在新会话中生效。')
+        print(tr('new_session'))
     if verbose:
-        labels={'updated':'已更新','available':'可更新','current':'已是最新','completed':'已完成','failed':'失败','manual':'已保留，需检查','unverified':'未确认','pending':'等待完成','owner-managed':'由安装器维护','installed':'已安装'}
-        print('\n完整明细：')
+        labels={k:tr('status_'+k) for k in ('updated','available','current','completed','failed','manual','unverified','pending','owner-managed','installed')}
+        print('\n'+tr('full_details'))
         for i in items:
             print('  '+i.get('name','')+' ['+channels.get(i.get('channel'),i.get('channel',''))+'] '+labels.get(i['status'],i['status']))
             if i.get('path'):print('    '+i['path'])
@@ -818,20 +1056,30 @@ def apply_context(file):
 
 
 def main(argv=None):
-    parser=argparse.ArgumentParser(prog='use',description=__doc__)
-    parser.add_argument('--version',action='version',version=VERSION)
+    global UI_LANG
+    language=argparse.ArgumentParser(add_help=False)
+    language.add_argument('--lang',choices=['en','zh','auto'])
+    preference,remaining=language.parse_known_args(argv)
+    UI_LANG=choose_language(preference.lang)
+    parser=Parser(prog='use',description=tr('description'))
+    parser.add_argument('--lang',choices=['en','zh','auto'],help=tr('help_lang'))
+    parser.add_argument('--version',action='version',version=VERSION,help=tr('help_version'))
     commands=parser.add_subparsers(dest='command',required=True)
-    ins=commands.add_parser('install',help='install the use manager (no family tools are installed)')
-    ins.add_argument('--local',action='store_true',help='install from this trusted checkout/plugin')
-    ins.add_argument('--auto',action='store_true'); ins.add_argument('--json',action='store_true')
-    up=commands.add_parser('upgrade',help='upgrade installed family CLIs, git skills and Claude plugins')
-    up.add_argument('names',nargs='*'); up.add_argument('--check',action='store_true'); up.add_argument('--json',action='store_true'); up.add_argument('--automatic',action='store_true',help=argparse.SUPPRESS); up.add_argument('--context',help=argparse.SUPPRESS)
-    up.add_argument('--verbose',action='store_true',help='show all channel results and preserved paths')
-    rp=commands.add_parser('report',help='show the last upgrade result without running another upgrade')
-    rp.add_argument('--json',action='store_true');rp.add_argument('--verbose',action='store_true')
-    st=commands.add_parser('status',help='installed versions and latest recorded result'); st.add_argument('--json',action='store_true')
-    au=commands.add_parser('auto',help='daily background upgrades'); au.add_argument('action',choices=['enable','disable','status']); au.add_argument('--hours',type=int,default=24); au.add_argument('--json',action='store_true')
-    args=parser.parse_args(argv)
+    ins=commands.add_parser('install',help=tr('help_install'))
+    ins.add_argument('--local',action='store_true',help=tr('help_local'))
+    ins.add_argument('--auto',action='store_true',help=tr('help_auto_flag')); ins.add_argument('--json',action='store_true',help=tr('help_json'))
+    up=commands.add_parser('upgrade',help=tr('help_upgrade'))
+    up.add_argument('names',nargs='*',help=tr('help_names'))
+    up.add_argument('--check',action='store_true',help=tr('help_check'));up.add_argument('--json',action='store_true',help=tr('help_json'))
+    up.add_argument('--automatic',action='store_true',help=argparse.SUPPRESS);up.add_argument('--context',help=argparse.SUPPRESS)
+    up.add_argument('--verbose',action='store_true',help=tr('help_verbose'))
+    rp=commands.add_parser('report',help=tr('help_report'))
+    rp.add_argument('--json',action='store_true',help=tr('help_json'));rp.add_argument('--verbose',action='store_true',help=tr('help_verbose'))
+    st=commands.add_parser('status',help=tr('help_status'));st.add_argument('--json',action='store_true',help=tr('help_json'))
+    au=commands.add_parser('auto',help=tr('help_auto'))
+    au.add_argument('action',choices=['enable','disable','status'],help=tr('help_action'))
+    au.add_argument('--hours',type=int,default=24,help=tr('help_hours'));au.add_argument('--json',action='store_true',help=tr('help_json'))
+    args=parser.parse_args(remaining)
     try:
         if args.command=='upgrade' and args.context:
             if not args.automatic: raise RuntimeError('Scheduler context is only for automatic runs')
@@ -851,7 +1099,7 @@ def main(argv=None):
             result,code=upgrade(args)
         elif args.command=='report':
             result=read(STATE/'last-report.json') if args.json else load_report()
-            if not result:raise RuntimeError('尚无升级报告，请先运行 use upgrade')
+            if not result:raise RuntimeError('No upgrade report yet; run use upgrade first')
             code=0 if result.get('ok') else 2
         elif args.command=='auto':
             if args.hours<1: raise RuntimeError('--hours must be at least 1')
@@ -866,6 +1114,6 @@ def main(argv=None):
         return code
     except (RuntimeError,OSError,ValueError) as e:
         progress({'json':args.json})
-        print(json.dumps(dict(ok=False,error=str(e)),ensure_ascii=False),file=sys.stdout if args.json else sys.stderr); return 2
+        print(json.dumps(dict(ok=False,error=str(e)),ensure_ascii=False) if args.json else tr('error',message=human_error(str(e))),file=sys.stdout if args.json else sys.stderr); return 2
 
 if __name__=='__main__': sys.exit(main())
