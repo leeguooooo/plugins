@@ -2,6 +2,8 @@ name: Release use manager
 on:
   push:
     tags: ['use-v*']
+    branches: [main]
+    paths: ['plugins/use-family/scripts/use.py']
   workflow_dispatch:
     inputs:
       tag:
@@ -16,7 +18,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      TAG: ${{ inputs.tag || github.ref_name }}
+      REQUESTED_TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,8 +30,10 @@ jobs:
       - name: Package the self-contained standard-library CLI
         run: |
           version=$(python3 plugins/use-family/scripts/use.py --version)
-          test "$TAG" = "use-v$version"
-          python3 -c 'import json,os; assert json.load(open("plugins/use-family/.claude-plugin/plugin.json"))["version"] == os.environ["TAG"].removeprefix("use-v")'
+          TAG="use-v$version"
+          if [ -n "$REQUESTED_TAG" ]; then test "$REQUESTED_TAG" = "$TAG"; fi
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          python3 -c 'import json,subprocess; assert json.load(open("plugins/use-family/.claude-plugin/plugin.json"))["version"] == subprocess.check_output(["python3","plugins/use-family/scripts/use.py","--version"],text=True).strip()'
           mkdir dist
           tar -czf "dist/$TAG.tar.gz" -C plugins/use-family/scripts use.py
           (cd dist && sha256sum "$TAG.tar.gz" > "$TAG.tar.gz.sha256")
@@ -40,5 +44,8 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo 'Release already exists; refusing to replace its files.'
             exit 1
+          fi
+          if [ -z "$REQUESTED_TAG" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA"
           fi
           gh release create "$TAG" "dist/$TAG.tar.gz" "dist/$TAG.tar.gz.sha256" --verify-tag --title "use $TAG" --generate-notes
