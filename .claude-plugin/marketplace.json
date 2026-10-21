@@ -120,7 +120,7 @@
     {
       "name": "motion-use",
       "description": "Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, default narration, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.",
-      "version": "0.19.0",
+      "version": "0.20.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -212,7 +212,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.18.18",
+      "version": "1.19.0",
       "category": "productivity",
       "source": {
         "source": "url",
