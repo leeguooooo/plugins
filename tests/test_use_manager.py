@@ -1,4 +1,6 @@
 import importlib.util
+import contextlib
+import io
 import json
 import os
 import subprocess
@@ -22,6 +24,11 @@ class ManagerTests(unittest.TestCase):
             p=patch.object(u,key,value);p.start();self.addCleanup(p.stop)
         patcher=patch.object(u,'codex_entries',return_value=[]);patcher.start();self.addCleanup(patcher.stop)
         patcher=patch.object(u,'canonical_sources',return_value={});patcher.start();self.addCleanup(patcher.stop)
+        patcher=patch.object(u,'thermo_version',return_value=None);patcher.start();self.addCleanup(patcher.stop)
+        patcher=patch.object(u,'github_limit_reached',return_value=False);patcher.start();self.addCleanup(patcher.stop)
+        patcher=patch.object(u,'UI_LANG','zh');patcher.start();self.addCleanup(patcher.stop)
+        self.real_auth=u.github_auth
+        patcher=patch.object(u,'github_auth',side_effect=lambda:contextlib.nullcontext());patcher.start();self.addCleanup(patcher.stop)
         self.args=SimpleNamespace(automatic=False,check=False,json=True,names=['chrome-use','mail-use'])
 
     def test_real_install_version_readback_and_unknown_executable_preserved(self):
@@ -34,7 +41,7 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(Path(launcher).read_text(),'user program')
 
     def test_older_plugin_bootstrap_never_downgrades_manager(self):
-        newer=SOURCE.read_bytes().replace(b"VERSION = '0.15.0'",b"VERSION = '9.0.0'")
+        newer=SOURCE.read_bytes().replace(b"VERSION = '0.15.2'",b"VERSION = '9.0.0'")
         u.install_bytes(newer,'9.0.0')
         u.install_bytes(SOURCE.read_bytes(),u.VERSION)
         self.assertEqual((u.INSTALL/'use.py').read_bytes(),newer)
@@ -185,8 +192,8 @@ class ManagerTests(unittest.TestCase):
         blob=io.BytesIO()
         with tarfile.open(fileobj=blob,mode='w:gz') as tar:
             member=tarfile.TarInfo('use.py');content=SOURCE.read_bytes();member.size=len(content);tar.addfile(member,io.BytesIO(content))
-        archive=blob.getvalue();name='use-v0.15.0.tar.gz'
-        data={'tag_name':'use-v0.15.0','assets':[{'name':n,'browser_download_url':'https://github.com/leeguooooo/plugins/releases/download/use-v0.15.0/'+n} for n in (name,name+'.sha256')]}
+        archive=blob.getvalue();name='use-v0.15.2.tar.gz'
+        data={'tag_name':'use-v0.15.2','assets':[{'name':n,'browser_download_url':'https://github.com/leeguooooo/plugins/releases/download/use-v0.15.2/'+n} for n in (name,name+'.sha256')]}
         with patch.object(u,'fetch',side_effect=[archive,(hashlib.sha256(archive).hexdigest()+'  '+name).encode()]):self.assertEqual(u.release_script(data),SOURCE.read_bytes())
         with patch.object(u,'fetch',side_effect=[archive,('0'*64+'  '+name).encode()]):
             with self.assertRaisesRegex(RuntimeError,'checksum'):u.release_script(data)
@@ -245,5 +252,151 @@ class ManagerTests(unittest.TestCase):
         e.pop('CI',None);e.pop('USE_NO_AUTO_UPGRADE',None)
         result=json.loads(subprocess.check_output([sys.executable,str(u.INSTALL/'use.py'),'upgrade','--automatic','--json'],env=e,text=True))
         self.assertEqual(result['skipped'],'not due')
+
+    def test_compact_report_groups_tools_and_preserved_copies(self):
+        rows=[{'name':'chrome-use','channel':'cli','status':'current'} for _ in range(60)]
+        rows += [dict(name='mail-use@market',channel=c,status='updated',before='1.0.0',after='2.0.0') for c in ('plugin','codex-plugin')]
+        rows += [dict(name='android-use',channel='skill',status='manual',path='/skills/'+p,reason='local copy differs from known owner baseline; preserved') for p in ('a','b')]
+        out=io.StringIO()
+        with contextlib.redirect_stdout(out):u.print_report({'items':rows})
+        text=out.getvalue()
+        self.assertIn('1 个已更新',text);self.assertIn('1 个工具的 2 份技能副本',text)
+        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),9)
+        self.assertIn('Claude 插件',text);self.assertIn('Codex 插件',text)
+
+    def test_failure_keeps_safe_reason_and_repository_path(self):
+        report={'items':[],'json':True}
+        with patch.object(u,'run',return_value=(128,'private diagnostic\nfatal: Not possible to fast-forward, aborting.')):
+            row=u.step(report,'wechat-use','skill',['git','pull','--ff-only'])
+        self.assertEqual(row['reason'],'Git history diverged; local checkout preserved')
+        self.assertNotIn('private diagnostic',json.dumps(report))
+        self.assertIn('无法安全快进',u.human_reason(row))
+
+    def test_report_is_read_only_and_json_preserves_saved_schema(self):
+        report={'ok':False,'items':[{'name':'wechat-use','channel':'skill','status':'failed','exitCode':128}]}
+        u.save(u.STATE/'last-report.json',report)
+        before=(u.STATE/'last-report.json').read_bytes();out=io.StringIO()
+        with patch.object(u,'upgrade') as upgrade,contextlib.redirect_stdout(out):code=u.main(['report','--json'])
+        self.assertEqual(code,2);upgrade.assert_not_called()
+        self.assertEqual(json.loads(out.getvalue()),report)
+        self.assertEqual((u.STATE/'last-report.json').read_bytes(),before)
+
+    def test_legacy_report_recovers_only_its_own_failure_entry(self):
+        at=u.datetime.datetime(2026,10,21,20,8,45).timestamp()
+        report={'started':at-10,'finished':at+10,'items':[dict(name='wechat-use',channel='skill',status='failed',exitCode=128)]}
+        u.save(u.STATE/'last-report.json',report)
+        (u.STATE/'upgrade.log').write_text('\n2026-10-20T20:08:45 skill wechat-use\nHTTP 403\n\n2026-10-21T20:08:45 skill wechat-use\nfatal: Not possible to fast-forward, aborting.\n')
+        loaded=u.load_report()
+        self.assertEqual(loaded['items'][0]['reason'],'Git history diverged; local checkout preserved')
+        self.assertNotIn('reason',u.read(u.STATE/'last-report.json')['items'][0])
+
+    def test_progress_is_tty_only_and_verbose_keeps_paths(self):
+        out=io.StringIO()
+        with contextlib.redirect_stderr(out),patch.object(out,'isatty',return_value=True):
+            u.progress({'json':True},'hidden')
+        self.assertEqual(out.getvalue(),'')
+        row=dict(name='x',channel='skill',status='failed',exitCode=128,path='/test/checkout',reason='Git history diverged; local checkout preserved')
+        with contextlib.redirect_stdout(out):u.print_report({'items':[row]},verbose=True)
+        self.assertIn('/test/checkout',out.getvalue());self.assertIn('完整明细',out.getvalue())
+
+    def test_language_precedence_and_english_fallback(self):
+        with patch.dict(os.environ,{'USE_LANG':'zh','LANGUAGE':'','LC_ALL':'en_US.UTF-8','LC_MESSAGES':'','LANG':'zh_CN.UTF-8'},clear=True):
+            self.assertEqual(u.choose_language(),'zh')
+            self.assertEqual(u.choose_language('en'),'en')
+            self.assertEqual(u.choose_language('auto'),'en')
+        with patch.dict(os.environ,{'LANGUAGE':'zh_CN','LC_ALL':'C'},clear=True):
+            self.assertEqual(u.choose_language(),'en');self.assertEqual(u.choose_language('zh'),'zh')
+        for locale,expected in [('zh_CN.UTF-8','zh'),('zh-Hant','zh'),('en_GB.UTF-8','en'),('ja_JP.UTF-8','en'),('C','en'),('POSIX','en')]:
+            with patch.dict(os.environ,{'LANG':locale},clear=True):self.assertEqual(u.choose_language(),expected)
+
+    def test_both_report_languages_and_json_are_consistent(self):
+        report={'ok':False,'items':[dict(name='mail-use',channel='cli',status='pending',reason='GitHub API rate limit reached; CLI upgrade deferred'),dict(name='wechat-use',channel='skill',status='failed',reason='Git history diverged; local checkout preserved'),dict(name='android-use',channel='skill',status='manual',reason='local copy differs from known owner baseline; preserved',path='/skills/a')]}
+        u.save(u.STATE/'last-report.json',report)
+        for lang in ('en','zh'):
+            out=io.StringIO()
+            with contextlib.redirect_stdout(out):self.assertEqual(u.main(['report','--lang',lang,'--verbose']),2)
+            text=out.getvalue()
+            self.assertIn('GitHub',text)
+            if lang=='en':self.assertNotRegex(text,r'[\u4e00-\u9fff]');self.assertIn('rate limited',text)
+            else:self.assertIn('限流',text);self.assertIn('历史已分叉',text)
+            out=io.StringIO()
+            with contextlib.redirect_stdout(out):u.main(['--lang',lang,'report','--json'])
+            self.assertEqual(json.loads(out.getvalue()),report)
+
+    def test_help_and_errors_have_both_languages(self):
+        for lang,word in [('en','output language'),('zh','输出语言')]:
+            out=io.StringIO()
+            with contextlib.redirect_stdout(out),self.assertRaises(SystemExit) as raised:u.main(['--lang',lang,'--help'])
+            self.assertEqual(raised.exception.code,0);self.assertIn(word,out.getvalue())
+            with patch.object(u,'read',return_value={}):
+                err=io.StringIO()
+                with contextlib.redirect_stderr(err):self.assertEqual(u.main(['--lang',lang,'report']),2)
+                self.assertIn('No upgrade report' if lang=='en' else '尚无升级报告',err.getvalue())
+
+    def test_rate_limit_defers_all_clis_without_owner_requests(self):
+        with patch.object(u,'github_limit_reached',return_value=True),patch.object(u,'installed_cli',side_effect=lambda n:n),patch.object(u,'cli_version',return_value='1.0.0'),patch.object(u,'run') as run,patch.object(u,'git_roots',return_value=[]):
+            report,code=u.upgrade(self.args)
+        self.assertEqual(code,2);run.assert_not_called()
+        self.assertEqual([r['status'] for r in report['items']],['pending','pending'])
+
+    def test_unknown_target_never_runs_installer_or_mislabels_wechat_support(self):
+        self.args.names=['wechat-use']
+        with patch.object(u,'installed_cli',return_value='wechat-use'),patch.object(u,'run',side_effect=lambda a,**kw:(0,'Commands: status') if a[-1]=='--help' else (1,'HTTP 403')),patch.object(u,'cli_version',return_value='1.19.1'),patch.object(u,'git_roots',return_value=[]),patch.object(u,'step') as step:
+            report,code=u.upgrade(self.args)
+        step.assert_not_called();self.assertEqual(code,2)
+        self.assertEqual(report['items'][0]['status'],'unverified')
+        self.assertEqual(report['items'][0]['reason'],'remote access denied (HTTP 403)')
+
+    def test_current_cli_does_not_reinstall(self):
+        with patch.object(u,'installed_cli',side_effect=lambda n:n),patch.object(u,'run',return_value=(0,'Commands: upgrade')),patch.object(u,'cli_version',return_value='1.0.0'),patch.object(u,'expected_cli',return_value='1.0.0'),patch.object(u,'git_roots',return_value=[]),patch.object(u,'step') as step:
+            report,code=u.upgrade(self.args)
+        step.assert_not_called();self.assertEqual(code,0)
+        self.assertTrue(all(r['status']=='current' for r in report['items']))
+
+    def test_gh_auth_is_ephemeral_and_never_enters_report(self):
+        secret='gho_'+('test_credential_'*3)
+        with patch.dict(os.environ,{},clear=True),patch.dict(u.UPGRADE_AUTH,{},clear=True),patch.object(u.shutil,'which',return_value='gh'),patch.object(u,'run',return_value=(0,secret)):
+            with self.real_auth():
+                self.assertEqual(u.env()['GH_TOKEN'],secret)
+                self.assertEqual(u.env()['GITHUB_TOKEN'],secret)
+                self.assertNotIn('GH_TOKEN',os.environ)
+                u.write_log('owner echoed '+secret)
+                self.assertNotIn(secret,(u.STATE/'upgrade.log').read_text())
+                u.PROBES['fake']=(0,'cached '+secret)
+            self.assertEqual(u.UPGRADE_AUTH,{})
+            self.assertEqual(u.PROBES,{})
+            with self.assertRaises(RuntimeError):
+                with self.real_auth():raise RuntimeError('stop')
+            self.assertEqual(u.UPGRADE_AUTH,{})
+
+    def test_captured_subprocess_output_redacts_known_tokens(self):
+        secret='test-token-not-a-real-credential'
+        with patch.dict(u.UPGRADE_AUTH,{'GH_TOKEN':secret},clear=True):
+            code,text=u.run([sys.executable,'-c',f'print({secret!r})'])
+        self.assertEqual(code,0);self.assertEqual(text.strip(),'[redacted]')
+
+    def test_utf8_state_and_unicode_install_paths(self):
+        data={'path':'工具/安装目录','message':'中文 and English'}
+        u.save(u.STATE/'unicode.json',data)
+        self.assertEqual(json.loads((u.STATE/'unicode.json').read_bytes().decode('utf-8')),data)
+        self.assertEqual(u.read(u.STATE/'unicode.json'),data)
+        with patch.object(u,'INSTALL',self.root/'安装目录'):
+            u.install_bytes(SOURCE.read_bytes(),u.VERSION)
+            self.assertEqual(subprocess.check_output([sys.executable,str(u.INSTALL/'use.py'),'--version'],text=True).strip(),u.VERSION)
+
+    def test_rate_limit_cache_is_validated_and_auth_does_not_use_anonymous_limit(self):
+        # Read the original helper, not the default isolated-upgrade mock.
+        # Restore only the function from source in a fresh isolated module.
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        module.STATE=u.STATE
+        at=u.time.time()+300
+        with patch.dict(os.environ,{},clear=True),patch.dict(module.UPGRADE_AUTH,{},clear=True),patch.object(module.urllib.request,'urlopen',return_value=io.StringIO(json.dumps({'resources':{'core':{'remaining':0,'reset':at}}}))) as request:
+            self.assertTrue(module.github_limit_reached());self.assertTrue(module.github_limit_reached())
+            self.assertEqual(request.call_count,1)
+        with patch.dict(os.environ,{'GH_TOKEN':'test-token-not-a-secret'},clear=True),patch.object(module.urllib.request,'urlopen',return_value=io.StringIO(json.dumps({'resources':{'core':{'remaining':500,'reset':at}}}))):
+            self.assertFalse(module.github_limit_reached())
+        u.save(u.STATE/'github-api-limit.json',{'reset':'bad value'})
+        with patch.dict(os.environ,{},clear=True),patch.object(module.urllib.request,'urlopen',side_effect=OSError('offline')):
+            self.assertFalse(module.github_limit_reached())
 
 if __name__=='__main__':unittest.main()

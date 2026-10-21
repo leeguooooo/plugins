@@ -74,6 +74,12 @@ Use `use upgrade` for all installed family CLIs, skills and Claude/Codex plugins
 `use status --json` shows installed versions and the last recorded result. Missing
 family tools are not installed; failures, pending app updates and preserved dirty
 skills remain visible. No zero-exit wrapper is accepted instead of version readback.
+Default output groups updates and attention items by tool; `use report` reads the last
+result without running another upgrade. Add `--verbose` for every channel/path, or
+`--json` for the structured report. A retained skill copy is distinct from an upgrade failure.
+For international users, `use --lang en upgrade` and `use --lang zh upgrade` select the
+complete display language (help/progress/results/errors); `USE_LANG` and terminal locale
+set the default. JSON stays language independent. Never assume all users want Chinese.
 
 If the manager is missing, install it with
 `curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh`.

@@ -6,6 +6,8 @@ Install the self-contained Python 3.9+ manager from a checksum-verified GitHub R
 curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh
 use upgrade
 use upgrade --check
+use report                # last result; does not run another upgrade
+use report --verbose      # all channels, failures and preserved paths
 use status --json
 ```
 
@@ -13,6 +15,44 @@ use status --json
 Claude/Codex family plugins. It also updates the manager itself. It does not bulk-install
 missing family members. Each CLI keeps ownership of its installer, app and skill refresh.
 `use upgrade motion-use chrome-use` selects a subset. Unknown names are refused.
+
+The default terminal output shows one live progress line, then a summary grouped by tool.
+Current versions and successful internal refreshes stay out of the summary. Modified or
+unverified skill copies are grouped separately from failed upgrades. `--verbose` shows every
+channel and path; `--json` retains the structured report without terminal progress output.
+Git history divergence is reported with its cause; the manager never resets local commits.
+
+### English and Chinese
+
+```sh
+use --lang en upgrade
+use upgrade --lang zh
+use --lang en report --verbose
+USE_LANG=zh use report
+```
+
+`--lang en|zh|auto` works before or after the command. It overrides `USE_LANG`, then
+the terminal locale is used. Chinese locales select Chinese; other locales fall back
+to English. C/POSIX locales select English in auto mode. Help, progress, summaries and
+manager-owned errors use the same language. JSON keys, status codes and stored reasons
+remain stable English data, independent of the display language. Third-party tool logs
+retain their original language.
+
+### Version checks and rate limits
+
+The manager installs a CLI only after a newer target version is confirmed. Current CLIs
+are not reinstalled; Git skills and plugins are still refreshed through their own channels.
+If a version check fails, the existing CLI is retained and the installer is not run.
+
+Existing `GH_TOKEN` / `GITHUB_TOKEN` values are honored. Otherwise the manager can reuse
+the current `gh` login for github.com: its token stays in memory and is passed only to
+upgrade subprocesses, never written to configuration or reports. Known token values are
+redacted from captured output and logs. No login is created or changed.
+
+A confirmed GitHub API limit defers the remaining CLI checks instead of repeating owner
+requests. Anonymous limits are cached until their reported reset time; authenticated checks
+do not reuse that anonymous cache. HTTP 403 alone is reported as access denied, not proof of
+a rate limit. Deferred checks and retained skill copies are shown separately from failures.
 
 On Windows, install Python 3.9+ first, then run in PowerShell:
 
