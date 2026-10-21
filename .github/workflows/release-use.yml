@@ -1,0 +1,44 @@
+name: Release use manager
+on:
+  push:
+    tags: ['use-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing use-vX.Y.Z tag
+        required: true
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s tests -p 'test_use_manager.py' -v
+      - name: Package the self-contained standard-library CLI
+        run: |
+          version=$(python3 plugins/use-family/scripts/use.py --version)
+          test "$TAG" = "use-v$version"
+          python3 -c 'import json,os; assert json.load(open("plugins/use-family/.claude-plugin/plugin.json"))["version"] == os.environ["TAG"].removeprefix("use-v")'
+          mkdir dist
+          tar -czf "dist/$TAG.tar.gz" -C plugins/use-family/scripts use.py
+          (cd dist && sha256sum "$TAG.tar.gz" > "$TAG.tar.gz.sha256")
+      - name: Publish immutable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo 'Release already exists; refusing to replace its files.'
+            exit 1
+          fi
+          gh release create "$TAG" "dist/$TAG.tar.gz" "dist/$TAG.tar.gz.sha256" --verify-tag --title "use $TAG" --generate-notes

@@ -1,0 +1,91 @@
+# One upgrade command for the installed use family
+
+Install the self-contained Python 3.9+ manager from a checksum-verified GitHub Release:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh
+use upgrade
+use upgrade --check
+use status --json
+```
+
+`use upgrade` updates only installed family CLIs, clean Git skill checkouts and installed
+Claude/Codex family plugins. It also updates the manager itself. It does not bulk-install
+missing family members. Each CLI keeps ownership of its installer, app and skill refresh.
+`use upgrade motion-use chrome-use` selects a subset. Unknown names are refused.
+
+On Windows, install Python 3.9+ first, then run in PowerShell:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.ps1)))
+use upgrade
+```
+
+The installer creates `~/.local/bin/use` (`use.cmd` with CRLF on Windows). Add that directory
+to PATH if it is not already there. Installing the manager does not enable a scheduler.
+The trusted use-family plugin and Git skill installer can install this small manager locally;
+unknown executables are preserved, and an older plugin bootstrap never downgrades it.
+
+## Daily automatic upgrades
+
+```sh
+use auto enable           # consent to daily upgrades on this machine
+use auto status --json    # enabled state, registration, busy state and last report
+use auto disable
+```
+
+`--hours 24` is the default; `use auto enable --hours 48` changes it. A per-user launchd agent
+(macOS), systemd user timer (Linux), or Task Scheduler task (Windows) wakes hourly, and the
+manager attempts upgrades at most once per configured interval. No agent session needs to
+be open. macOS runs once when first registered; Linux/Windows use their next trigger. A
+registered timer does not prove that upgrades succeeded: inspect the last report.
+
+Automatic upgrades are opt-in. `CI`, `USE_NO_AUTO_UPGRADE` and per-member variables such as
+`MAIL_USE_NO_AUTO_UPGRADE` suppress automatic actions when present in the worker's environment.
+Use `use auto disable` for a durable off switch. Disabling stops future upgrades; it does not
+kill a tool already being updated. No other agent session, shared daemon or remote host is
+stopped or upgraded by the manager. Interactive authentication/trust requirements remain
+attention items; the worker never accepts a newly displayed marketplace command with `-y`.
+
+## What is checked
+
+- **CLIs:** the owner's `upgrade --check`, then `upgrade`, then a version readback. A zero exit
+  code that leaves a known required version uninstalled is a failure. Unknown target versions
+  remain unverified; newer development versions are retained.
+- **Skills:** only clean Git checkouts are pulled with `--ff-only`. Dirty or modified copies
+  are preserved and reported for attention. An unmodified copy that matches a known installed
+  plugin snapshot can be refreshed with a retained backup; its baseline is then tracked by the
+  manager. Copies without a verifiable owner baseline remain manual. Installer-owned skills
+  stay with their CLI.
+- **Claude:** only installed family plugin IDs and scopes are updated. Marketplace refreshes
+  are limited to the markets those plugins use. Plugin failures propagate; missing bundle
+  dependencies are not installed behind the user's back.
+- **Codex:** uses its native `plugin list --json` and targeted `plugin marketplace upgrade`.
+  Installed versions, installed set and enabled state are read back. If a marketplace refresh
+  would include a plugin outside the requested family/subset, it is preserved and reported
+  for attention. Local/admin-owned markets remain owned by their host. See the
+  [official marketplace refresh documentation](https://developers.openai.com/plugins/build/plugins).
+- **Thermo:** uses the public thermo-use installer, which installs the signed App if missing
+  and links its CLI. An existing App updates through Thermo's own update mechanism. The
+  manager reads the official appcast and installed App version; a submitted update request
+  or relink alone is not reported as a completed App upgrade. It never installs/restarts the
+  privileged fan helper. Pending UI/app updates remain visible.
+
+One ordinary failure does not stop the remaining members. A process lock prevents two
+manager runs from upgrading concurrently; the OS releases it after a crash, without PID
+killing or stale-lock deletion. Each child command is bounded, and automatic attempts are
+throttled even after failure. Use a manual `use upgrade` after resolving an attention item.
+
+`--check` checks CLI update availability and inventories the other installed channels; it
+never runs their upgrade operations. It does not claim to have fetched fresh plugin/skill
+catalogues. `--json` provides per-channel results. Exit 0 means all attempted items were
+verified/current/completed; exit 2 means failed, manual, pending or unverified items remain.
+New plugin code takes effect in a new host session; the manager does not restart your chat.
+
+State: `~/.local/state/use-family/` (`config.json`, `last-attempt.json`, `last-report.json`,
+private `upgrade.log`). `USE_MANAGER_STATE`, `USE_MANAGER_HOME`, `USE_MANAGER_BIN` and the
+existing `USE_FAMILY_DIR` support isolated installations/tests. Log output may contain the
+owner tools' diagnostics and stays private instead of being copied into status JSON.
+
+The older `upgrade-use-family.sh` command delegates to this manager. The existing CLI/plugin
+upgrade convention remains in [upgrade.md](upgrade.md).

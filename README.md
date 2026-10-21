@@ -39,6 +39,20 @@ The plugin only carries the slash commands; the actual statusLine renderer is th
 
 Agent-native CLIs that let coding agents drive real, logged-in surfaces — a browser, a phone, WeChat, Discord, a password vault, a private notes repo, the clipboard history — and talk to each other (`ocs`, from [open-cross-session](https://github.com/leeguooooo/open-cross-session)) or work through one multi-step workflow together (`sflow`, from [session-flow](https://github.com/leeguooooo/session-flow)). Each plugin ships the agent skill; the CLI binary self-installs on first use (GitHub Release, no npm, no token).
 
+## Upgrade the installed family
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh
+use upgrade
+use auto enable           # optional: daily background upgrades, without an agent session
+use auto status --json
+use auto disable
+```
+
+Updates installed family CLIs, clean Git skills and Claude/Codex family plugins. Missing
+tools are not bulk-installed; dirty skills, failures and pending App updates stay visible.
+See [commands, Windows installation and scheduler behavior](docs/use-manager.md).
+
 ## The *-use family in one install
 
 ```

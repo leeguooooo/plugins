@@ -36,7 +36,7 @@ download failed (network, GitHub API). An update being available is not an error
   with a short timeout; honour `GITHUB_TOKEN` if set.
 - If a use already has an equivalent command (`update`), keep it and add `upgrade` as the
   name the docs use. Do not break existing commands.
-- Never ask for or handle credentials. Never upgrade without being invoked — except that a
+- Never ask for or handle credentials. Never upgrade without being invoked or explicitly opted into `use auto enable` — except that a
   Claude Code plugin install keeps its CLI at the plugin's version (section 6).
 
 ## 2. Daily "new version" notice
@@ -89,12 +89,13 @@ If the skill came from somewhere `upgrade` can't refresh:
 
 ## 5. Whole family
 
-`upgrade-use-family.sh` in this repo runs `<name> upgrade` for every installed use and
-refreshes skills installed by `install-use-family.sh` and Claude Code plugins.
-use-family is a bundle plugin: it fails to load while any plugin it depends on is missing
-(Claude Code has no optional dependencies). Marketplace auto-update installs dependencies a new
-version adds; a manual `claude plugin update` does not, so the script installs any that are
-missing.
+The installed entry point is now `use upgrade`, with opt-in independent daily upgrades via
+`use auto enable`. See [use-manager.md](use-manager.md) for channel coverage, version
+readback, failure reporting and scheduler controls. The older script delegates to it.
+
+
+`upgrade-use-family.sh` delegates to `use upgrade` and propagates its result. Missing bundle
+dependencies are reported by the doctor; an upgrade does not install missing family members.
 
 ## 6. Plugin installs: the CLI follows the plugin
 
@@ -110,7 +111,7 @@ That only moves SKILL.md, so at session start the CLI is brought to the plugin's
 - **A use may carry its own hook** when it must work without use-family; it then installs
   exactly the plugin's version. bitwarden-use does this (`hooks/sync-cli.sh`, declared inline in
   its marketplace entry, since a `strict: false` entry with `skills` cannot load a hooks file),
-  and use-family skips it.
+  and the legacy session-start sync skips it.
 - Output: one line on stdout per CLI upgraded or failed (the agent sees it); nothing when all
   are current.
 - Off: `USE_NO_AUTO_UPGRADE` or `CI`; per use `<NAME>_NO_AUTO_UPGRADE`
