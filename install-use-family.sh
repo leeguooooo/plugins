@@ -75,6 +75,13 @@ for entry in $USES; do
   if [ -f "$target/SKILL.md" ]; then link "$target" "$name"; else echo "warn   $name: no SKILL.md at $sub"; fi
 done
 
+# The manager itself is small and local to this already trusted checkout. It does not
+# install missing family CLIs or enable background scheduling without explicit consent.
+manager="$BASE/plugins/plugins/use-family/scripts/use.py"
+if [ -f "$manager" ] && command -v python3 >/dev/null 2>&1; then
+  python3 "$manager" install --local || failed="$failed use-manager"
+fi
+
 missing=""
 for name in $CLIS; do command -v "$name" >/dev/null 2>&1 || missing="$missing $name"; done
 echo

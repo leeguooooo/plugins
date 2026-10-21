@@ -1,75 +1,15 @@
 #!/bin/sh
-# Upgrade every installed *-use: each CLI through its own `upgrade` command, the skill
-# checkouts made by install-use-family.sh, and the Claude Code plugins.
-#   curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/upgrade-use-family.sh | sh
-# Convention: docs/upgrade.md.
-set -u
-BASE="${USE_FAMILY_DIR:-$HOME/.agents/use-family}"
-PLUGINS="$HOME/.claude/plugins/installed_plugins.json"
-NAMES="android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use switch-use"
-failed=""
-
-repo_of() {  # repo_of <name>: the GitHub repo a use lives in
-  case "$1" in ocs) echo open-cross-session ;; sflow) echo session-flow ;; *) echo "$1" ;; esac
-}
-
-has_upgrade() {  # the CLI lists an `upgrade` subcommand in its help (text, or JSON when piped, e.g. mail-use);
-  # usage lines may repeat the program name ("  ocs upgrade [--check]", or unindented "sflow upgrade")
-  "$1" --help 2>&1 | grep -qE "^([[:space:]]*$1[[:space:]]+|[[:space:]]+)upgrade([[:space:]]|\$)|\"name\":[[:space:]]*\"upgrade\""
-}
-
-echo "== CLIs"
-for name in $NAMES; do
-  command -v "$name" >/dev/null 2>&1 || continue
-  if has_upgrade "$name"; then
-    echo "-- $name"
-    "$name" upgrade || failed="$failed $name"
-  else
-    echo "-- $name: no upgrade command in this version; reinstall to get it:"
-    echo "   curl -fsSL https://raw.githubusercontent.com/leeguooooo/$(repo_of "$name")/main/install.sh | sh"
-  fi
-done
-
-if [ -d "$BASE" ]; then
-  echo "== skills from install-use-family.sh ($BASE)"
-  for dir in "$BASE"/*/; do
-    [ -d "$dir.git" ] || continue
-    name=$(basename "$dir")
-    if git -C "$dir" pull -q --ff-only; then echo "-- $name updated"; continue; fi
-    failed="$failed $name-skill"
-    if [ -n "$(git -C "$dir" status --porcelain 2>/dev/null)" ]; then
-      echo "-- $name: not updated, $dir has local changes; commit or stash them and re-run"
-    else
-      echo "-- $name: not updated (network, or its history no longer fast-forwards to origin)"
-      echo "   if the history was rewritten, back the checkout up and re-run install-use-family.sh:  mv \"${dir%/}\" \"${dir%/}.bak\""
-    fi
-  done
+# Compatibility entry point. use upgrade is the installed, independently scheduled manager.
+set -eu
+PATH="$HOME/.local/bin:$PATH"
+if command -v use >/dev/null 2>&1; then exec use upgrade "$@"; fi
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -f "$0" ] && [ -f "$root/install-use.sh" ]; then
+  sh "$root/install-use.sh"
+else
+  tmp=$(mktemp -d)
+  trap 'rm -rf "$tmp"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh -o "$tmp/install-use.sh"
+  sh "$tmp/install-use.sh"
 fi
-
-if command -v claude >/dev/null 2>&1 && [ -f "$PLUGINS" ]; then
-  echo "== Claude Code plugins"
-  claude plugin marketplace update leeguooooo-plugins >/dev/null 2>&1 || true
-  for name in use-family $NAMES; do
-    grep -q "\"$name@leeguooooo-plugins\"" "$PLUGINS" || continue
-    printf -- "-- %s: " "$name"
-    claude plugin update "$name@leeguooooo-plugins" 2>&1 | tail -1
-  done
-  # use-family is a bundle: it fails to load while any plugin it depends on is missing, and a
-  # manual update does not install dependencies a new version added (auto-update does).
-  if grep -q '"use-family@leeguooooo-plugins"' "$PLUGINS"; then
-    manifest="$HOME/.claude/plugins/marketplaces/leeguooooo-plugins/plugins/use-family/.claude-plugin/plugin.json"
-    deps=$(python3 -c 'import json,sys; print(" ".join(d if isinstance(d, str) else d["name"] for d in json.load(open(sys.argv[1])).get("dependencies", [])))' "$manifest" 2>/dev/null)
-    for dep in $deps; do
-      grep -q "\"$dep@leeguooooo-plugins\"" "$PLUGINS" && continue
-      printf -- "-- %s (needed by use-family): " "$dep"
-      claude plugin install "$dep@leeguooooo-plugins" 2>&1 | tail -1
-    done
-  fi
-  echo "Restart Claude Code (or /reload-plugins) to load updated plugins."
-fi
-
-if [ -n "$failed" ]; then
-  echo
-  echo "Some upgrades did not finish:$failed"
-  exit 2
-fi
+exec "$HOME/.local/bin/use" upgrade "$@"

@@ -69,7 +69,23 @@ On the old computer, `memory-use migrate` first. On the new one:
 
 ## Upgrade
 
-Each CLI prints `<name> X is available` on stderr when a newer release exists (at most once a day). Tell the user and offer `<name> upgrade`, which updates the CLI and its skill; `<name> upgrade --check` only looks. When the user says "升级 use 全家" / "upgrade everything", run `curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/upgrade-use-family.sh | sh` after they agree.
+Use `use upgrade` for all installed family CLIs, skills and Claude/Codex plugins;
+`use upgrade --check` checks CLI availability and inventories the other channels.
+`use status --json` shows installed versions and the last recorded result. Missing
+family tools are not installed; failures, pending app updates and preserved dirty
+skills remain visible. No zero-exit wrapper is accepted instead of version readback.
+
+If the manager is missing, install it with
+`curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh`.
+Only when the user requests automatic upgrades, run `use auto enable` (daily by
+default); `use auto status --json` and `use auto disable` inspect/stop future runs.
+This scheduler works without an agent session. Do not turn it on just because an
+update was found. Details: https://github.com/leeguooooo/plugins/blob/main/docs/use-manager.md
+
+Thermo is owned by thermo-use's installer/App updater, not a guessed `thermo upgrade`
+command. A submitted App update/relink is not an installed-version proof. Respect
+host-owned plugin refresh and enabled state; never accept new marketplace executable
+commands automatically. Report attention items and whether a new session is needed.
 
 ## Rules that hold across the family
 
@@ -77,4 +93,4 @@ Each CLI prints `<name> X is available` on stderr when a newer release exists (a
 2. Redacted by default. Raw values only at the moment of use, never in the final reply.
 3. Never bypass a Touch ID or unlock prompt, and never handle the master password.
 4. Before committing to any repo that could echo personal data, run `profile-use leak-scan --staged --all-profiles`.
-5. A CLI is missing → this plugin's session-start check names its installer, plus `install-clis.sh` for all missing ones at once; ask the user before running either.
+5. A member CLI is missing → this plugin's session-start check names its installer, plus `install-clis.sh` for all missing ones at once; ask the user before running either. The small `use` manager is bundled with this plugin; daily scheduling remains opt-in.

@@ -10,7 +10,7 @@
           },
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/sync-clis.sh\"",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap-use.sh\"",
             "timeout": 600
           }
         ]
