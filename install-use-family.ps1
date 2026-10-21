@@ -80,7 +80,7 @@ if ($missing) {
 if ($Failed) { throw "Not updated: $($Failed -join ', ') (each one's reason is above; their old skills stay linked)" }
 
 # Install the manager from the trusted family checkout, without opting into scheduling.
-$Manager = Join-Path $Base 'plugins/plugins/use-family/scripts/use.py'
+$Manager = Join-Path $Base 'plugins/plugins/use-manager/scripts/use.py'
 $ManagerPython = Get-Command python3,python -ErrorAction SilentlyContinue | Select-Object -First 1
 if ((Test-Path $Manager) -and $ManagerPython) {
   & $ManagerPython.Source $Manager install --local

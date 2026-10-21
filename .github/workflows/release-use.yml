@@ -27,11 +27,13 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_use_manager.py' -v
       - name: Package the self-contained standard-library CLI
         run: |
-          version=$(python3 plugins/use-family/scripts/use.py --version)
+          # use-manager is the canonical home; use-family keeps a byte-identical copy for old raw URLs.
+          cmp plugins/use-manager/scripts/use.py plugins/use-family/scripts/use.py
+          version=$(python3 plugins/use-manager/scripts/use.py --version)
           test "$TAG" = "use-v$version"
-          python3 -c 'import json,os; assert json.load(open("plugins/use-family/.claude-plugin/plugin.json"))["version"] == os.environ["TAG"].removeprefix("use-v")'
+          python3 -c 'import json,os; v=os.environ["TAG"].removeprefix("use-v"); assert all(json.load(open(f"plugins/{n}/.claude-plugin/plugin.json"))["version"] == v for n in ("use-manager","use-family"))'
           mkdir dist
-          tar -czf "dist/$TAG.tar.gz" -C plugins/use-family/scripts use.py
+          tar -czf "dist/$TAG.tar.gz" -C plugins/use-manager/scripts use.py
           (cd dist && sha256sum "$TAG.tar.gz" > "$TAG.tar.gz.sha256")
       - name: Publish immutable release assets
         env:

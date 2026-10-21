@@ -51,6 +51,9 @@ use auto disable
 
 Updates installed family CLIs, clean Git skills and Claude/Codex family plugins. Missing
 tools are not bulk-installed; dirty skills, failures and pending App updates stay visible.
+In Claude Code you rarely need the `curl` line: every `*-use` plugin depends on
+[use-manager](plugins/use-manager), which installs `use` at session start from the copy it
+ships (offline, never a downgrade, never enables scheduling; `USE_NO_MANAGER=1` skips it).
 See [commands, Windows installation and scheduler behavior](docs/use-manager.md).
 
 ## The *-use family in one install
@@ -108,6 +111,14 @@ Claude Code plugins alone: `claude plugin update <name>@leeguooooo-plugins`, the
 ChatGPT on the web and mobile can't use these: the uses drive your own browser, mailbox and chat apps, and ChatGPT only installs plugins from OpenAI's directory.
 
 <!-- use-family:start — this section is generated from .claude-plugin/marketplace.json by .github/workflows/auto-sync-versions.yml; edit descriptions there, not here -->
+
+### [use-manager](https://github.com/leeguooooo/plugins/tree/main/plugins/use-manager)
+
+The `use` command: `use upgrade` upgrades every *-use tool you have (CLIs, skills, plugins). Every *-use plugin depends on it, so installing any one of them brings `use` along. It never installs missing tools and never schedules upgrades by itself (`use auto enable` does).
+
+**Claude Code:** `/plugin install use-manager@leeguooooo-plugins`
+
+---
 
 ### [chrome-use](https://github.com/leeguooooo/chrome-use)
 

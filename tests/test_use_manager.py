@@ -11,7 +11,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-SOURCE=Path(__file__).resolve().parents[1]/'plugins/use-family/scripts/use.py'
+REPO=Path(__file__).resolve().parents[1]
+SOURCE=REPO/'plugins/use-manager/scripts/use.py'
 spec=importlib.util.spec_from_file_location('use_manager',SOURCE)
 u=importlib.util.module_from_spec(spec); spec.loader.exec_module(u)
 
@@ -41,7 +42,7 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(Path(launcher).read_text(),'user program')
 
     def test_older_plugin_bootstrap_never_downgrades_manager(self):
-        newer=SOURCE.read_bytes().replace(b"VERSION = '0.15.2'",b"VERSION = '9.0.0'")
+        newer=SOURCE.read_bytes().replace(f"VERSION = '{u.VERSION}'".encode(),b"VERSION = '9.0.0'")
         u.install_bytes(newer,'9.0.0')
         u.install_bytes(SOURCE.read_bytes(),u.VERSION)
         self.assertEqual((u.INSTALL/'use.py').read_bytes(),newer)
@@ -186,6 +187,68 @@ class ManagerTests(unittest.TestCase):
         with patch.object(u,'canonical_sources',return_value=latest):u.refresh_copies(report,[dict(item)],baseline,['ocs'],False)
         self.assertEqual(report['items'][0]['status'],'manual')
         self.assertEqual((target/'SKILL.md').read_text(),'my own edits')
+
+    def test_skill_only_copy_of_root_level_plugin_is_current(self):
+        source=self.root/'cache/message-use/0.1.2';target=self.root/'.claude/skills/message-use'
+        for p in (source,target):p.mkdir(parents=True)
+        (source/'SKILL.md').write_text('skill');(source/'README.md').write_text('repo files');(target/'SKILL.md').write_text('skill')
+        latest={'message-use':[{'path':str(source),'hash':u.folder_hash(source),'version':'0.1.2'}]}
+        item=dict(name='message-use',path=str(target),channel='skill',status='manual')
+        report={'items':[],'json':True}
+        with patch.object(u,'canonical_sources',return_value=latest):u.refresh_copies(report,[dict(item)],{},['message-use'],False)
+        self.assertEqual(report['items'][0]['status'],'current')
+        (target/'SKILL.md').write_text('my own edits')
+        report={'items':[],'json':True}
+        with patch.object(u,'canonical_sources',return_value=latest):u.refresh_copies(report,[dict(item)],{},['message-use'],False)
+        self.assertEqual(report['items'][0]['status'],'manual')
+        self.assertEqual((target/'SKILL.md').read_text(),'my own edits')
+
+    def test_installer_marked_copy_is_owner_managed_until_edited(self):
+        import hashlib
+        target=self.root/'.agents/skills/iphone-use';target.mkdir(parents=True)
+        (target/'SKILL.md').write_text('installed by owner')
+        digest=hashlib.sha256(b'installed by owner').hexdigest()
+        (target/'.iphone-use-release').write_text('format=1\nrelease_ref=v0.21.0\nskill_sha256='+digest+'\n')
+        unmanaged=[];list(u.git_roots(['iphone-use'],unmanaged))
+        self.assertEqual([(i['path'],i['status']) for i in unmanaged],[(str(target),'owner-managed')])
+        (target/'SKILL.md').write_text('edited')
+        unmanaged=[];list(u.git_roots(['iphone-use'],unmanaged))
+        self.assertEqual(unmanaged[0]['status'],'manual')
+
+    def test_manager_plugin_follows_use_family_in_upgrades_and_reports(self):
+        self.assertEqual(u.plugin_names(['use-family']),['use-family','use-manager'])
+        self.assertEqual(u.plugin_names(['chrome-use']),['chrome-use'])
+        self.assertEqual(u.tool_name(dict(name='use-manager@leeguooooo-plugins')),'use-family')
+
+    def test_every_family_plugin_brings_the_manager(self):
+        market=json.loads((REPO/'.claude-plugin/marketplace.json').read_text())
+        entries={p['name']:p for p in market['plugins']}
+        for name in u.NAMES:  # use-family declares its own in plugin.json
+            self.assertIn('use-manager',entries[name].get('dependencies',[]),name)
+        bundle=json.loads((REPO/'plugins/use-family/.claude-plugin/plugin.json').read_text())
+        self.assertIn('use-manager',bundle['dependencies'])
+        manager=json.loads((REPO/'plugins/use-manager/.claude-plugin/plugin.json').read_text())
+        self.assertFalse(manager.get('dependencies'))  # no cycle, nothing else installed
+        self.assertEqual(entries['use-manager']['source'],'./plugins/use-manager')
+        for version in (manager['version'],bundle['version'],entries['use-manager']['version'],entries['use-family']['version']):
+            self.assertEqual(version,u.VERSION)
+
+    def test_use_family_copy_matches_canonical_manager(self):
+        # Old installers and cached scripts still fetch plugins/use-family/scripts/use.py.
+        self.assertEqual((REPO/'plugins/use-family/scripts/use.py').read_bytes(),SOURCE.read_bytes())
+
+    @unittest.skipIf(os.name=='nt','POSIX hook script')
+    def test_manager_bootstrap_never_blocks_session_start(self):
+        script=REPO/'plugins/use-manager/scripts/bootstrap-use.sh'
+        hooks=json.loads((REPO/'plugins/use-manager/hooks/hooks.json').read_text())
+        self.assertEqual(hooks['hooks']['SessionStart'][0]['matcher'],'startup')
+        e=dict(os.environ,HOME=str(self.root),USE_MANAGER_HOME=str(self.root/'install'),USE_MANAGER_BIN=str(self.root/'bin'),USE_MANAGER_STATE=str(self.root/'state'),PATH='/usr/bin:/bin:'+str(Path(sys.executable).parent))
+        done=subprocess.run(['sh',str(script)],env=dict(e,USE_NO_MANAGER='1'),capture_output=True,text=True)
+        self.assertEqual(done.returncode,0);self.assertFalse((self.root/'bin/use').exists())
+        broken=self.root/'broken';(broken/'scripts').mkdir(parents=True);(broken/'scripts/use.py').write_text('raise SystemExit(3)\n')
+        (broken/'scripts/bootstrap-use.sh').write_bytes(script.read_bytes())
+        done=subprocess.run(['sh',str(broken/'scripts/bootstrap-use.sh')],env=e,capture_output=True,text=True)
+        self.assertEqual(done.returncode,0);self.assertIn('could not install',done.stderr)
 
     def test_release_checksum_is_required_before_install(self):
         import io,tarfile,hashlib
