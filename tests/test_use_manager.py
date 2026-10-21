@@ -375,6 +375,15 @@ class ManagerTests(unittest.TestCase):
             code,text=u.run([sys.executable,'-c',f'print({secret!r})'])
         self.assertEqual(code,0);self.assertEqual(text.strip(),'[redacted]')
 
+    def test_utf8_state_and_unicode_install_paths(self):
+        data={'path':'工具/安装目录','message':'中文 and English'}
+        u.save(u.STATE/'unicode.json',data)
+        self.assertEqual(json.loads((u.STATE/'unicode.json').read_bytes().decode('utf-8')),data)
+        self.assertEqual(u.read(u.STATE/'unicode.json'),data)
+        with patch.object(u,'INSTALL',self.root/'安装目录'):
+            u.install_bytes(SOURCE.read_bytes(),u.VERSION)
+            self.assertEqual(subprocess.check_output([sys.executable,str(u.INSTALL/'use.py'),'--version'],text=True).strip(),u.VERSION)
+
     def test_rate_limit_cache_is_validated_and_auth_does_not_use_anonymous_limit(self):
         # Read the original helper, not the default isolated-upgrade mock.
         # Restore only the function from source in a fresh isolated module.

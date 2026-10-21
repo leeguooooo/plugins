@@ -28,7 +28,7 @@ ALIASES = {'thermo-use':['thermo-use','thermo'], 'bitwarden-use':['bitwarden-use
 HOME = Path.home()
 SCRIPT = Path(__file__).resolve()
 try:
-    _metadata=json.loads((SCRIPT.parent/'installed.json').read_text())
+    _metadata=json.loads((SCRIPT.parent/'installed.json').read_text(encoding='utf-8-sig'))
     _paths=_metadata.get('paths',{}) if _metadata.get('installPath')==str(SCRIPT.parent) else {}
 except (OSError,ValueError): _paths={}
 def setting(key,default):
@@ -215,9 +215,9 @@ def _install_bytes(content,expected):
         with open(existing,'rb') as f: owned=MARKER.encode() in f.read(512)
         if not owned: raise RuntimeError('Another unmanaged use command is already on PATH; left it untouched')
     for f in (target,launcher):
-        if f.exists() and MARKER not in f.read_text(errors='replace'): raise RuntimeError('Refusing to replace an unmanaged use executable: '+str(f))
+        if f.exists() and MARKER not in f.read_text(encoding='utf-8',errors='replace'): raise RuntimeError('Refusing to replace an unmanaged use executable: '+str(f))
     if target.exists():
-        old=re.search(r"^VERSION = ['\"](\d+\.\d+\.\d+)['\"]$",target.read_text(),re.M)
+        old=re.search(r"^VERSION = ['\"](\d+\.\d+\.\d+)['\"]$",target.read_text(encoding='utf-8-sig'),re.M)
         if old and tuple(map(int,old.group(1).split('.')))>tuple(map(int,expected.split('.'))):
             content=target.read_bytes(); expected=old.group(1)
     INSTALL.mkdir(parents=True,exist_ok=True); BIN.mkdir(parents=True,exist_ok=True)
@@ -251,14 +251,14 @@ def install_bytes(content,expected):
 
 
 def read(path, default=None):
-    try: return json.loads(Path(path).read_text())
+    try: return json.loads(Path(path).read_text(encoding='utf-8-sig'))
     except (OSError, ValueError): return {} if default is None else default
 
 
 def save(path, data):
     path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_name(path.name+'.partial')
-    with open(temp,'w') as out:
+    with open(temp,'w',encoding='utf-8',newline='\n') as out:
         if os.name != 'nt': os.chmod(temp,0o600)
         json.dump(data,out,ensure_ascii=False,indent=2); out.write('\n')
     os.replace(temp,path)
@@ -359,7 +359,7 @@ def signal_group(group,signum):
 def run(argv,cwd=None,timeout=240):
     process=None;job=None
     try:
-        options=dict(cwd=cwd,env=env(),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,errors='replace')
+        options=dict(cwd=cwd,env=env(),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace')
         if os.name=='nt': options['creationflags']=0x4  # CREATE_SUSPENDED: no child can escape assignment
         else: options['start_new_session']=True
         process=subprocess.Popen([str(a) for a in argv],**options)
@@ -399,7 +399,7 @@ def cli_version(exe):
 def plugin_entries():
     p=HOME/'.claude/plugins/installed_plugins.json'
     if not p.exists(): return []
-    try: data=json.loads(p.read_text())
+    try: data=json.loads(p.read_text(encoding='utf-8-sig'))
     except (OSError,ValueError): raise RuntimeError('Cannot read installed Claude plugins; no plugin changes attempted')
     if not isinstance(data,dict) or not isinstance(data.get('plugins',data),dict):
         raise RuntimeError('Cannot read installed Claude plugins; no plugin changes attempted')
@@ -499,7 +499,7 @@ def write_log(text):
     STATE.mkdir(parents=True,exist_ok=True)
     p=STATE/'upgrade.log'
     if p.exists() and p.stat().st_size>5_000_000: os.replace(p,STATE/'upgrade.previous.log')
-    with open(p,'a') as f:
+    with open(p,'a',encoding='utf-8') as f:
         if os.name!='nt': os.chmod(p,0o600)
         f.write(text+'\n')
 
@@ -689,7 +689,7 @@ def canonical_sources(names):
         for p in (root/'skills'/name,root,root/'plugins/use-family/skills/use-family'):
             skill=p/'SKILL.md'
             if not skill.is_file(): continue
-            if not re.search(r'^name:\s*[\"\']?'+re.escape(name)+r'[\"\']?\s*$',skill.read_text(errors='replace'),re.M): continue
+            if not re.search(r'^name:\s*[\"\']?'+re.escape(name)+r'[\"\']?\s*$',skill.read_text(encoding='utf-8',errors='replace'),re.M): continue
             try: sig=folder_hash(p)
             except OSError: continue
             result.setdefault(name,[]).append(dict(path=str(p),hash=sig,version=v)); break
@@ -894,7 +894,7 @@ def load_report():
     missing=[i for i in report.get('items',[]) if i['status']=='failed' and not i.get('reason')]
     log=STATE/'upgrade.log'
     if missing and log.is_file():
-        entries=re.split(r'\n(\d{4}-\d\d-\d\dT[^\n]+)\n',log.read_text(errors='replace'))
+        entries=re.split(r'\n(\d{4}-\d\d-\d\dT[^\n]+)\n',log.read_text(encoding='utf-8',errors='replace'))
         for header,text in zip(entries[1::2],entries[2::2]):
             fields=header.split(' ',2)
             if len(fields)!=3:continue
@@ -1056,6 +1056,9 @@ def apply_context(file):
 
 
 def main(argv=None):
+    if os.name=='nt':
+        for stream in (sys.stdout,sys.stderr):
+            if hasattr(stream,'reconfigure'):stream.reconfigure(encoding='utf-8',errors='backslashreplace')
     global UI_LANG
     language=argparse.ArgumentParser(add_help=False)
     language.add_argument('--lang',choices=['en','zh','auto'])
