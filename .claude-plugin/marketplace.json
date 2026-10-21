@@ -120,7 +120,7 @@
     {
       "name": "motion-use",
       "description": "Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, default narration, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.",
-      "version": "0.17.0",
+      "version": "0.19.0",
       "category": "productivity",
       "source": {
         "source": "url",
