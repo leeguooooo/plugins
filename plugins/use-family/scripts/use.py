@@ -21,7 +21,7 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.0'
+VERSION = '0.15.1'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 ALIASES = {'thermo-use':['thermo-use','thermo'], 'bitwarden-use':['bitwarden-use','bwu']}
@@ -282,6 +282,7 @@ def codex_upgrade(report,names,check):
     allowed=set(names+(['use-family'] if set(names)==set(NAMES) else []))
     selected=[p for p in entries if p['name'] in allowed]
     for market in sorted({p['marketplaceName'] for p in selected}):
+        progress(report,'更新 Codex 插件：'+market+'…')
         group=[p for p in entries if p['marketplaceName']==market]
         chosen=[p for p in selected if p['marketplaceName']==market]
         if check:
@@ -303,8 +304,8 @@ def codex_upgrade(report,names,check):
             target=version(targets.get(p['pluginId']))
             if target and (not version(after.get('version')) or tuple(map(int,version(after['version']).split('.')))<tuple(map(int,target.split('.')))): ok=False
             row=dict(name=p['pluginId'],channel='codex-plugin',status=(('updated' if after.get('version')!=p['version'] else 'current') if target else 'unverified') if ok else 'failed',before=p['version'],after=after.get('version'),target=target,enabledBefore=p['enabled'],enabledAfter=after.get('enabled'),exitCode=code)
+            if not ok: row['reason']=failure_reason(code,text,'codex-plugin') if code else 'plugin version, installed set or enabled state could not be verified'
             report['items'].append(row)
-            if not report['json']: print('codex-plugin: '+str(p['pluginId'])+': '+row['status'],flush=True)
 
 
 @contextlib.contextmanager
@@ -341,6 +342,20 @@ def write_log(text):
         f.write(text+'\n')
 
 
+def progress(report,label=''):
+    if not report.get('json') and sys.stderr.isatty():
+        print('\r\033[2K'+label,end='',file=sys.stderr,flush=True)
+
+
+def failure_reason(code,text,channel):
+    if code==124: return 'command timed out; inspect before retrying'
+    if channel=='skill' and re.search(r'fast.forward|diverging branches|divergent branches',text,re.I):
+        return 'Git history diverged; local checkout preserved'
+    if re.search(r'403|rate.limit',text,re.I): return 'remote access denied or rate limited'
+    if re.search(r'authentication failed|permission denied|could not read.*[Uu]sername',text,re.I): return 'repository authentication required'
+    return 'owner command failed; see private upgrade log'
+
+
 def step(report,name,channel,argv,cwd=None,before=None,after=None,target=None):
     code,text=run(argv,cwd)
     write_log(f'\n{datetime.datetime.now().isoformat()} {channel} {name}\n{text}')
@@ -355,8 +370,8 @@ def step(report,name,channel,argv,cwd=None,before=None,after=None,target=None):
         elif observed: status='current' if target else 'unverified'
         else: status='unverified'
     row=dict(name=name,channel=channel,status=status,exitCode=code,before=before,after=observed,target=target)
+    if status=='failed': row['reason']=failure_reason(code,text,channel) if code else 'installed version did not reach the expected target'
     report['items'].append(row)
-    if not report['json']: print(f'{channel}: {name}: {status}',flush=True)
     return row
 
 
@@ -552,6 +567,7 @@ def upgrade(args):
             return dict(ok=True,skipped='not due'),0
     report=dict(ok=False,started=time.time(),automatic=automatic,check=args.check,json=args.json,items=[])
     with lock():
+        progress(report,'读取已安装的 use 工具…')
         if automatic: save(STATE/'last-attempt.json',{'at':time.time()})
         names=list(args.names) if args.names else NAMES+['use-family']
         if automatic: names=[n for n in names if not os.environ.get(n.upper().replace('-','_')+'_NO_AUTO_UPGRADE')]
@@ -560,10 +576,12 @@ def upgrade(args):
         except (OSError,ValueError,RuntimeError): initial_codex=[]
         unknown=set(names)-set(NAMES+['use-family'])
         if unknown: raise RuntimeError('Unknown family member: '+', '.join(sorted(unknown)))
+        progress(report,'核对技能副本…')
         copy_baselines=canonical_sources(names) if not args.check else {}
         if 'use-family' in names: self_upgrade(report,args.check)
         # Each installed CLI owns its installer, native apps and skill refresh. Do not install missing tools.
         for name in names:
+            progress(report,('检查 ' if args.check else '检查并升级 ')+name+'…')
             if automatic and not read(CONFIG).get('enabled'): break
             if automatic and os.environ.get(name.upper().replace('-','_')+'_NO_AUTO_UPGRADE'): continue
             if name=='thermo-use':
@@ -585,12 +603,13 @@ def upgrade(args):
             step(report,name,'cli',[exe,'upgrade'],before=before,after=(lambda e=exe:upgrade_probe(e)[0] or cli_version(e)) if name=='wechat-use' else (lambda e=exe:cli_version(e)),target=target)
         unmanaged=[]
         for root in git_roots(names,unmanaged):
+            progress(report,'更新技能：'+root.name+'…')
             code,dirty=run(['git','-C',root,'status','--porcelain'],timeout=15)
             if code or dirty.strip():
                 report['items'].append(dict(name=root.name,channel='skill',status='manual',reason='checkout is dirty or unreadable',path=str(root))); continue
             if args.check:
                 report['items'].append(dict(name=root.name,channel='skill',status='installed',path=str(root))); continue
-            step(report,root.name,'skill',['git','-C',root,'pull','--ff-only'])
+            step(report,root.name,'skill',['git','-C',root,'pull','--ff-only'])['path']=str(root)
         codex_upgrade(report,names,args.check)
         if not args.check:
             entries=[e for e in plugin_entries() if e['key'].split('@')[0] in names]
@@ -600,6 +619,7 @@ def upgrade(args):
                 markets=sorted({e['key'].split('@',1)[1] for e in entries if '@' in e['key']})
                 for market in markets: step(report,market,'marketplace',[claude,'plugin','marketplace','update',market])
                 for e in entries:
+                    progress(report,'更新 Claude 插件：'+e['key'].split('@')[0]+'…')
                     if automatic and not read(CONFIG).get('enabled'): break
                     scope=e.get('scope','user'); cwd=e.get('projectPath') if scope in ('project','local') else None
                     if scope in ('project','local') and (not cwd or not Path(cwd).is_dir()):
@@ -609,11 +629,114 @@ def upgrade(args):
                     step(report,e['key'],'plugin',[claude,'plugin','update',e['key'],'--scope',scope],cwd=cwd,before=e.get('version'),after=after,target=plugin_target(e['key']))
         else:
             report['items'].extend(dict(name=e['key'],channel='plugin',status='installed',before=e.get('version')) for e in plugin_entries() if e['key'].split('@')[0] in names)
+        progress(report,'核对升级结果和保留的技能副本…')
         refresh_copies(report,unmanaged,copy_baselines,names,args.check)
         report['ok']=all(i['status'] not in ('failed','manual','unverified','pending') for i in report['items'])
         report['finished']=time.time(); report.pop('json')
         if not args.check: save(STATE/'last-report.json',report)
+        progress(report)
         return report,0 if report['ok'] else 2
+
+
+def tool_name(item):
+    name=item.get('name','').split('@')[0]
+    return 'use-family' if name=='use' else name
+
+
+def human_reason(item):
+    reason=item.get('reason','')
+    messages={
+        'Git history diverged; local checkout preserved':'技能仓库历史已分叉，无法安全快进；已保留本地内容',
+        'command timed out; inspect before retrying':'命令超时，请检查工具状态后再重试',
+        'remote access denied or rate limited':'远端拒绝访问或触发限流，请稍后重试',
+        'repository authentication required':'仓库需要认证，请先检查 Git 登录',
+        'installed version did not reach the expected target':'实际安装版本未达到目标版本',
+        'local copy differs from known owner baseline; preserved':'技能副本与已知原版不同，已保留',
+        'checkout is dirty or unreadable':'技能目录有本地改动或无法读取，已保留',
+        'installed version has no upgrade command':'当前 CLI 没有自动升级入口',
+        'owner command failed; see private upgrade log':'工具自身的升级命令失败，原因见私有日志',
+        'Thermo update requested; installed App has not reached the target version yet':'已请求更新 Thermo，等待 App 完成更新',
+        'native marketplace refresh would include plugins outside the requested family scope':'市场更新会涉及所选范围以外的插件，已跳过',
+        'native Codex plugin inventory unavailable':'无法读取 Codex 已安装插件，已跳过',
+        'plugin version, installed set or enabled state could not be verified':'无法确认插件版本、安装列表或启用状态',
+    }
+    return messages.get(reason,reason or ('命令失败，详见私有日志' if item.get('exitCode') else '需要进一步检查'))
+
+
+def load_report():
+    report=read(STATE/'last-report.json')
+    if not report:raise RuntimeError('尚无升级报告，请先运行 use upgrade')
+    # Older reports omitted failure reasons. Recover only a matching log entry
+    # from this report's time interval, never echoing raw owner output.
+    missing=[i for i in report.get('items',[]) if i['status']=='failed' and not i.get('reason')]
+    log=STATE/'upgrade.log'
+    if missing and log.is_file():
+        entries=re.split(r'\n(\d{4}-\d\d-\d\dT[^\n]+)\n',log.read_text(errors='replace'))
+        for header,text in zip(entries[1::2],entries[2::2]):
+            fields=header.split(' ',2)
+            if len(fields)!=3:continue
+            try:at=datetime.datetime.fromisoformat(fields[0]).timestamp()
+            except ValueError:continue
+            if not report.get('started',0)<=at<=report.get('finished',0):continue
+            for item in missing:
+                if fields[1:]==[item.get('channel'),item.get('name')]:item['reason']=failure_reason(item.get('exitCode'),text,item.get('channel'))
+    return report
+
+
+def print_report(report,verbose=False):
+    items=report.get('items',[])
+    if report.get('skipped'):
+        print({'not due':'尚未到下次自动升级时间。','automatic upgrades disabled':'自动升级未启用或已被环境设置暂停。'}.get(report['skipped'],report['skipped'])); return
+    known=set(NAMES+['use-family'])
+    tools={tool_name(i) for i in items if tool_name(i) in known}
+    changes={}
+    wanted='available' if report.get('check') else 'updated'
+    for i in items:
+        if i['status']==wanted: changes.setdefault(tool_name(i),[]).append(i)
+    problems=[i for i in items if i['status'] in ('failed','pending','unverified')]
+    manuals=[i for i in items if i['status']=='manual']
+    copied=[i for i in manuals if i.get('channel')=='skill' and i.get('path') and ('baseline' in i.get('reason','') or 'copied/unmanaged' in i.get('reason',''))]
+    other_manual=[i for i in manuals if i not in copied]
+    parts=[f'已检查 {len(tools)} 个工具']
+    if changes: parts.append(f'{len(changes)} 个'+('可更新' if report.get('check') else '已更新'))
+    failed={tool_name(i) for i in problems if i['status']=='failed'}
+    waiting={tool_name(i) for i in problems if i['status']!='failed'}
+    if failed:parts.append(f'{len(failed)} 个失败')
+    if waiting:parts.append(f'{len(waiting)} 个等待确认')
+    if other_manual:parts.append(f'{len({tool_name(i) for i in other_manual})} 个需检查')
+    if not changes and not problems and not manuals: parts.append('暂无更新')
+    print('；'.join(parts)+'。')
+    channels={'cli':'CLI','app':'App','manager':'管理器','plugin':'Claude 插件','codex-plugin':'Codex 插件','skill':'技能','marketplace':'插件市场'}
+    for name,rows in changes.items():
+        versions=[]
+        for i in rows:
+            after=i.get('after') or i.get('target')
+            label=(str(i.get('before'))+' → '+str(after)) if i.get('before') and after else str(after or '')
+            text=channels.get(i.get('channel'),i.get('channel',''))+(' '+label if label else '')
+            if text not in versions:versions.append(text)
+        print('  '+('↑' if report.get('check') else '✓')+' '+name+'：'+'；'.join(versions))
+    seen=set()
+    for i in problems+other_manual:
+        key=(tool_name(i),human_reason(i))
+        if key in seen:continue
+        seen.add(key)
+        print('  ! '+key[0]+'：'+key[1])
+    if copied:
+        names=list(dict.fromkeys(tool_name(i) for i in copied))
+        print(f'  保留 {len(names)} 个工具的 {len(copied)} 份技能副本，与已知原版不一致，未覆盖：')
+        print('  '+ '、'.join(names))
+    if problems or manuals:
+        print('详情：'+('use upgrade --check --verbose' if report.get('check') else 'use report --verbose')+'；日志：'+str(STATE/'upgrade.log'))
+        if any('diverged' in i.get('reason','') for i in problems):print('Git 分叉需先检查本地提交；请勿直接重置或强制覆盖。')
+    if not report.get('check') and any(i['status']=='updated' and i.get('channel') in ('plugin','codex-plugin') for i in items):
+        print('插件更新在新会话中生效。')
+    if verbose:
+        labels={'updated':'已更新','available':'可更新','current':'已是最新','completed':'已完成','failed':'失败','manual':'已保留，需检查','unverified':'未确认','pending':'等待完成','owner-managed':'由安装器维护','installed':'已安装'}
+        print('\n完整明细：')
+        for i in items:
+            print('  '+i.get('name','')+' ['+channels.get(i.get('channel'),i.get('channel',''))+'] '+labels.get(i['status'],i['status']))
+            if i.get('path'):print('    '+i['path'])
+            if i['status'] in ('failed','manual','unverified','pending'):print('    '+human_reason(i))
 
 
 def schedule(kind,enable):
@@ -703,6 +826,9 @@ def main(argv=None):
     ins.add_argument('--auto',action='store_true'); ins.add_argument('--json',action='store_true')
     up=commands.add_parser('upgrade',help='upgrade installed family CLIs, git skills and Claude plugins')
     up.add_argument('names',nargs='*'); up.add_argument('--check',action='store_true'); up.add_argument('--json',action='store_true'); up.add_argument('--automatic',action='store_true',help=argparse.SUPPRESS); up.add_argument('--context',help=argparse.SUPPRESS)
+    up.add_argument('--verbose',action='store_true',help='show all channel results and preserved paths')
+    rp=commands.add_parser('report',help='show the last upgrade result without running another upgrade')
+    rp.add_argument('--json',action='store_true');rp.add_argument('--verbose',action='store_true')
     st=commands.add_parser('status',help='installed versions and latest recorded result'); st.add_argument('--json',action='store_true')
     au=commands.add_parser('auto',help='daily background upgrades'); au.add_argument('action',choices=['enable','disable','status']); au.add_argument('--hours',type=int,default=24); au.add_argument('--json',action='store_true')
     args=parser.parse_args(argv)
@@ -723,6 +849,10 @@ def main(argv=None):
         elif args.command=='upgrade':
             if args.automatic and args.check: raise RuntimeError('--automatic cannot be combined with --check')
             result,code=upgrade(args)
+        elif args.command=='report':
+            result=read(STATE/'last-report.json') if args.json else load_report()
+            if not result:raise RuntimeError('尚无升级报告，请先运行 use upgrade')
+            code=0 if result.get('ok') else 2
         elif args.command=='auto':
             if args.hours<1: raise RuntimeError('--hours must be at least 1')
             result,code=auto(args),0
@@ -730,14 +860,12 @@ def main(argv=None):
             result,code=dict(version=VERSION,clis=[dict(name=n,path=p,version=cli_version(p)) for n in NAMES if (p:=installed_cli(n))],plugins=plugin_entries(),codexPlugins=[p for p in codex_entries() if p['name'] in NAMES+['use-family']],auto=read(CONFIG),lastRun=read(STATE/'last-report.json')),0
         if args.json or args.command=='status' or (args.command=='auto' and args.action=='status'):
             print(json.dumps(result,ensure_ascii=False,indent=2))
-        elif args.command=='upgrade':
-            from collections import Counter
-            counts=Counter(i['status'] for i in result.get('items',[]))
-            print('use: '+(', '.join(f'{v} {k}' for k,v in sorted(counts.items())) or result.get('skipped','no installed targets')))
-            if not args.check: print('Report: '+str(STATE/'last-report.json'))
+        elif args.command in ('upgrade','report'):
+            print_report(result,args.verbose)
         else: print(json.dumps(result,ensure_ascii=False))
         return code
     except (RuntimeError,OSError,ValueError) as e:
+        progress({'json':args.json})
         print(json.dumps(dict(ok=False,error=str(e)),ensure_ascii=False),file=sys.stdout if args.json else sys.stderr); return 2
 
 if __name__=='__main__': sys.exit(main())

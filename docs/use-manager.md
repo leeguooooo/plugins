@@ -6,6 +6,8 @@ Install the self-contained Python 3.9+ manager from a checksum-verified GitHub R
 curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh
 use upgrade
 use upgrade --check
+use report                # last result; does not run another upgrade
+use report --verbose      # all channels, failures and preserved paths
 use status --json
 ```
 
@@ -13,6 +15,12 @@ use status --json
 Claude/Codex family plugins. It also updates the manager itself. It does not bulk-install
 missing family members. Each CLI keeps ownership of its installer, app and skill refresh.
 `use upgrade motion-use chrome-use` selects a subset. Unknown names are refused.
+
+The default terminal output shows one live progress line, then a summary grouped by tool.
+Current versions and successful internal refreshes stay out of the summary. Modified or
+unverified skill copies are grouped separately from failed upgrades. `--verbose` shows every
+channel and path; `--json` retains the structured report without terminal progress output.
+Git history divergence is reported with its cause; the manager never resets local commits.
 
 On Windows, install Python 3.9+ first, then run in PowerShell:
 

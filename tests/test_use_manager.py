@@ -1,4 +1,6 @@
 import importlib.util
+import contextlib
+import io
 import json
 import os
 import subprocess
@@ -22,6 +24,7 @@ class ManagerTests(unittest.TestCase):
             p=patch.object(u,key,value);p.start();self.addCleanup(p.stop)
         patcher=patch.object(u,'codex_entries',return_value=[]);patcher.start();self.addCleanup(patcher.stop)
         patcher=patch.object(u,'canonical_sources',return_value={});patcher.start();self.addCleanup(patcher.stop)
+        patcher=patch.object(u,'thermo_version',return_value=None);patcher.start();self.addCleanup(patcher.stop)
         self.args=SimpleNamespace(automatic=False,check=False,json=True,names=['chrome-use','mail-use'])
 
     def test_real_install_version_readback_and_unknown_executable_preserved(self):
@@ -34,7 +37,7 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(Path(launcher).read_text(),'user program')
 
     def test_older_plugin_bootstrap_never_downgrades_manager(self):
-        newer=SOURCE.read_bytes().replace(b"VERSION = '0.15.0'",b"VERSION = '9.0.0'")
+        newer=SOURCE.read_bytes().replace(b"VERSION = '0.15.1'",b"VERSION = '9.0.0'")
         u.install_bytes(newer,'9.0.0')
         u.install_bytes(SOURCE.read_bytes(),u.VERSION)
         self.assertEqual((u.INSTALL/'use.py').read_bytes(),newer)
@@ -185,8 +188,8 @@ class ManagerTests(unittest.TestCase):
         blob=io.BytesIO()
         with tarfile.open(fileobj=blob,mode='w:gz') as tar:
             member=tarfile.TarInfo('use.py');content=SOURCE.read_bytes();member.size=len(content);tar.addfile(member,io.BytesIO(content))
-        archive=blob.getvalue();name='use-v0.15.0.tar.gz'
-        data={'tag_name':'use-v0.15.0','assets':[{'name':n,'browser_download_url':'https://github.com/leeguooooo/plugins/releases/download/use-v0.15.0/'+n} for n in (name,name+'.sha256')]}
+        archive=blob.getvalue();name='use-v0.15.1.tar.gz'
+        data={'tag_name':'use-v0.15.1','assets':[{'name':n,'browser_download_url':'https://github.com/leeguooooo/plugins/releases/download/use-v0.15.1/'+n} for n in (name,name+'.sha256')]}
         with patch.object(u,'fetch',side_effect=[archive,(hashlib.sha256(archive).hexdigest()+'  '+name).encode()]):self.assertEqual(u.release_script(data),SOURCE.read_bytes())
         with patch.object(u,'fetch',side_effect=[archive,('0'*64+'  '+name).encode()]):
             with self.assertRaisesRegex(RuntimeError,'checksum'):u.release_script(data)
@@ -245,5 +248,51 @@ class ManagerTests(unittest.TestCase):
         e.pop('CI',None);e.pop('USE_NO_AUTO_UPGRADE',None)
         result=json.loads(subprocess.check_output([sys.executable,str(u.INSTALL/'use.py'),'upgrade','--automatic','--json'],env=e,text=True))
         self.assertEqual(result['skipped'],'not due')
+
+    def test_compact_report_groups_tools_and_preserved_copies(self):
+        rows=[{'name':'chrome-use','channel':'cli','status':'current'} for _ in range(60)]
+        rows += [dict(name='mail-use@market',channel=c,status='updated',before='1.0.0',after='2.0.0') for c in ('plugin','codex-plugin')]
+        rows += [dict(name='android-use',channel='skill',status='manual',path='/skills/'+p,reason='local copy differs from known owner baseline; preserved') for p in ('a','b')]
+        out=io.StringIO()
+        with contextlib.redirect_stdout(out):u.print_report({'items':rows})
+        text=out.getvalue()
+        self.assertIn('1 个已更新',text);self.assertIn('1 个工具的 2 份技能副本',text)
+        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),9)
+        self.assertIn('Claude 插件',text);self.assertIn('Codex 插件',text)
+
+    def test_failure_keeps_safe_reason_and_repository_path(self):
+        report={'items':[],'json':True}
+        with patch.object(u,'run',return_value=(128,'private diagnostic\nfatal: Not possible to fast-forward, aborting.')):
+            row=u.step(report,'wechat-use','skill',['git','pull','--ff-only'])
+        self.assertEqual(row['reason'],'Git history diverged; local checkout preserved')
+        self.assertNotIn('private diagnostic',json.dumps(report))
+        self.assertIn('无法安全快进',u.human_reason(row))
+
+    def test_report_is_read_only_and_json_preserves_saved_schema(self):
+        report={'ok':False,'items':[{'name':'wechat-use','channel':'skill','status':'failed','exitCode':128}]}
+        u.save(u.STATE/'last-report.json',report)
+        before=(u.STATE/'last-report.json').read_bytes();out=io.StringIO()
+        with patch.object(u,'upgrade') as upgrade,contextlib.redirect_stdout(out):code=u.main(['report','--json'])
+        self.assertEqual(code,2);upgrade.assert_not_called()
+        self.assertEqual(json.loads(out.getvalue()),report)
+        self.assertEqual((u.STATE/'last-report.json').read_bytes(),before)
+
+    def test_legacy_report_recovers_only_its_own_failure_entry(self):
+        at=u.datetime.datetime(2026,10,21,20,8,45).timestamp()
+        report={'started':at-10,'finished':at+10,'items':[dict(name='wechat-use',channel='skill',status='failed',exitCode=128)]}
+        u.save(u.STATE/'last-report.json',report)
+        (u.STATE/'upgrade.log').write_text('\n2026-10-20T20:08:45 skill wechat-use\nHTTP 403\n\n2026-10-21T20:08:45 skill wechat-use\nfatal: Not possible to fast-forward, aborting.\n')
+        loaded=u.load_report()
+        self.assertEqual(loaded['items'][0]['reason'],'Git history diverged; local checkout preserved')
+        self.assertNotIn('reason',u.read(u.STATE/'last-report.json')['items'][0])
+
+    def test_progress_is_tty_only_and_verbose_keeps_paths(self):
+        out=io.StringIO()
+        with contextlib.redirect_stderr(out),patch.object(out,'isatty',return_value=True):
+            u.progress({'json':True},'hidden')
+        self.assertEqual(out.getvalue(),'')
+        row=dict(name='x',channel='skill',status='failed',exitCode=128,path='/test/checkout',reason='Git history diverged; local checkout preserved')
+        with contextlib.redirect_stdout(out):u.print_report({'items':[row]},verbose=True)
+        self.assertIn('/test/checkout',out.getvalue());self.assertIn('完整明细',out.getvalue())
 
 if __name__=='__main__':unittest.main()
