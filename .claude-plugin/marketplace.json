@@ -74,7 +74,7 @@
     {
       "name": "iphone-use",
       "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.21.0",
+      "version": "0.22.0",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -212,7 +212,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.19.4",
+      "version": "1.19.5",
       "category": "productivity",
       "source": {
         "source": "url",
