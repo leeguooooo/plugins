@@ -655,11 +655,16 @@ def git_roots(only,unmanaged=None):
         seen.add(root); yield root
 
 
+# Markers that hosts and installers write beside an unchanged skill: Claude Code's plugin cache lock
+# and the iphone-use installer's release stamp. They are not skill content.
+HASH_IGNORED=('.git','node_modules','__pycache__','.DS_Store','.in_use','.iphone-use-release')
+
+
 def folder_hash(root):
     h=hashlib.sha256()
     for p in sorted(Path(root).rglob('*')):
         rel=p.relative_to(root)
-        if any(part in ('.git','node_modules','__pycache__','.DS_Store') for part in rel.parts): continue
+        if any(part in HASH_IGNORED for part in rel.parts): continue
         if p.is_symlink(): value=b'link:'+os.readlink(p).encode()
         elif p.is_file(): value=p.read_bytes()+str(p.stat().st_mode & 0o111).encode()
         else: continue

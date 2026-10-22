@@ -286,6 +286,14 @@ class ManagerTests(unittest.TestCase):
         text=out.getvalue()
         self.assertIn('1 needs attention',text);self.assertIn('1 skill copy of 1 tool untouched',text)
 
+    def test_host_and_installer_markers_do_not_change_skill_hash(self):
+        a,b=self.root/'a',self.root/'b'
+        for d in (a,b):d.mkdir();(d/'SKILL.md').write_text('---\nname: x\n---\n')
+        (b/'.in_use').write_text('');(b/'.iphone-use-release').write_text('v1')
+        self.assertEqual(u.folder_hash(a),u.folder_hash(b))
+        (b/'notes.md').write_text('edit')
+        self.assertNotEqual(u.folder_hash(a),u.folder_hash(b))
+
     def test_skill_pull_that_moves_head_is_reported_as_updated(self):
         (u.BASE/'chrome-use').mkdir(parents=True)
         heads=iter(['abc1234\n','def5678\n'])
