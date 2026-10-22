@@ -16,13 +16,13 @@ $Uses = [ordered]@{
   'android-use' = 'skills/android-use'
   'chrome-use'  = 'skills/chrome-use'
   'mail-use'    = 'skills/mail-use'
-  'discord-use' = '.'
+  'discord-use' = 'skills/discord-use'
   'profile-use' = '.'
   'chatgpt-use' = '.'
-  'image-use'   = '.'
+  'image-use'   = 'skills/image-use'
   'memory-use'  = '.'
   'ocs'         = 'skills/ocs'
-  'paste-use'   = '.'
+  'paste-use'   = 'skills/paste-use'
 }
 # Uses whose repo name differs from the use name.
 $Repos = @{ 'ocs' = 'open-cross-session' }
@@ -65,6 +65,10 @@ foreach ($name in $Uses.Keys) {
   Get-Repo $(if ($Repos[$name]) { $Repos[$name] } else { $name }) $dir
   if (-not (Test-Path (Join-Path $dir '.git'))) { continue }
   $target = if ($Uses[$name] -eq '.') { $dir } else { Join-Path $dir $Uses[$name] }
+  # Preserve an old checkout while the Skill update is pending or its fetch failed.
+  if (($name -eq 'paste-use' -or $name -eq 'discord-use' -or $name -eq 'image-use') -and -not (Test-Path (Join-Path $target 'SKILL.md')) -and (Test-Path (Join-Path $dir 'SKILL.md'))) {
+    $target = $dir
+  }
   if (Test-Path (Join-Path $target 'SKILL.md')) { Add-SkillLink $target $name } else { Write-Warning "$name has no SKILL.md at $($Uses[$name])" }
 }
 
@@ -73,7 +77,7 @@ foreach ($name in $Uses.Keys) {
 $missing = @('android-use', 'chrome-use', 'mail-use', 'discord-use', 'chatgpt-use', 'ocs', 'paste-use', 'image-use') | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) }
 if ($missing) {
   "CLIs not installed yet: $($missing -join ', '). See each repo's README for the Windows install."
-  # image-use has no installer: the CLI is a single Python file at the root of its checkout.
+  # image-use has no PowerShell installer: the CLI is a single Python file at the root of its checkout.
   if ($missing -contains 'image-use') { "  image-use: run it as  py `"$(Join-Path $Base 'image-use\image-use')`"" }
 }
 # throw rather than exit: under `irm | iex`, exit would close the caller's PowerShell window.
