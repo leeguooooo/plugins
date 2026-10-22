@@ -275,7 +275,7 @@ class ManagerTests(unittest.TestCase):
             self.assertEqual(text.count('wechat-use\n'),1)
             self.assertIn('2 need attention' if lang=='en' else '2 个需处理',text)
             self.assertIn('→ wechat-use upgrade',text);self.assertIn('→ motion-use --help',text)
-            self.assertIn('→ git -C ~/family/wechat-use status -sb',text)
+            self.assertIn('→ git -C '+os.path.join('~','family','wechat-use')+' status -sb',text)
             self.assertNotIn(str(u.HOME),text)
 
     def test_english_summary_uses_singular_forms(self):
