@@ -14,9 +14,9 @@ mkdir -p "$BASE" "$SKILLS"
 # The repo defaults to the name; ocs lives in leeguooooo/open-cross-session, sflow in leeguooooo/session-flow.
 # Keep in step with .claude-plugin/marketplace.json.
 USES="chrome-use:skills/chrome-use cookie-use:skills/cookie-use iphone-use:skills/iphone-use android-use:skills/android-use
-mail-use:skills/mail-use wechat-use:. discord-use:. profile-use:. bitwarden-use:.
-chatgpt-use:. image-use:. memory-use:. ocs=open-cross-session:skills/ocs sflow=session-flow:skills/sflow message-use:. motion-use:.
-paste-use:. thermo-use:. switch-use:."
+mail-use:skills/mail-use wechat-use:. discord-use:skills/discord-use profile-use:. bitwarden-use:.
+chatgpt-use:. image-use:skills/image-use memory-use:. ocs=open-cross-session:skills/ocs sflow=session-flow:skills/sflow message-use:skills/message-use motion-use:.
+paste-use:skills/paste-use thermo-use:skills/thermo-use switch-use:skills/switch-use"
 # Uses that ship a CLI on PATH (iphone-use runs as a daemon, profile-use as a script in its skill;
 # switch-use needs a homebrew Switch, so it is installed only by name).
 CLIS="android-use chrome-use cookie-use mail-use discord-use bitwarden-use chatgpt-use memory-use ocs motion-use image-use"
@@ -72,6 +72,11 @@ for entry in $USES; do
   fetch "$(repo_of "$name")" "$BASE/$name"
   [ -d "$BASE/$name/.git" ] || continue
   target="$BASE/$name"; [ "$sub" = . ] || target="$target/$sub"
+  # A checkout kept at the old root layout is still usable if its update failed,
+  # or while the installer and Skill repository releases are rolling out.
+  if { [ "$name" = thermo-use ] || [ "$name" = paste-use ] || [ "$name" = message-use ] || [ "$name" = discord-use ] || [ "$name" = image-use ] || [ "$name" = switch-use ]; } && [ ! -f "$target/SKILL.md" ] && [ -f "$BASE/$name/SKILL.md" ]; then
+    target="$BASE/$name"
+  fi
   if [ -f "$target/SKILL.md" ]; then link "$target" "$name"; else echo "warn   $name: no SKILL.md at $sub"; fi
 done
 
