@@ -41,7 +41,7 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(Path(launcher).read_text(),'user program')
 
     def test_older_plugin_bootstrap_never_downgrades_manager(self):
-        newer=SOURCE.read_bytes().replace(b"VERSION = '0.15.2'",b"VERSION = '9.0.0'")
+        newer=SOURCE.read_bytes().replace(f"VERSION = '{u.VERSION}'".encode(),b"VERSION = '9.0.0'")
         u.install_bytes(newer,'9.0.0')
         u.install_bytes(SOURCE.read_bytes(),u.VERSION)
         self.assertEqual((u.INSTALL/'use.py').read_bytes(),newer)
@@ -263,6 +263,43 @@ class ManagerTests(unittest.TestCase):
         self.assertIn('1 个已更新',text);self.assertIn('1 个工具的 2 份技能副本',text)
         self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),9)
         self.assertIn('Claude 插件',text);self.assertIn('Codex 插件',text)
+
+    def test_problems_are_grouped_per_tool_with_next_steps(self):
+        rows=[dict(name='wechat-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log'),
+              dict(name='wechat-use',channel='skill',status='failed',exitCode=128,path=str(u.HOME/'family/wechat-use'),reason='Git history diverged; local checkout preserved'),
+              dict(name='motion-use',channel='cli',status='unverified',exitCode=1,reason='CLI help could not be read; upgrade support not determined')]
+        for lang in ('en','zh'):
+            out=io.StringIO()
+            with patch.object(u,'UI_LANG',lang),contextlib.redirect_stdout(out):u.print_report({'items':rows})
+            text=out.getvalue()
+            self.assertEqual(text.count('wechat-use\n'),1)
+            self.assertIn('2 need attention' if lang=='en' else '2 个需处理',text)
+            self.assertIn('→ wechat-use upgrade',text);self.assertIn('→ motion-use --help',text)
+            self.assertIn('→ git -C ~/family/wechat-use status -sb',text)
+            self.assertNotIn(str(u.HOME),text)
+
+    def test_english_summary_uses_singular_forms(self):
+        rows=[dict(name='mail-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log'),
+              dict(name='android-use',channel='skill',status='manual',path='/skills/a',reason='local copy differs from known owner baseline; preserved')]
+        out=io.StringIO()
+        with patch.object(u,'UI_LANG','en'),contextlib.redirect_stdout(out):u.print_report({'items':rows})
+        text=out.getvalue()
+        self.assertIn('1 needs attention',text);self.assertIn('1 skill copy of 1 tool untouched',text)
+
+    def test_skill_pull_that_moves_head_is_reported_as_updated(self):
+        (u.BASE/'chrome-use').mkdir(parents=True)
+        heads=iter(['abc1234\n','def5678\n'])
+        def run(args,cwd=None,timeout=240):
+            if 'rev-parse' in args and '--show-toplevel' in args:return 0,str(u.BASE/'chrome-use')+'\n'
+            if 'rev-parse' in args:return 0,next(heads)
+            return 0,''
+        with patch.object(u,'run',side_effect=run),patch.object(u,'installed_cli',return_value=None),patch.object(u,'plugin_entries',return_value=[]):
+            report,code=u.upgrade(SimpleNamespace(automatic=False,check=False,json=True,names=['chrome-use']))
+        row=next(i for i in report['items'] if i['channel']=='skill')
+        self.assertEqual((row['status'],row['before'],row['after']),('updated','abc1234','def5678'));self.assertEqual(code,0)
+        out=io.StringIO()
+        with contextlib.redirect_stdout(out):u.print_report(report)
+        self.assertIn('chrome-use：技能 abc1234 → def5678',out.getvalue())
 
     def test_failure_keeps_safe_reason_and_repository_path(self):
         report={'items':[],'json':True}
