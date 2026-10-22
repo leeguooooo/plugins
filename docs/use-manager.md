@@ -17,8 +17,11 @@ missing family members. Each CLI keeps ownership of its installer, app and skill
 `use upgrade motion-use chrome-use` selects a subset. Unknown names are refused.
 
 The default terminal output shows one live progress line, then a summary grouped by tool.
-Current versions and successful internal refreshes stay out of the summary. Modified or
-unverified skill copies are grouped separately from failed upgrades. `--verbose` shows every
+Current versions stay out of the summary; a skill checkout whose pull moved `HEAD` is listed
+with its old and new commit. Problems are grouped per tool, one line per channel, each followed
+by a `→` command that reproduces or inspects it (`<tool> upgrade`, `<tool> --help`,
+`git -C <path> status`); owner output itself is never echoed. Skill copies that differ from
+every known release are grouped separately from failed upgrades. `--verbose` shows every
 channel and path; `--json` retains the structured report without terminal progress output.
 Git history divergence is reported with its cause; the manager never resets local commits.
 
