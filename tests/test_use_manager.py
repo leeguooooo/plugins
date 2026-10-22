@@ -278,6 +278,17 @@ class ManagerTests(unittest.TestCase):
             self.assertIn('→ git -C '+os.path.join('~','family','wechat-use')+' status -sb',text)
             self.assertNotIn(str(u.HOME),text)
 
+    def test_one_block_per_tool_with_problems_last(self):
+        rows=[dict(name='thermo-use@m',channel='plugin',status='updated',before='0.4.1',after='0.4.2'),
+              dict(name='thermo-use',channel='app',status='pending',reason='Thermo update requested; installed App has not reached the target version yet'),
+              dict(name='message-use',channel='skill',status='updated',path='/s',backup='/b',before=None,after='0.1.3')]
+        out=io.StringIO()
+        with patch.object(u,'UI_LANG','en'),contextlib.redirect_stdout(out):u.print_report({'items':rows})
+        lines=out.getvalue().splitlines()
+        self.assertEqual(sum('thermo-use' in l for l in lines),1)
+        self.assertLess(next(n for n,l in enumerate(lines) if 'message-use' in l),next(n for n,l in enumerate(lines) if 'thermo-use' in l))
+        self.assertIn('✓ message-use  skill copy  0.1.3',out.getvalue());self.assertIn('! thermo-use',out.getvalue())
+
     def test_colors_only_on_request_or_terminal(self):
         rows=[dict(name='mail-use',channel='cli',status='updated',before='1.0.0',after='2.0.0'),
               dict(name='wechat-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log')]
@@ -320,7 +331,7 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual((row['status'],row['before'],row['after']),('updated','abc1234','def5678'));self.assertEqual(code,0)
         out=io.StringIO()
         with contextlib.redirect_stdout(out):u.print_report(report)
-        self.assertIn('✓ chrome-use  技能 abc1234 → def5678',out.getvalue())
+        self.assertIn('✓ chrome-use  技能  abc1234 → def5678',out.getvalue())
 
     def test_failure_keeps_safe_reason_and_repository_path(self):
         report={'items':[],'json':True}

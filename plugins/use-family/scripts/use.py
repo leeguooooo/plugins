@@ -21,7 +21,7 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.4'
+VERSION = '0.15.5'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 ALIASES = {'thermo-use':['thermo-use','thermo'], 'bitwarden-use':['bitwarden-use','bwu']}
@@ -87,7 +87,7 @@ TEXT={
     'blocked_group':('Remote version checks unavailable for {count} CLIs:','{count} 个 CLI 的远端版本检查不可用：'),
     'cli':('CLI','CLI'),'app':('App','App'),'manager':('manager','管理器'),
     'plugin':('Claude plugin','Claude 插件'),'codex-plugin':('Codex plugin','Codex 插件'),
-    'skill':('skill','技能'),'marketplace':('marketplace','插件市场'),
+    'skill':('skill','技能'),'skill_copy':('skill copy','技能副本'),'marketplace':('marketplace','插件市场'),
     'status_updated':('updated','已更新'),'status_available':('update available','可更新'),
     'status_current':('up to date','已是最新'),'status_completed':('completed','已完成'),
     'status_failed':('failed','失败'),'status_manual':('retained; review required','已保留，需检查'),
@@ -761,7 +761,7 @@ def refresh_copies(report,items,baseline,names,check):
                 if not path.exists(): os.replace(backup,path)
                 raise
             records[str(path)]={'hash':selected['hash'],'version':selected['version']}
-            item.update(status='updated',reason='verified owner baseline refreshed',backup=str(backup))
+            item.update(status='updated',reason='verified owner baseline refreshed',backup=str(backup),before=old_version,after=selected_version)
         except (OSError,ValueError): item.update(status='manual',reason='copy update could not be completed; original/backup retained')
         report['items'].append(item)
     if not check and records: save(STATE/'copied-skills.json',records)
@@ -992,23 +992,27 @@ def print_report(report,verbose=False):
         print('  '+paint(mark,*styles)+' '+paint(name.ljust(width),'bold')+'  '+text)
     def hint(command):
         if command:print(indent+paint('→ ','dim')+paint(command,'cyan'))
-    if changes or issues or limited or blocked or copied:print()
+    def channel_of(i):
+        return tr('skill_copy') if i.get('channel')=='skill' and i.get('backup') else channels.get(i.get('channel'),i.get('channel',''))
+    blocks={}
     for name,rows in changes.items():
-        versions=[]
         for i in rows:
             after=i.get('after') or i.get('target')
-            label=(paint(str(i.get('before')),'dim')+paint(' → ','dim')+paint(str(after),'green' if not report.get('check') else 'cyan')) if i.get('before') and after else str(after or '')
-            text=paint(channels.get(i.get('channel'),i.get('channel','')),'dim')+(' '+label if label else '')
-            if text not in versions:versions.append(text)
-        if report.get('check'):row('↑',('cyan','bold'),name,versions[0])
-        else:row('✓',('green','bold'),name,versions[0])
-        for text in versions[1:]:print(indent+text)
-    for name,rows in sorted(issues.items(),key=lambda kv:kv[0] not in failed):
-        styles=('red','bold') if name in failed else ('yellow','bold')
-        lines=list(dict.fromkeys((channels.get(i.get('channel'),i.get('channel','')),human_reason(i),next_step(i),i['status']=='failed') for i in rows))
-        for n,(channel,reason,command,bad) in enumerate(lines):
-            text=paint(channel,'dim')+'  '+(paint(reason,'red') if bad else reason)
-            if n==0:row('✗' if name in failed else '!',styles,name,text)
+            label=(paint(str(i.get('before')),'dim')+paint(' → ','dim')+paint(str(after),'green' if not report.get('check') else 'cyan')) if i.get('before') and after else paint(str(after or ''),'green')
+            text=paint(channel_of(i),'dim')+('  '+label if label else '')
+            lines=blocks.setdefault(name,[])
+            if (text,None) not in lines:lines.append((text,None))
+    for name,rows in issues.items():
+        for i in rows:
+            line=(paint(channel_of(i),'dim')+'  '+(paint(human_reason(i),'red') if i['status']=='failed' else human_reason(i)),next_step(i))
+            if line not in blocks.setdefault(name,[]):blocks[name].append(line)
+    # Updates first, failures last: the lines nearest the prompt are the ones to act on.
+    rank=lambda name:2 if name in failed else 1 if name in issues else 0
+    if blocks or limited or blocked or copied:print()
+    for name in sorted(blocks,key=rank):
+        mark,styles={0:('↑' if report.get('check') else '✓',('cyan','bold') if report.get('check') else ('green','bold')),1:('!',('yellow','bold')),2:('✗',('red','bold'))}[rank(name)]
+        for n,(text,command) in enumerate(blocks[name]):
+            if n==0:row(mark,styles,name,text)
             else:print(indent+text)
             hint(command)
     for group,title,tip in ((limited,'rate_group',tr('rate_tip')),(blocked,'blocked_group',human_reason(blocked[0]) if blocked else '')):
