@@ -21,7 +21,7 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.3'
+VERSION = '0.15.4'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 ALIASES = {'thermo-use':['thermo-use','thermo'], 'bitwarden-use':['bitwarden-use','bwu']}
@@ -66,10 +66,11 @@ TEXT={
     'checked':('Checked {count} tools','已检查 {count} 个工具'),
     'updated':('{count} updated','{count} 个已更新'),
     'available':('{count} updates available','{count} 个可更新'),
+    'failed_count':('{count} failed','{count} 个失败'),
     'attention':('{count} need attention','{count} 个需处理'),
     'deferred':('{count} deferred','{count} 个暂缓'),
     'no_updates':('No updates needed','暂无更新'),
-    'preserved':('Left {copies} skill copies of {tools} tools untouched; they differ from every known release:','{tools} 个工具的 {copies} 份技能副本与已知发布版都不同，未覆盖：'),
+    'preserved':('Left {copies} skill copies of {tools} tools untouched; they differ from every known release','{tools} 个工具的 {copies} 份技能副本与已知发布版都不同，未覆盖'),
     'details':('Details: {command} · log: {path}','详情：{command} · 日志：{path}'),
     'reason_owner_failed':('upgrade command failed','升级命令失败'),
     'reason_cli_broken':('does not start','无法启动'),
@@ -506,9 +507,29 @@ def write_log(text):
         f.write(text+'\n')
 
 
+def color_enabled(stream):
+    if os.environ.get('NO_COLOR') or os.environ.get('TERM')=='dumb':return False
+    if os.environ.get('FORCE_COLOR'):return True
+    if not stream.isatty():return False
+    if os.name!='nt':return True
+    try:  # Windows consoles render ANSI only after virtual terminal processing is enabled.
+        import ctypes
+        kernel=ctypes.windll.kernel32;handle=kernel.GetStdHandle(-11);mode=ctypes.c_uint32()
+        return bool(kernel.GetConsoleMode(handle,ctypes.byref(mode)) and kernel.SetConsoleMode(handle,mode.value|4))
+    except (AttributeError,OSError):return False
+
+
+STYLES={'bold':'1','dim':'2','red':'31','green':'32','yellow':'33','cyan':'36'}
+
+
+def paint(text,*styles,stream=None):
+    if not text or not color_enabled(stream or sys.stdout):return text
+    return '\033['+';'.join(STYLES[s] for s in styles)+'m'+text+'\033[0m'
+
+
 def progress(report,label=''):
     if not report.get('json') and sys.stderr.isatty():
-        print('\r\033[2K'+label,end='',file=sys.stderr,flush=True)
+        print('\r\033[2K'+(paint('› ','cyan',stream=sys.stderr)+paint(label,'dim',stream=sys.stderr) if label else ''),end='',file=sys.stderr,flush=True)
 
 
 def failure_reason(code,text,channel):
@@ -956,54 +977,61 @@ def print_report(report,verbose=False):
     for i in problems+other_manual:
         if i not in limited and i not in blocked:issues.setdefault(tool_name(i),[]).append(i)
     deferred={tool_name(i) for i in limited if i['status']=='pending'}
-    if issues:parts.append(tr('attention',count=len(issues)))
-    if deferred:parts.append(tr('deferred',count=len(deferred)))
-    if not changes and not problems and not manuals: parts.append(tr('no_updates'))
-    print(('；' if UI_LANG=='zh' else '; ').join(parts)+('。' if UI_LANG=='zh' else '.'))
+    failed={n for n,rows in issues.items() if any(i['status']=='failed' for i in rows)}
+    if failed:parts.append(paint(tr('failed_count',count=len(failed)),'red','bold'))
+    if len(issues)>len(failed):parts.append(paint(tr('attention',count=len(issues)-len(failed)),'yellow','bold'))
+    if deferred:parts.append(paint(tr('deferred',count=len(deferred)),'yellow'))
+    if not changes and not problems and not manuals: parts.append(paint(tr('no_updates'),'green'))
+    if changes:parts[1]=paint(parts[1],'cyan' if report.get('check') else 'green','bold')
+    print(paint(parts[0],'bold')+paint(' · ','dim')+paint(' · ','dim').join(parts[1:]) if len(parts)>1 else paint(parts[0],'bold'))
     channels={k:tr(k) for k in ('cli','app','manager','plugin','codex-plugin','skill','marketplace')}
+    sep='、' if UI_LANG=='zh' else ', '
+    width=min(max([len(n) for n in list(changes)+list(issues)]+[0]),20)
+    indent=' '*(4+width+2)
+    def row(mark,styles,name,text):
+        print('  '+paint(mark,*styles)+' '+paint(name.ljust(width),'bold')+'  '+text)
+    def hint(command):
+        if command:print(indent+paint('→ ','dim')+paint(command,'cyan'))
+    if changes or issues or limited or blocked or copied:print()
     for name,rows in changes.items():
         versions=[]
         for i in rows:
             after=i.get('after') or i.get('target')
-            label=(str(i.get('before'))+' → '+str(after)) if i.get('before') and after else str(after or '')
-            text=channels.get(i.get('channel'),i.get('channel',''))+(' '+label if label else '')
+            label=(paint(str(i.get('before')),'dim')+paint(' → ','dim')+paint(str(after),'green' if not report.get('check') else 'cyan')) if i.get('before') and after else str(after or '')
+            text=paint(channels.get(i.get('channel'),i.get('channel','')),'dim')+(' '+label if label else '')
             if text not in versions:versions.append(text)
-        print('  '+('↑' if report.get('check') else '✓')+' '+name+('：' if UI_LANG=='zh' else ': ')+('；' if UI_LANG=='zh' else '; ').join(versions))
-    if limited:
-        names=list(dict.fromkeys(tool_name(i) for i in limited))
-        print('  ! '+tr('rate_group',count=len(names)))
-        print('    '+(', '.join(names)))
-        print('    '+tr('rate_tip'))
-    if blocked:
-        names=list(dict.fromkeys(tool_name(i) for i in blocked))
-        print('  ! '+tr('blocked_group',count=len(names)))
-        print('    '+', '.join(names))
-        print('    '+human_reason(blocked[0]))
-    colon='：' if UI_LANG=='zh' else ': '
-    for name,rows in issues.items():
-        lines=list(dict.fromkeys((channels.get(i.get('channel'),i.get('channel',''))+colon+human_reason(i),next_step(i)) for i in rows))
-        if len(lines)==1:
-            print('  ! '+name+' '+lines[0][0])
-            if lines[0][1]:print('    → '+lines[0][1])
-            continue
-        print('  ! '+name)
-        for text,hint in lines:
-            print('    '+text)
-            if hint:print('      → '+hint)
+        if report.get('check'):row('↑',('cyan','bold'),name,versions[0])
+        else:row('✓',('green','bold'),name,versions[0])
+        for text in versions[1:]:print(indent+text)
+    for name,rows in sorted(issues.items(),key=lambda kv:kv[0] not in failed):
+        styles=('red','bold') if name in failed else ('yellow','bold')
+        lines=list(dict.fromkeys((channels.get(i.get('channel'),i.get('channel','')),human_reason(i),next_step(i),i['status']=='failed') for i in rows))
+        for n,(channel,reason,command,bad) in enumerate(lines):
+            text=paint(channel,'dim')+'  '+(paint(reason,'red') if bad else reason)
+            if n==0:row('✗' if name in failed else '!',styles,name,text)
+            else:print(indent+text)
+            hint(command)
+    for group,title,tip in ((limited,'rate_group',tr('rate_tip')),(blocked,'blocked_group',human_reason(blocked[0]) if blocked else '')):
+        if not group:continue
+        names=list(dict.fromkeys(tool_name(i) for i in group))
+        print('  '+paint('!','yellow','bold')+' '+tr(title,count=len(names)).rstrip(':：'))
+        print('    '+paint(sep.join(names),'dim'))
+        print('    '+paint(tip,'dim'))
     if copied:
         names=list(dict.fromkeys(tool_name(i) for i in copied))
-        print('  '+tr('preserved',tools=len(names),copies=len(copied)))
-        print('    '+ ('、' if UI_LANG=='zh' else ', ').join(names))
+        print('  '+paint('·','dim')+' '+tr('preserved',tools=len(names),copies=len(copied)))
+        print('    '+paint(sep.join(names),'dim'))
     if problems or manuals:
-        print(tr('details',command='use upgrade --check --verbose' if report.get('check') else 'use report --verbose',path=home_path(STATE/'upgrade.log')))
+        print('\n'+paint(tr('details',command='use upgrade --check --verbose' if report.get('check') else 'use report --verbose',path=home_path(STATE/'upgrade.log')),'dim'))
     if not report.get('check') and any(i['status']=='updated' and i.get('channel') in ('plugin','codex-plugin') for i in items):
-        print(tr('new_session'))
+        print(paint(tr('new_session'),'dim'))
     if verbose:
         labels={k:tr('status_'+k) for k in ('updated','available','current','completed','failed','manual','unverified','pending','owner-managed','installed')}
         print('\n'+tr('full_details'))
         for i in items:
-            print('  '+i.get('name','')+' ['+channels.get(i.get('channel'),i.get('channel',''))+'] '+labels.get(i['status'],i['status']))
-            if i.get('path'):print('    '+i['path'])
+            tone={'updated':('green',),'available':('cyan',),'failed':('red',),'manual':('yellow',),'unverified':('yellow',),'pending':('yellow',)}.get(i['status'],('dim',))
+            print('  '+i.get('name','')+paint(' ['+channels.get(i.get('channel'),i.get('channel',''))+'] ','dim')+paint(labels.get(i['status'],i['status']),*tone))
+            if i.get('path'):print('    '+paint(home_path(i['path']),'dim'))
             if i['status'] in ('failed','manual','unverified','pending'):print('    '+human_reason(i))
 
 

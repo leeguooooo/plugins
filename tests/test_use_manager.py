@@ -261,7 +261,7 @@ class ManagerTests(unittest.TestCase):
         with contextlib.redirect_stdout(out):u.print_report({'items':rows})
         text=out.getvalue()
         self.assertIn('1 个已更新',text);self.assertIn('1 个工具的 2 份技能副本',text)
-        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),9)
+        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),11)
         self.assertIn('Claude 插件',text);self.assertIn('Codex 插件',text)
 
     def test_problems_are_grouped_per_tool_with_next_steps(self):
@@ -272,11 +272,24 @@ class ManagerTests(unittest.TestCase):
             out=io.StringIO()
             with patch.object(u,'UI_LANG',lang),contextlib.redirect_stdout(out):u.print_report({'items':rows})
             text=out.getvalue()
-            self.assertEqual(text.count('wechat-use\n'),1)
-            self.assertIn('2 need attention' if lang=='en' else '2 个需处理',text)
+            self.assertEqual(text.count('✗ wechat-use'),1);self.assertIn('! motion-use',text)
+            self.assertIn('1 failed · 1 needs attention' if lang=='en' else '1 个失败 · 1 个需处理',text)
             self.assertIn('→ wechat-use upgrade',text);self.assertIn('→ motion-use --help',text)
             self.assertIn('→ git -C '+os.path.join('~','family','wechat-use')+' status -sb',text)
             self.assertNotIn(str(u.HOME),text)
+
+    def test_colors_only_on_request_or_terminal(self):
+        rows=[dict(name='mail-use',channel='cli',status='updated',before='1.0.0',after='2.0.0'),
+              dict(name='wechat-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log')]
+        for env,colored in (({'FORCE_COLOR':'1'},True),({'FORCE_COLOR':'1','NO_COLOR':'1'},False),({},False)):
+            out=io.StringIO()
+            with patch.dict(os.environ,env),contextlib.redirect_stdout(out):
+                if 'NO_COLOR' not in env:os.environ.pop('NO_COLOR',None)
+                if not env:os.environ.pop('FORCE_COLOR',None)
+                u.print_report({'items':rows})
+            text=out.getvalue()
+            if colored:self.assertIn('\033[32;1m✓',text);self.assertIn('\033[31;1m✗',text)
+            else:self.assertNotIn('\033[',text)
 
     def test_english_summary_uses_singular_forms(self):
         rows=[dict(name='mail-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log'),
@@ -284,7 +297,7 @@ class ManagerTests(unittest.TestCase):
         out=io.StringIO()
         with patch.object(u,'UI_LANG','en'),contextlib.redirect_stdout(out):u.print_report({'items':rows})
         text=out.getvalue()
-        self.assertIn('1 needs attention',text);self.assertIn('1 skill copy of 1 tool untouched',text)
+        self.assertIn('1 failed',text);self.assertIn('1 skill copy of 1 tool untouched',text)
 
     def test_host_and_installer_markers_do_not_change_skill_hash(self):
         a,b=self.root/'a',self.root/'b'
@@ -307,7 +320,7 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual((row['status'],row['before'],row['after']),('updated','abc1234','def5678'));self.assertEqual(code,0)
         out=io.StringIO()
         with contextlib.redirect_stdout(out):u.print_report(report)
-        self.assertIn('chrome-use：技能 abc1234 → def5678',out.getvalue())
+        self.assertIn('✓ chrome-use  技能 abc1234 → def5678',out.getvalue())
 
     def test_failure_keeps_safe_reason_and_repository_path(self):
         report={'items':[],'json':True}
