@@ -22,7 +22,7 @@
     {
       "name": "claude-statusbar",
       "description": "Claude Code status-line monitor with 5h/7d usage, reset timers, per-segment colors and a macOS HUD. Optional cached network observations and local custom-endpoint notices preserve unknown and last-known states without predicting account suspension. cs doctor links to IP Check and Thermo for explicit detailed checks. Install the cs CLI through GitHub Release binaries.",
-      "version": "3.49.4",
+      "version": "3.51.0",
       "category": "monitoring",
       "source": {
         "source": "url",
@@ -104,7 +104,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.34.2",
+      "version": "0.34.3",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -148,7 +148,7 @@
     {
       "name": "message-use",
       "description": "iMessage & SMS for AI agents through macOS Messages — read, search, watch and send texts, and pull verification codes (短信验证码) out of incoming messages with `message-use code --wait`. Read-only database access; sending previews until confirmed.",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -164,7 +164,7 @@
     {
       "name": "paste-use",
       "description": "Pastyx clipboard history for AI agents — list, search and read what you copied (text, links, code, images with recognised text, files), re-copy an old clip, or put text on the clipboard. Reads the app's local database read-only (no sign-in, works offline); secret-looking values are masked by default. macOS and Windows.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -180,7 +180,7 @@
     {
       "name": "switch-use",
       "description": "Let AI agents drive a real Nintendo Switch (Atmosphère + sys-botbase) over the LAN — computer-use for the Switch: on-screen text with touch points (macOS Vision OCR), tap a label, wait for a screen, settled-screen observation, buttons, sticks, touch, typing, screenshots. 让 AI 操作任天堂 Switch。Single Rust binary, no daemon.",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -319,7 +319,7 @@
     {
       "name": "discord-use",
       "description": "Fast REST-only Discord CLI + MCP server in one ~6 MB Rust binary. Drop-in replacement for mcp-discord — no gateway, no Node.js, sub-second start.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "category": "development",
       "source": {
         "source": "url",
