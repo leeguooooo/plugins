@@ -22,7 +22,7 @@
     {
       "name": "claude-statusbar",
       "description": "Claude Code status-line monitor with 5h/7d usage, reset timers, per-segment colors and a macOS HUD. Optional cached network observations and local custom-endpoint notices preserve unknown and last-known states without predicting account suspension. cs doctor links to IP Check and Thermo for explicit detailed checks. Install the cs CLI through GitHub Release binaries.",
-      "version": "3.51.2",
+      "version": "3.52.0",
       "category": "monitoring",
       "source": {
         "source": "url",
@@ -104,7 +104,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.34.3",
+      "version": "0.34.4",
       "category": "productivity",
       "source": {
         "source": "url",
