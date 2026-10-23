@@ -127,7 +127,7 @@ Agent-friendly multi-account session manager — capture, store, list, switch, a
 
 ### [iphone-use](https://github.com/leeguooooo/iphone-use)
 
-Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.
+Agents operate a real iPhone over USB or Wi-Fi using an XCTest Runner. Native UI elements, batched actions, saved Flows, HTTP API and MCP.
 
 **Claude Code:** `/plugin install iphone-use@leeguooooo-plugins`
 
