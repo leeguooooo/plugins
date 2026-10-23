@@ -22,7 +22,7 @@
     {
       "name": "claude-statusbar",
       "description": "Claude Code status-line monitor with 5h/7d usage, reset timers, per-segment colors and a macOS HUD. Optional cached network observations and local custom-endpoint notices preserve unknown and last-known states without predicting account suspension. cs doctor links to IP Check and Thermo for explicit detailed checks. Install the cs CLI through GitHub Release binaries.",
-      "version": "3.52.0",
+      "version": "3.52.1",
       "category": "monitoring",
       "source": {
         "source": "url",
@@ -42,7 +42,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.258",
+      "version": "1.5.259",
       "category": "development",
       "source": {
         "source": "url",
