@@ -21,7 +21,7 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.3'
+VERSION = '0.15.6'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 # Plugins that carry the manager itself; they follow the use-family upgrade target.
@@ -68,14 +68,17 @@ TEXT={
     'checked':('Checked {count} tools','已检查 {count} 个工具'),
     'updated':('{count} updated','{count} 个已更新'),
     'available':('{count} updates available','{count} 个可更新'),
-    'failed':('{count} failed','{count} 个失败'),
-    'waiting':('{count} awaiting verification','{count} 个等待确认'),
+    'failed_count':('{count} failed','{count} 个失败'),
+    'attention':('{count} need attention','{count} 个需处理'),
     'deferred':('{count} deferred','{count} 个暂缓'),
-    'manual':('{count} need review','{count} 个需检查'),
     'no_updates':('No updates needed','暂无更新'),
-    'preserved':('Kept {copies} skill copies for {tools} tools; they do not match a known owner snapshot:','保留 {tools} 个工具的 {copies} 份技能副本，未确认与原版一致，未覆盖：'),
-    'details':('Details: {command}; log: {path}','详情：{command}；日志：{path}'),
-    'diverged_tip':('Review local commits before resolving the Git divergence.','Git 分叉需先检查本地提交后再处理。'),
+    'preserved':('Left {copies} skill copies of {tools} tools untouched; they differ from every known release','{tools} 个工具的 {copies} 份技能副本与已知发布版都不同，未覆盖'),
+    'details':('Details: {command} · log: {path}','详情：{command} · 日志：{path}'),
+    'reason_owner_failed':('upgrade command failed','升级命令失败'),
+    'reason_cli_broken':('does not start','无法启动'),
+    'reason_diverged':('local commits diverged from upstream; checkout kept','本地提交与上游历史已分叉，无法安全快进；已保留本地内容'),
+    'reason_dirty':('checkout has local changes or is unreadable; not pulled','仓库有未提交改动或无法读取；未拉取'),
+    'exit_code':(' (exit {code})','（退出码 {code}）'),
     'new_session':('Plugin updates take effect in a new session.','插件更新在新会话中生效。'),
     'full_details':('Full details:','完整明细：'),
     'no_report':('No upgrade report yet; run use upgrade first','尚无升级报告，请先运行 use upgrade'),
@@ -86,7 +89,7 @@ TEXT={
     'blocked_group':('Remote version checks unavailable for {count} CLIs:','{count} 个 CLI 的远端版本检查不可用：'),
     'cli':('CLI','CLI'),'app':('App','App'),'manager':('manager','管理器'),
     'plugin':('Claude plugin','Claude 插件'),'codex-plugin':('Codex plugin','Codex 插件'),
-    'skill':('skill','技能'),'marketplace':('marketplace','插件市场'),
+    'skill':('skill','技能'),'skill_copy':('skill copy','技能副本'),'marketplace':('marketplace','插件市场'),
     'status_updated':('updated','已更新'),'status_available':('update available','可更新'),
     'status_current':('up to date','已是最新'),'status_completed':('completed','已完成'),
     'status_failed':('failed','失败'),'status_manual':('retained; review required','已保留，需检查'),
@@ -116,9 +119,9 @@ def tr(key,**values):
     text=TEXT[key][UI_LANG=='zh'].format(**values)
     if UI_LANG=='en':
         if values.get('count')==1:
-            for plural,singular in (('tools','tool'),('updates available','update available'),('need review','needs review'),('CLI upgrades','CLI upgrade'),('CLIs','CLI')):text=text.replace(plural,singular)
+            for plural,singular in (('tools','tool'),('updates available','update available'),('need attention','needs attention'),('CLI upgrades','CLI upgrade'),('CLIs','CLI')):text=text.replace(plural,singular)
         if values.get('copies')==1:text=text.replace('skill copies','skill copy')
-        if values.get('tools')==1:text=text.replace('tools;','tool;')
+        if values.get('tools')==1:text=text.replace('tools untouched','tool untouched')
     return text
 
 
@@ -506,9 +509,29 @@ def write_log(text):
         f.write(text+'\n')
 
 
+def color_enabled(stream):
+    if os.environ.get('NO_COLOR') or os.environ.get('TERM')=='dumb':return False
+    if os.environ.get('FORCE_COLOR'):return True
+    if not stream.isatty():return False
+    if os.name!='nt':return True
+    try:  # Windows consoles render ANSI only after virtual terminal processing is enabled.
+        import ctypes
+        kernel=ctypes.windll.kernel32;handle=kernel.GetStdHandle(-11);mode=ctypes.c_uint32()
+        return bool(kernel.GetConsoleMode(handle,ctypes.byref(mode)) and kernel.SetConsoleMode(handle,mode.value|4))
+    except (AttributeError,OSError):return False
+
+
+STYLES={'bold':'1','dim':'2','red':'31','green':'32','yellow':'33','cyan':'36'}
+
+
+def paint(text,*styles,stream=None):
+    if not text or not color_enabled(stream or sys.stdout):return text
+    return '\033['+';'.join(STYLES[s] for s in styles)+'m'+text+'\033[0m'
+
+
 def progress(report,label=''):
     if not report.get('json') and sys.stderr.isatty():
-        print('\r\033[2K'+label,end='',file=sys.stderr,flush=True)
+        print('\r\033[2K'+(paint('› ','cyan',stream=sys.stderr)+paint(label,'dim',stream=sys.stderr) if label else ''),end='',file=sys.stderr,flush=True)
 
 
 def failure_reason(code,text,channel):
@@ -671,19 +694,23 @@ def copy_matches(copy,source):
     copy=Path(copy); source=Path(source); seen=False
     for p in sorted(copy.rglob('*')):
         rel=p.relative_to(copy)
-        if any(part in ('.git','node_modules','__pycache__','.DS_Store') for part in rel.parts): continue
+        if any(part in HASH_IGNORED for part in rel.parts): continue
         if p.is_symlink() or not p.is_file(): continue
         other=source/rel
         if other.is_symlink() or not other.is_file() or other.read_bytes()!=p.read_bytes(): return False
         seen=seen or rel==Path('SKILL.md')
     return seen
 
+# Markers that hosts and installers write beside an unchanged skill: Claude Code's plugin cache lock
+# and the iphone-use installer's release stamp. They are not skill content.
+HASH_IGNORED=('.git','node_modules','__pycache__','.DS_Store','.in_use','.iphone-use-release')
+
 
 def folder_hash(root):
     h=hashlib.sha256()
     for p in sorted(Path(root).rglob('*')):
         rel=p.relative_to(root)
-        if any(part in ('.git','node_modules','__pycache__','.DS_Store') for part in rel.parts): continue
+        if any(part in HASH_IGNORED for part in rel.parts): continue
         if p.is_symlink(): value=b'link:'+os.readlink(p).encode()
         elif p.is_file(): value=p.read_bytes()+str(p.stat().st_mode & 0o111).encode()
         else: continue
@@ -759,7 +786,7 @@ def refresh_copies(report,items,baseline,names,check):
                 if not path.exists(): os.replace(backup,path)
                 raise
             records[str(path)]={'hash':selected['hash'],'version':selected['version']}
-            item.update(status='updated',reason='verified owner baseline refreshed',backup=str(backup))
+            item.update(status='updated',reason='verified owner baseline refreshed',backup=str(backup),before=old_version,after=selected_version)
         except (OSError,ValueError): item.update(status='manual',reason='copy update could not be completed; original/backup retained')
         report['items'].append(item)
     if not check and records: save(STATE/'copied-skills.json',records)
@@ -808,7 +835,7 @@ def upgrade(args):
                 report['items'].append(dict(name=name,channel='cli',status='pending',before=cli_version(exe),target=None,reason='GitHub API rate limit reached; CLI upgrade deferred'));continue
             code,help_text=run([exe,'--help'],timeout=15)
             if code:
-                report['items'].append(dict(name=name,channel='cli',status='unverified',reason='CLI help could not be read; upgrade support not determined'));continue
+                report['items'].append(dict(name=name,channel='cli',status='unverified',exitCode=code,reason='CLI help could not be read; upgrade support not determined'));continue
             probe=upgrade_probe(exe) if name=='wechat-use' else (None,None)
             if not re.search(r'\bupgrade\b',help_text) and name!='wechat-use':
                 report['items'].append(dict(name=name,channel='cli',status='manual',reason='installed version has no upgrade command')); continue
@@ -836,7 +863,11 @@ def upgrade(args):
                 report['items'].append(dict(name=root.name,channel='skill',status='manual',reason='checkout is dirty or unreadable',path=str(root))); continue
             if args.check:
                 report['items'].append(dict(name=root.name,channel='skill',status='installed',path=str(root))); continue
-            step(report,root.name,'skill',['git','-C',root,'pull','--ff-only'])['path']=str(root)
+            head=lambda:(lambda r:r[1].strip() if r[0]==0 and re.fullmatch(r'[0-9a-f]{7,40}',r[1].strip()) else None)(run(['git','-C',root,'rev-parse','--short','HEAD'],timeout=10))
+            before=head()
+            row=step(report,root.name,'skill',['git','-C',root,'pull','--ff-only']);row['path']=str(root)
+            after=head() if row['status']=='completed' and before else None
+            if after and after!=before: row.update(status='updated',before=before,after=after)
         codex_upgrade(report,names,args.check)
         if not args.check:
             entries=[e for e in plugin_entries() if e['key'].split('@')[0] in plugin_names(names)]
@@ -877,22 +908,18 @@ def tool_name(item):
 def human_reason(item):
     reason=item.get('reason','')
     messages={
-        'Git history diverged; local checkout preserved':'技能仓库历史已分叉，无法安全快进；已保留本地内容',
         'command timed out; inspect before retrying':'命令超时，请检查工具状态后再重试',
         'remote access denied or rate limited':'远端拒绝访问或触发限流，请稍后重试',
         'remote access denied (HTTP 403)':'远端拒绝访问（HTTP 403），请检查访问权限或服务限制',
         'repository authentication required':'仓库需要认证，请先检查 Git 登录',
         'installed version did not reach the expected target':'实际安装版本未达到目标版本',
         'local copy differs from known owner baseline; preserved':'技能副本与已知原版不同，已保留',
-        'checkout is dirty or unreadable':'技能目录有本地改动或无法读取，已保留',
         'installed version has no upgrade command':'当前 CLI 没有自动升级入口',
-        'owner command failed; see private upgrade log':'工具自身的升级命令失败，原因见私有日志',
         'Thermo update requested; installed App has not reached the target version yet':'已请求更新 Thermo，等待 App 完成更新',
         'native marketplace refresh would include plugins outside the requested family scope':'市场更新会涉及所选范围以外的插件，已跳过',
         'native Codex plugin inventory unavailable':'无法读取 Codex 已安装插件，已跳过',
         'plugin version, installed set or enabled state could not be verified':'无法确认插件版本、安装列表或启用状态',
         'latest version could not be checked; installer not run':'无法获取最新版本，未运行安装器；现有版本已保留',
-        'CLI help could not be read; upgrade support not determined':'无法读取 CLI 帮助，尚未确认升级入口',
         'GitHub API rate limit reached; CLI upgrade deferred':'GitHub API 被限流，已暂缓 CLI 升级',
         'latest version could not be checked; installed version retained':'无法获取最新版本，现有安装版本未变',
         'Claude CLI not installed':'未安装 Claude CLI，插件暂未更新',
@@ -912,8 +939,29 @@ def human_reason(item):
     }
     if not reason and item.get('status')=='unverified' and not item.get('target'):
         reason='latest version could not be checked; installed version retained'
+    short={'owner command failed; see private upgrade log':'reason_owner_failed','CLI help could not be read; upgrade support not determined':'reason_cli_broken',
+        'Git history diverged; local checkout preserved':'reason_diverged','checkout is dirty or unreadable':'reason_dirty'}.get(reason)
+    if short:
+        code=item.get('exitCode')
+        return tr(short)+(tr('exit_code',code=code) if code and short in ('reason_owner_failed','reason_cli_broken') else '')
     if UI_LANG=='en':return reason or tr('failed_reason' if item.get('exitCode') else 'fallback_reason')
     return messages.get(reason,reason or tr('failed_reason' if item.get('exitCode') else 'fallback_reason'))
+
+
+def home_path(path):
+    path=str(path)
+    return '~'+path[len(str(HOME)):] if path==str(HOME) or path.startswith(str(HOME)+os.sep) else path
+
+
+def next_step(item):
+    # Commands that reproduce or inspect a problem; never the owner's captured output.
+    reason,channel,name,path=item.get('reason',''),item.get('channel'),tool_name(item),item.get('path')
+    if channel=='cli' and reason=='owner command failed; see private upgrade log':return name+' upgrade'
+    if channel=='cli' and reason=='CLI help could not be read; upgrade support not determined':return name+' --help'
+    if channel=='skill' and path and reason in ('Git history diverged; local checkout preserved','checkout is dirty or unreadable'):
+        return 'git -C '+home_path(path)+' status'+(' -sb' if 'diverged' in reason else ' --short')
+    if channel=='plugin' and reason=='owner command failed; see private upgrade log':return 'claude plugin update '+item.get('name','')
+    return None
 
 
 def load_report():
@@ -954,56 +1002,69 @@ def print_report(report,verbose=False):
     other_manual=[i for i in manuals if i not in copied]
     parts=[tr('checked',count=len(tools))]
     if changes: parts.append(tr('available' if report.get('check') else 'updated',count=len(changes)))
-    failed={tool_name(i) for i in problems if i['status']=='failed'}
-    waiting={tool_name(i) for i in problems if i['status']!='failed' and i not in limited}
+    issues={}
+    for i in problems+other_manual:
+        if i not in limited and i not in blocked:issues.setdefault(tool_name(i),[]).append(i)
     deferred={tool_name(i) for i in limited if i['status']=='pending'}
-    if failed:parts.append(tr('failed',count=len(failed)))
-    if waiting:parts.append(tr('waiting',count=len(waiting)))
-    if deferred:parts.append(tr('deferred',count=len(deferred)))
-    if other_manual:parts.append(tr('manual',count=len({tool_name(i) for i in other_manual})))
-    if not changes and not problems and not manuals: parts.append(tr('no_updates'))
-    print(('；' if UI_LANG=='zh' else '; ').join(parts)+('。' if UI_LANG=='zh' else '.'))
+    failed={n for n,rows in issues.items() if any(i['status']=='failed' for i in rows)}
+    if failed:parts.append(paint(tr('failed_count',count=len(failed)),'red','bold'))
+    if len(issues)>len(failed):parts.append(paint(tr('attention',count=len(issues)-len(failed)),'yellow','bold'))
+    if deferred:parts.append(paint(tr('deferred',count=len(deferred)),'yellow'))
+    if not changes and not problems and not manuals: parts.append(paint(tr('no_updates'),'green'))
+    if changes:parts[1]=paint(parts[1],'cyan' if report.get('check') else 'green','bold')
+    print(paint(parts[0],'bold')+paint(' · ','dim')+paint(' · ','dim').join(parts[1:]) if len(parts)>1 else paint(parts[0],'bold'))
     channels={k:tr(k) for k in ('cli','app','manager','plugin','codex-plugin','skill','marketplace')}
+    sep='、' if UI_LANG=='zh' else ', '
+    width=min(max([len(n) for n in list(changes)+list(issues)]+[0]),20)
+    indent=' '*(4+width+2)
+    def row(mark,styles,name,text):
+        print('  '+paint(mark,*styles)+' '+paint(name.ljust(width),'bold')+'  '+text)
+    def hint(command):
+        if command:print(indent+paint('→ ','dim')+paint(command,'cyan'))
+    def channel_of(i):
+        return tr('skill_copy') if i.get('channel')=='skill' and i.get('backup') else channels.get(i.get('channel'),i.get('channel',''))
+    blocks={}
     for name,rows in changes.items():
-        versions=[]
         for i in rows:
             after=i.get('after') or i.get('target')
-            label=(str(i.get('before'))+' → '+str(after)) if i.get('before') and after else str(after or '')
-            text=channels.get(i.get('channel'),i.get('channel',''))+(' '+label if label else '')
-            if text not in versions:versions.append(text)
-        print('  '+('↑' if report.get('check') else '✓')+' '+name+('：' if UI_LANG=='zh' else ': ')+('；' if UI_LANG=='zh' else '; ').join(versions))
-    if limited:
-        names=list(dict.fromkeys(tool_name(i) for i in limited))
-        print('  ! '+tr('rate_group',count=len(names)))
-        print('    '+(', '.join(names)))
-        print('    '+tr('rate_tip'))
-    if blocked:
-        names=list(dict.fromkeys(tool_name(i) for i in blocked))
-        print('  ! '+tr('blocked_group',count=len(names)))
-        print('    '+', '.join(names))
-        print('    '+human_reason(blocked[0]))
-    seen=set()
-    for i in problems+other_manual:
-        if i in limited or i in blocked:continue
-        key=(tool_name(i),human_reason(i))
-        if key in seen:continue
-        seen.add(key)
-        print('  ! '+key[0]+('：' if UI_LANG=='zh' else ': ')+key[1])
+            label=(paint(str(i.get('before')),'dim')+paint(' → ','dim')+paint(str(after),'green' if not report.get('check') else 'cyan')) if i.get('before') and after else paint(str(after or ''),'green')
+            text=paint(channel_of(i),'dim')+('  '+label if label else '')
+            lines=blocks.setdefault(name,[])
+            if (text,None) not in lines:lines.append((text,None))
+    for name,rows in issues.items():
+        for i in rows:
+            line=(paint(channel_of(i),'dim')+'  '+(paint(human_reason(i),'red') if i['status']=='failed' else human_reason(i)),next_step(i))
+            if line not in blocks.setdefault(name,[]):blocks[name].append(line)
+    # Updates first, failures last: the lines nearest the prompt are the ones to act on.
+    rank=lambda name:2 if name in failed else 1 if name in issues else 0
+    if blocks or limited or blocked or copied:print()
+    for name in sorted(blocks,key=rank):
+        mark,styles={0:('↑' if report.get('check') else '✓',('cyan','bold') if report.get('check') else ('green','bold')),1:('!',('yellow','bold')),2:('✗',('red','bold'))}[rank(name)]
+        for n,(text,command) in enumerate(blocks[name]):
+            if n==0:row(mark,styles,name,text)
+            else:print(indent+text)
+            hint(command)
+    for group,title,tip in ((limited,'rate_group',tr('rate_tip')),(blocked,'blocked_group',human_reason(blocked[0]) if blocked else '')):
+        if not group:continue
+        names=list(dict.fromkeys(tool_name(i) for i in group))
+        print('  '+paint('!','yellow','bold')+' '+tr(title,count=len(names)).rstrip(':：'))
+        print('    '+paint(sep.join(names),'dim'))
+        print('    '+paint(tip,'dim'))
     if copied:
         names=list(dict.fromkeys(tool_name(i) for i in copied))
-        print('  '+tr('preserved',tools=len(names),copies=len(copied)))
-        print('  '+ ('、' if UI_LANG=='zh' else ', ').join(names))
+        print('  '+paint('·','dim')+' '+tr('preserved',tools=len(names),copies=len(copied)))
+        print('    '+paint(sep.join(names),'dim'))
     if problems or manuals:
-        print(tr('details',command='use upgrade --check --verbose' if report.get('check') else 'use report --verbose',path=STATE/'upgrade.log'))
-        if any('diverged' in i.get('reason','') for i in problems):print(tr('diverged_tip'))
+        print('\n'+paint(tr('details',command='use upgrade --check --verbose' if report.get('check') else 'use report --verbose',path=home_path(STATE/'upgrade.log')),'dim'))
     if not report.get('check') and any(i['status']=='updated' and i.get('channel') in ('plugin','codex-plugin') for i in items):
-        print(tr('new_session'))
+        print(paint(tr('new_session'),'dim'))
     if verbose:
         labels={k:tr('status_'+k) for k in ('updated','available','current','completed','failed','manual','unverified','pending','owner-managed','installed')}
         print('\n'+tr('full_details'))
         for i in items:
-            print('  '+i.get('name','')+' ['+channels.get(i.get('channel'),i.get('channel',''))+'] '+labels.get(i['status'],i['status']))
-            if i.get('path'):print('    '+i['path'])
+            tone={'updated':('green',),'available':('cyan',),'failed':('red',),'manual':('yellow',),'unverified':('yellow',),'pending':('yellow',)}.get(i['status'],('dim',))
+            print('  '+i.get('name','')+paint(' ['+channels.get(i.get('channel'),i.get('channel',''))+'] ','dim')+paint(labels.get(i['status'],i['status']),*tone))
+            if i.get('path'):print('    '+paint(home_path(i['path']),'dim'))
             if i['status'] in ('failed','manual','unverified','pending'):print('    '+human_reason(i))
 
 
