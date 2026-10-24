@@ -22,7 +22,7 @@
     {
       "name": "claude-statusbar",
       "description": "Claude Code status-line monitor with 5h/7d usage, reset timers, per-segment colors and a macOS HUD. Optional cached network observations and local custom-endpoint notices preserve unknown and last-known states without predicting account suspension. cs doctor links to IP Check and Thermo for explicit detailed checks. Install the cs CLI through GitHub Release binaries.",
-      "version": "3.52.1",
+      "version": "3.52.2",
       "category": "monitoring",
       "source": {
         "source": "url",
