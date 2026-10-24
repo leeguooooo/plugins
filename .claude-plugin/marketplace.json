@@ -21,8 +21,8 @@
     },
     {
       "name": "claude-statusbar",
-      "description": "Lightweight Claude Code statusLine monitor. 3 styles × 9 themes, per-segment color management (each metric colors itself by its own severity), per-severity color overrides (cs config set color_ok|warn|hot), cache-expiry countdown + session-cost segments, conversational claude-statusbar skill (no slash commands needed) plus the legacy /statusbar slash commands, cs doctor self-diagnostic. v3.10.0 adds an opt-in live-activity line (in-progress todo, active tool, completed-tool rollup), git ahead/behind + session duration/lines on the project line, running-subagent lines, an opt-in bar_shimmer starfield on the battery bars, a self-hosted plugin marketplace, and a [worktree] marker when the checkout is a linked git worktree — plus a reliability fix so auto-update actually runs in daemon mode (detached, non-blocking) and the cache countdown is now per-session-correct. v3.9.0 makes the cache countdown auto-detect the real prompt-cache TTL (5m vs 1h) from the transcript's usage.cache_creation buckets, fixing a ~55-minute early `cache COLD` for Claude subscription (Pro/Max) users — Claude Code auto-requests the 1-hour TTL on a subscription (the deprecated cache_ttl_seconds config is no longer needed). v3.9.1 makes that countdown always show seconds (58m23s, 1h59m03s) so it visibly ticks instead of sitting on a static 58m. v3.8.1 fixes a long-standing daemon staleness bug: after `pip install -U`, the running daemon's pidfile kept lazy-spawn from restarting it, so users saw old renders until manual `cs daemon stop`; the thin client now detects the version drift via package mtime + a new `daemon_started_at` field and SIGTERMs the outdated daemon on the next tick. v3.8.0 adds a default-on second status-bar line `⤷ <project> ⎇ <branch>●` — project name from Claude Code's `workspace.repo.name` stdin field, branch read from `.git/HEAD` directly, dirty marker refreshed in the background with a 5s cache so the inline render never blocks on git (disable with `cs config set show_project_branch false`). v3.7.0 defends against statusLine hijacking via `cs --setup --project`. v3.6.0 makes daemon mode default — under 1% CPU continuously. Backed by the cs CLI on PyPI.",
-      "version": "3.46.1",
+      "description": "Claude Code status-line monitor with 5h/7d usage, reset timers, per-segment colors and a macOS HUD. Optional cached network observations and local custom-endpoint notices preserve unknown and last-known states without predicting account suspension. cs doctor links to IP Check and Thermo for explicit detailed checks. Install the cs CLI through GitHub Release binaries.",
+      "version": "3.52.1",
       "category": "monitoring",
       "source": {
         "source": "url",
@@ -34,7 +34,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
-      "version": "0.15.3",
+      "version": "0.15.6",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
@@ -42,7 +42,7 @@
     {
       "name": "use-manager",
       "description": "The `use` command: `use upgrade` upgrades every *-use tool you have (CLIs, skills, plugins). Every *-use plugin depends on it, so installing any one of them brings `use` along. It never installs missing tools and never schedules upgrades by itself (`use auto enable` does).",
-      "version": "0.15.3",
+      "version": "0.15.6",
       "category": "productivity",
       "source": "./plugins/use-manager",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-manager"
@@ -50,7 +50,7 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.252",
+      "version": "1.5.265",
       "category": "development",
       "source": {
         "source": "url",
@@ -87,8 +87,8 @@
     },
     {
       "name": "iphone-use",
-      "description": "Computer-use, but for the iPhone — agents see and drive a real phone over macOS iPhone Mirroring. Low-latency WebRTC video, near-native touch, HTTP API + MCP.",
-      "version": "0.21.0",
+      "description": "Agents operate a real iPhone over USB or Wi-Fi using an XCTest Runner. Native UI elements, batched actions, saved Flows, HTTP API and MCP.",
+      "version": "0.22.4",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -124,7 +124,7 @@
     {
       "name": "image-use",
       "description": "Use your ChatGPT subscription to generate images from the command line — no OPENAI_API_KEY, no gateway, no daemon. Zero-dep Python CLI + AI-agent skill.",
-      "version": "0.34.2",
+      "version": "0.34.5",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -133,7 +133,7 @@
       },
       "homepage": "https://github.com/leeguooooo/image-use",
       "skills": [
-        "./"
+        "./skills/image-use"
       ],
       "strict": false,
       "dependencies": [
@@ -143,7 +143,7 @@
     {
       "name": "motion-use",
       "description": "Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, default narration, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.",
-      "version": "0.21.0",
+      "version": "0.21.2",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -177,7 +177,7 @@
     {
       "name": "message-use",
       "description": "iMessage & SMS for AI agents through macOS Messages — read, search, watch and send texts, and pull verification codes (短信验证码) out of incoming messages with `message-use code --wait`. Read-only database access; sending previews until confirmed.",
-      "version": "0.1.2",
+      "version": "0.1.4",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -186,7 +186,7 @@
       },
       "homepage": "https://github.com/leeguooooo/message-use",
       "skills": [
-        "./"
+        "./skills/message-use"
       ],
       "strict": false,
       "dependencies": [
@@ -196,7 +196,7 @@
     {
       "name": "paste-use",
       "description": "Pastyx clipboard history for AI agents — list, search and read what you copied (text, links, code, images with recognised text, files), re-copy an old clip, or put text on the clipboard. Reads the app's local database read-only (no sign-in, works offline); secret-looking values are masked by default. macOS and Windows.",
-      "version": "0.1.0",
+      "version": "0.1.2",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -205,7 +205,7 @@
       },
       "homepage": "https://github.com/leeguooooo/paste-use",
       "skills": [
-        "./"
+        "./skills/paste-use"
       ],
       "strict": false,
       "dependencies": [
@@ -215,7 +215,7 @@
     {
       "name": "switch-use",
       "description": "Let AI agents drive a real Nintendo Switch (Atmosphère + sys-botbase) over the LAN — computer-use for the Switch: on-screen text with touch points (macOS Vision OCR), tap a label, wait for a screen, settled-screen observation, buttons, sticks, touch, typing, screenshots. 让 AI 操作任天堂 Switch。Single Rust binary, no daemon.",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -224,7 +224,7 @@
       },
       "homepage": "https://github.com/leeguooooo/switch-use",
       "skills": [
-        "./"
+        "./skills/switch-use"
       ],
       "strict": false,
       "dependencies": [
@@ -234,7 +234,7 @@
     {
       "name": "thermo-use",
       "description": "How this Mac is doing, and fixing it, for AI agents — performance, temperatures, fans, battery, disk cleanup and agent diagnostics through the Thermo CLI. Undo cleanups, cleanup whitelist, keep a closed laptop awake, app uninstall/leftovers, startup items and Homebrew app updates. Also manages browser-tab overload: preview and create native Chrome groups, opt in to continuous organization, save and close reviewed background tabs, restore saved batches and undo grouping. Protected and agent tabs stay untouched. macOS.",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "category": "monitoring",
       "source": {
         "source": "url",
@@ -243,7 +243,7 @@
       },
       "homepage": "https://github.com/leeguooooo/thermo-use",
       "skills": [
-        "./"
+        "./skills/thermo-use"
       ],
       "strict": false,
       "dependencies": [
@@ -253,7 +253,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.19.1",
+      "version": "1.19.8",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -307,7 +307,7 @@
     {
       "name": "ocs",
       "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
-      "version": "0.9.3",
+      "version": "0.9.4",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -345,7 +345,7 @@
     {
       "name": "bitwarden-use",
       "description": "Bitwarden/Vaultwarden CLI with an ssh-agent-style background agent and FIDO2 passkey extraction — headless passkey logins, vault lookups, and a built-in SSH agent.",
-      "version": "0.12.2",
+      "version": "0.12.3",
       "category": "security",
       "source": {
         "source": "url",
@@ -378,7 +378,7 @@
     {
       "name": "discord-use",
       "description": "Fast REST-only Discord CLI + MCP server in one ~6 MB Rust binary. Drop-in replacement for mcp-discord — no gateway, no Node.js, sub-second start.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "category": "development",
       "source": {
         "source": "url",
@@ -387,7 +387,7 @@
       },
       "homepage": "https://github.com/leeguooooo/discord-use",
       "skills": [
-        "./"
+        "./skills/discord-use"
       ],
       "strict": false,
       "dependencies": [

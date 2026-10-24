@@ -324,8 +324,77 @@ class ManagerTests(unittest.TestCase):
         with contextlib.redirect_stdout(out):u.print_report({'items':rows})
         text=out.getvalue()
         self.assertIn('1 个已更新',text);self.assertIn('1 个工具的 2 份技能副本',text)
-        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),9)
+        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),11)
         self.assertIn('Claude 插件',text);self.assertIn('Codex 插件',text)
+
+    def test_problems_are_grouped_per_tool_with_next_steps(self):
+        rows=[dict(name='wechat-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log'),
+              dict(name='wechat-use',channel='skill',status='failed',exitCode=128,path=str(u.HOME/'family/wechat-use'),reason='Git history diverged; local checkout preserved'),
+              dict(name='motion-use',channel='cli',status='unverified',exitCode=1,reason='CLI help could not be read; upgrade support not determined')]
+        for lang in ('en','zh'):
+            out=io.StringIO()
+            with patch.object(u,'UI_LANG',lang),contextlib.redirect_stdout(out):u.print_report({'items':rows})
+            text=out.getvalue()
+            self.assertEqual(text.count('✗ wechat-use'),1);self.assertIn('! motion-use',text)
+            self.assertIn('1 failed · 1 needs attention' if lang=='en' else '1 个失败 · 1 个需处理',text)
+            self.assertIn('→ wechat-use upgrade',text);self.assertIn('→ motion-use --help',text)
+            self.assertIn('→ git -C '+os.path.join('~','family','wechat-use')+' status -sb',text)
+            self.assertNotIn(str(u.HOME),text)
+
+    def test_one_block_per_tool_with_problems_last(self):
+        rows=[dict(name='thermo-use@m',channel='plugin',status='updated',before='0.4.1',after='0.4.2'),
+              dict(name='thermo-use',channel='app',status='pending',reason='Thermo update requested; installed App has not reached the target version yet'),
+              dict(name='message-use',channel='skill',status='updated',path='/s',backup='/b',before=None,after='0.1.3')]
+        out=io.StringIO()
+        with patch.object(u,'UI_LANG','en'),contextlib.redirect_stdout(out):u.print_report({'items':rows})
+        lines=out.getvalue().splitlines()
+        self.assertEqual(sum('thermo-use' in l for l in lines),1)
+        self.assertLess(next(n for n,l in enumerate(lines) if 'message-use' in l),next(n for n,l in enumerate(lines) if 'thermo-use' in l))
+        self.assertIn('✓ message-use  skill copy  0.1.3',out.getvalue());self.assertIn('! thermo-use',out.getvalue())
+
+    def test_colors_only_on_request_or_terminal(self):
+        rows=[dict(name='mail-use',channel='cli',status='updated',before='1.0.0',after='2.0.0'),
+              dict(name='wechat-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log')]
+        for env,colored in (({'FORCE_COLOR':'1'},True),({'FORCE_COLOR':'1','NO_COLOR':'1'},False),({},False)):
+            out=io.StringIO()
+            with patch.dict(os.environ,env),contextlib.redirect_stdout(out):
+                if 'NO_COLOR' not in env:os.environ.pop('NO_COLOR',None)
+                if not env:os.environ.pop('FORCE_COLOR',None)
+                u.print_report({'items':rows})
+            text=out.getvalue()
+            if colored:self.assertIn('\033[32;1m✓',text);self.assertIn('\033[31;1m✗',text)
+            else:self.assertNotIn('\033[',text)
+
+    def test_english_summary_uses_singular_forms(self):
+        rows=[dict(name='mail-use',channel='cli',status='failed',exitCode=2,reason='owner command failed; see private upgrade log'),
+              dict(name='android-use',channel='skill',status='manual',path='/skills/a',reason='local copy differs from known owner baseline; preserved')]
+        out=io.StringIO()
+        with patch.object(u,'UI_LANG','en'),contextlib.redirect_stdout(out):u.print_report({'items':rows})
+        text=out.getvalue()
+        self.assertIn('1 failed',text);self.assertIn('1 skill copy of 1 tool untouched',text)
+
+    def test_host_and_installer_markers_do_not_change_skill_hash(self):
+        a,b=self.root/'a',self.root/'b'
+        for d in (a,b):d.mkdir();(d/'SKILL.md').write_text('---\nname: x\n---\n')
+        (b/'.in_use').write_text('');(b/'.iphone-use-release').write_text('v1')
+        self.assertEqual(u.folder_hash(a),u.folder_hash(b))
+        (b/'notes.md').write_text('edit')
+        self.assertNotEqual(u.folder_hash(a),u.folder_hash(b))
+
+    def test_skill_pull_that_moves_head_is_reported_as_updated(self):
+        (u.BASE/'chrome-use').mkdir(parents=True)
+        heads=iter(['abc1234\n','def5678\n'])
+        def run(args,cwd=None,timeout=240):
+            if 'rev-parse' in args and '--show-toplevel' in args:return 0,str(u.BASE/'chrome-use')+'\n'
+            if 'rev-parse' in args:return 0,next(heads)
+            return 0,''
+        with patch.object(u,'run',side_effect=run),patch.object(u,'installed_cli',return_value=None),patch.object(u,'plugin_entries',return_value=[]):
+            report,code=u.upgrade(SimpleNamespace(automatic=False,check=False,json=True,names=['chrome-use']))
+        row=next(i for i in report['items'] if i['channel']=='skill')
+        self.assertEqual((row['status'],row['before'],row['after']),('updated','abc1234','def5678'));self.assertEqual(code,0)
+        out=io.StringIO()
+        with contextlib.redirect_stdout(out):u.print_report(report)
+        self.assertIn('✓ chrome-use  技能  abc1234 → def5678',out.getvalue())
 
     def test_failure_keeps_safe_reason_and_repository_path(self):
         report={'items':[],'json':True}
