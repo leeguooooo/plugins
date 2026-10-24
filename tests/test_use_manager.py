@@ -34,12 +34,12 @@ class ManagerTests(unittest.TestCase):
 
     def test_real_install_version_readback_and_unknown_executable_preserved(self):
         launcher=u.install_bytes(SOURCE.read_bytes(),u.VERSION)
-        self.assertIn(u.MARKER,Path(launcher).read_text())
+        self.assertIn(u.MARKER,Path(launcher).read_text(encoding='utf-8'))
         self.assertEqual(subprocess.check_output([sys.executable,str(u.INSTALL/'use.py'),'--version'],text=True).strip(),u.VERSION)
         if os.name=='nt': self.assertIn(b'\r\n',Path(launcher).read_bytes())
         Path(launcher).write_text('user program')
         with self.assertRaisesRegex(RuntimeError,'unmanaged'):u.install_bytes(SOURCE.read_bytes(),u.VERSION)
-        self.assertEqual(Path(launcher).read_text(),'user program')
+        self.assertEqual(Path(launcher).read_text(encoding='utf-8'),'user program')
 
     def test_older_plugin_bootstrap_never_downgrades_manager(self):
         newer=SOURCE.read_bytes().replace(f"VERSION = '{u.VERSION}'".encode(),b"VERSION = '9.0.0'")
@@ -179,14 +179,14 @@ class ManagerTests(unittest.TestCase):
         item=dict(name='ocs',path=str(target),channel='skill',status='manual')
         report={'items':[],'json':True}
         with patch.object(u,'canonical_sources',return_value=latest):u.refresh_copies(report,[dict(item)],baseline,['ocs'],False)
-        self.assertEqual((target/'SKILL.md').read_text(),'new')
+        self.assertEqual((target/'SKILL.md').read_text(encoding='utf-8'),'new')
         self.assertEqual(report['items'][0]['status'],'updated')
-        self.assertEqual((Path(report['items'][0]['backup'])/'SKILL.md').read_text(),'old')
+        self.assertEqual((Path(report['items'][0]['backup'])/'SKILL.md').read_text(encoding='utf-8'),'old')
         (target/'SKILL.md').write_text('my own edits')
         report={'items':[],'json':True}
         with patch.object(u,'canonical_sources',return_value=latest):u.refresh_copies(report,[dict(item)],baseline,['ocs'],False)
         self.assertEqual(report['items'][0]['status'],'manual')
-        self.assertEqual((target/'SKILL.md').read_text(),'my own edits')
+        self.assertEqual((target/'SKILL.md').read_text(encoding='utf-8'),'my own edits')
 
     def test_skill_only_copy_of_root_level_plugin_is_current(self):
         source=self.root/'cache/message-use/0.1.2';target=self.root/'.claude/skills/message-use'
@@ -201,7 +201,7 @@ class ManagerTests(unittest.TestCase):
         report={'items':[],'json':True}
         with patch.object(u,'canonical_sources',return_value=latest):u.refresh_copies(report,[dict(item)],{},['message-use'],False)
         self.assertEqual(report['items'][0]['status'],'manual')
-        self.assertEqual((target/'SKILL.md').read_text(),'my own edits')
+        self.assertEqual((target/'SKILL.md').read_text(encoding='utf-8'),'my own edits')
 
     def test_installer_marked_copy_is_owner_managed_until_edited(self):
         import hashlib
@@ -221,13 +221,13 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(u.tool_name(dict(name='use-manager@leeguooooo-plugins')),'use-family')
 
     def test_every_family_plugin_brings_the_manager(self):
-        market=json.loads((REPO/'.claude-plugin/marketplace.json').read_text())
+        market=json.loads((REPO/'.claude-plugin/marketplace.json').read_text(encoding='utf-8'))
         entries={p['name']:p for p in market['plugins']}
         for name in u.NAMES:  # use-family declares its own in plugin.json
             self.assertIn('use-manager',entries[name].get('dependencies',[]),name)
-        bundle=json.loads((REPO/'plugins/use-family/.claude-plugin/plugin.json').read_text())
+        bundle=json.loads((REPO/'plugins/use-family/.claude-plugin/plugin.json').read_text(encoding='utf-8'))
         self.assertIn('use-manager',bundle['dependencies'])
-        manager=json.loads((REPO/'plugins/use-manager/.claude-plugin/plugin.json').read_text())
+        manager=json.loads((REPO/'plugins/use-manager/.claude-plugin/plugin.json').read_text(encoding='utf-8'))
         self.assertFalse(manager.get('dependencies'))  # no cycle, nothing else installed
         self.assertEqual(entries['use-manager']['source'],'./plugins/use-manager')
         for version in (manager['version'],bundle['version'],entries['use-manager']['version'],entries['use-family']['version']):
@@ -240,7 +240,7 @@ class ManagerTests(unittest.TestCase):
     @unittest.skipIf(os.name=='nt','POSIX hook script')
     def test_manager_bootstrap_never_blocks_session_start(self):
         script=REPO/'plugins/use-manager/scripts/bootstrap-use.sh'
-        hooks=json.loads((REPO/'plugins/use-manager/hooks/hooks.json').read_text())
+        hooks=json.loads((REPO/'plugins/use-manager/hooks/hooks.json').read_text(encoding='utf-8'))
         self.assertEqual(hooks['hooks']['SessionStart'][0]['matcher'],'startup')
         e=dict(os.environ,HOME=str(self.root),USE_MANAGER_HOME=str(self.root/'install'),USE_MANAGER_BIN=str(self.root/'bin'),USE_MANAGER_STATE=str(self.root/'state'),PATH='/usr/bin:/bin:'+str(Path(sys.executable).parent))
         done=subprocess.run(['sh',str(script)],env=dict(e,USE_NO_MANAGER='1'),capture_output=True,text=True)
@@ -493,7 +493,7 @@ class ManagerTests(unittest.TestCase):
                 self.assertEqual(u.env()['GITHUB_TOKEN'],secret)
                 self.assertNotIn('GH_TOKEN',os.environ)
                 u.write_log('owner echoed '+secret)
-                self.assertNotIn(secret,(u.STATE/'upgrade.log').read_text())
+                self.assertNotIn(secret,(u.STATE/'upgrade.log').read_text(encoding='utf-8'))
                 u.PROBES['fake']=(0,'cached '+secret)
             self.assertEqual(u.UPGRADE_AUTH,{})
             self.assertEqual(u.PROBES,{})
