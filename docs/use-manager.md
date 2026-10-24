@@ -28,6 +28,27 @@ items that need attention, with tool names in one aligned column. Piped output, 
 channel and path; `--json` retains the structured report without terminal progress output.
 Git history divergence is reported with its cause; the manager never resets local commits.
 
+### How `use` gets installed
+
+- **Claude Code:** every `*-use` marketplace entry (and `use-family`) depends on the
+  `use-manager` plugin, so installing any one of them installs it too. Its `startup`
+  SessionStart hook runs `use.py install --local` from the plugin's own copy: no network,
+  idempotent, never a downgrade (a newer installed manager is kept), never enables scheduling,
+  and it never fails session start. `USE_NO_MANAGER=1` skips it. Users who installed a plugin
+  before the dependency existed get it with the next marketplace auto-update, or with
+  `claude plugin update <plugin>@leeguooooo-plugins` and `/reload-plugins`.
+- **Codex / plain `install.sh`:** `install-use.sh` above. Product installers call it too.
+- `plugins/use-manager/scripts/use.py` is canonical. `plugins/use-family/scripts/use.py` is a
+  byte-identical copy kept for older raw URLs; tests and the release workflow refuse a drift.
+
+### Copied skills
+
+A copied skill (for example `~/.claude/skills/message-use`) counts as current when every file
+in it is byte-identical to the same path in the installed owner plugin, even when that plugin
+is a whole repository. A copy carrying an owner installer's `.<name>-release` marker whose
+`skill_sha256` still matches its `SKILL.md` is installer-owned and left to that installer.
+Anything else differing is preserved and reported.
+
 ### English and Chinese
 
 ```sh

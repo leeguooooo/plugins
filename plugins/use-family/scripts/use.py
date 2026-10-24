@@ -21,9 +21,11 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.5'
+VERSION = '0.15.6'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
+# Plugins that carry the manager itself; they follow the use-family upgrade target.
+MANAGER_PLUGINS = ['use-family','use-manager']
 ALIASES = {'thermo-use':['thermo-use','thermo'], 'bitwarden-use':['bitwarden-use','bwu']}
 HOME = Path.home()
 SCRIPT = Path(__file__).resolve()
@@ -408,7 +410,7 @@ def plugin_entries():
         raise RuntimeError('Cannot read installed Claude plugins; no plugin changes attempted')
     result=[]
     for key,rows in data.get('plugins',data).items():
-        if key.split('@')[0] not in NAMES+['use-family']: continue
+        if key.split('@')[0] not in NAMES+MANAGER_PLUGINS: continue
         for row in rows if isinstance(rows,list) else [rows]:
             if isinstance(row,dict): result.append(dict(key=key,**{k:row.get(k) for k in ('scope','version','projectPath') if row.get(k) is not None}))
     return result
@@ -668,13 +670,36 @@ def git_roots(only,unmanaged=None):
         code,text=run(['git','-C',str(real),'rev-parse','--show-toplevel'],timeout=10)
         if code:
             if unmanaged is not None and (p/'SKILL.md').is_file():
-                managed=str(p.resolve()).startswith(str(HOME/'.local/share')+os.sep)
+                managed=str(p.resolve()).startswith(str(HOME/'.local/share')+os.sep) or installer_marked(p)
                 unmanaged.append(dict(name=p.name,channel='skill',status='owner-managed' if managed else 'manual',path=str(p),reason='installer-owned skill' if managed else 'copied/unmanaged skill preserved; no ownership baseline for automatic overwrite'))
             continue
         root=Path(text.strip())
         if root!=real and root in seen: continue
         seen.add(root); yield root
 
+
+def installer_marked(skill):
+    # Owner installers (e.g. iphone-use install.sh) record the SKILL.md they wrote in .<name>-release.
+    for marker in Path(skill).glob('.*-release'):
+        try:
+            recorded=re.search(r'^skill_sha256=([0-9a-f]{64})\s*$',marker.read_text(encoding='utf-8',errors='replace'),re.M)
+            if recorded and hashlib.sha256((Path(skill)/'SKILL.md').read_bytes()).hexdigest()==recorded.group(1): return True
+        except OSError: continue
+    return False
+
+
+def copy_matches(copy,source):
+    # A copied skill often holds only SKILL.md while the plugin root is a whole repo: every copied
+    # file must be byte-identical to the same path in the owner source.
+    copy=Path(copy); source=Path(source); seen=False
+    for p in sorted(copy.rglob('*')):
+        rel=p.relative_to(copy)
+        if any(part in HASH_IGNORED for part in rel.parts): continue
+        if p.is_symlink() or not p.is_file(): continue
+        other=source/rel
+        if other.is_symlink() or not other.is_file() or other.read_bytes()!=p.read_bytes(): return False
+        seen=seen or rel==Path('SKILL.md')
+    return seen
 
 # Markers that hosts and installers write beside an unchanged skill: Claude Code's plugin cache lock
 # and the iphone-use installer's release stamp. They are not skill content.
@@ -739,7 +764,7 @@ def refresh_copies(report,items,baseline,names,check):
             selected=max(candidates,key=lambda c:tuple(map(int,(version(c['version']) or '0.0.0').split('.'))))
             known={c['hash'] for c in baseline.get(item['name'],[])}
             if records.get(str(path),{}).get('hash'): known.add(records[str(path)]['hash'])
-            if current==selected['hash']:
+            if current==selected['hash'] or copy_matches(path,selected['path']):
                 item['status']='current'; item['reason']='matches installed owner skill'; records[str(path)]={'hash':current,'version':selected['version']};report['items'].append(item);continue
             old_version=version(records.get(str(path),{}).get('version'))
             selected_version=version(selected.get('version'))
@@ -845,7 +870,7 @@ def upgrade(args):
             if after and after!=before: row.update(status='updated',before=before,after=after)
         codex_upgrade(report,names,args.check)
         if not args.check:
-            entries=[e for e in plugin_entries() if e['key'].split('@')[0] in names]
+            entries=[e for e in plugin_entries() if e['key'].split('@')[0] in plugin_names(names)]
             claude=shutil.which('claude')
             if entries and not claude: report['items'].append(dict(name='claude',channel='plugin',status='manual',reason='Claude CLI not installed'))
             if claude:
@@ -861,7 +886,7 @@ def upgrade(args):
                         return next((r.get('version') for r in plugin_entries() if r['key']==entry['key'] and r.get('scope','user')==entry.get('scope','user') and r.get('projectPath')==entry.get('projectPath')),None)
                     step(report,e['key'],'plugin',[claude,'plugin','update',e['key'],'--scope',scope],cwd=cwd,before=e.get('version'),after=after,target=plugin_target(e['key']))
         else:
-            report['items'].extend(dict(name=e['key'],channel='plugin',status='installed',before=e.get('version')) for e in plugin_entries() if e['key'].split('@')[0] in names)
+            report['items'].extend(dict(name=e['key'],channel='plugin',status='installed',before=e.get('version')) for e in plugin_entries() if e['key'].split('@')[0] in plugin_names(names))
         progress(report,tr('verify'))
         refresh_copies(report,unmanaged,copy_baselines,names,args.check)
         report['ok']=all(i['status'] not in ('failed','manual','unverified','pending') for i in report['items'])
@@ -871,9 +896,13 @@ def upgrade(args):
         return report,0 if report['ok'] else 2
 
 
+def plugin_names(names):
+    return names+(['use-manager'] if 'use-family' in names else [])
+
+
 def tool_name(item):
     name=item.get('name','').split('@')[0]
-    return 'use-family' if name=='use' else name
+    return 'use-family' if name in ('use','use-manager') else name
 
 
 def human_reason(item):

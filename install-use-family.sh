@@ -82,7 +82,7 @@ done
 
 # The manager itself is small and local to this already trusted checkout. It does not
 # install missing family CLIs or enable background scheduling without explicit consent.
-manager="$BASE/plugins/plugins/use-family/scripts/use.py"
+manager="$BASE/plugins/plugins/use-manager/scripts/use.py"
 if [ -f "$manager" ] && command -v python3 >/dev/null 2>&1; then
   python3 "$manager" install --local || failed="$failed use-manager"
 fi
