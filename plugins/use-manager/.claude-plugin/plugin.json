@@ -1,6 +1,6 @@
 {
   "name": "use-manager",
-  "version": "0.15.6",
+  "version": "0.15.7",
   "description": "Installs the `use` command that upgrades every *-use tool you have (CLIs, skills, plugins) with `use upgrade`. Every *-use plugin depends on it, so installing any one of them brings `use` along. Never installs missing tools and never turns on scheduled upgrades by itself (`use auto enable` does).",
   "author": {
     "name": "leeguooooo"
