@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # use-family managed CLI
-"""Upgrade the installed use family. Python 3 standard library; no shell execution."""
+"""Upgrade use itself or update installed family tools. Standard library only."""
 import argparse
 import contextlib
 import datetime
@@ -21,7 +21,7 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.16.0'
+VERSION = '0.17.0'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 # Plugins that carry the manager itself; they follow the use-family upgrade target.
@@ -59,7 +59,7 @@ def choose_language(explicit=None):
 
 UI_LANG=choose_language()
 TEXT={
-    'description':('Upgrade installed use tools and plugins.','升级已安装的 use 工具和插件。'),
+    'description':('Upgrade use itself or update installed family tools and plugins.','升级 use 自身，或更新已安装的家族工具和插件。'),
     'scan':('Reading installed tools…','读取已安装的工具…'),
     'copies':('Checking skill copies…','核对技能副本…'),
     'check_tool':('Checking {name}…','检查 {name}…'),
@@ -86,7 +86,7 @@ TEXT={
     'exit_code':(' (exit {code})','（退出码 {code}）'),
     'new_session':('Plugin updates take effect in a new session.','插件更新在新会话中生效。'),
     'full_details':('Full details:','完整明细：'),
-    'no_report':('No upgrade report yet; run use upgrade first','尚无升级报告，请先运行 use upgrade'),
+    'no_report':('No upgrade report yet; run use update first','尚无升级报告，请先运行 use update'),
     'fallback_reason':('Further inspection is required','需要进一步检查'),
     'failed_reason':('Command failed; see the private log','命令失败，详见私有日志'),
     'rate_group':('GitHub version checks are rate limited; {count} CLI upgrades deferred:','GitHub 版本检查被限流，暂缓 {count} 个 CLI 升级：'),
@@ -107,12 +107,14 @@ TEXT={
     'help_install_names':('family members whose CLI to install, e.g. image-use','要补装 CLI 的家族成员，例如 image-use'),
     'help_local':('install from this trusted checkout or plugin','从这个可信工作区或插件安装'),
     'help_auto_flag':('enable daily automatic upgrades after installation','安装后开启每日自动升级'),
-    'help_upgrade':('upgrade installed family CLIs, skills and plugins','升级已安装的家族 CLI、技能和插件'),
+    'help_upgrade':('upgrade the use manager itself only','仅升级 use 管理器自身'),
+    'help_update':('update installed family CLIs, skills and plugins','更新已安装的家族 CLI、技能和插件'),
     'help_names':('optional family members; default: all installed members','可选的成员名称，默认处理所有已安装成员'),
     'help_check':('check versions without running upgrades','仅检查版本，不执行升级'),
     'help_json':('write stable machine-readable JSON','输出字段稳定的机器可读 JSON'),
     'help_verbose':('show every channel result and preserved path','显示各渠道结果和保留目录'),
     'help_report':('read the last result without running another upgrade','查看上次结果，不重新执行升级'),
+    'help_manager_report':('read the last manager self-upgrade result','查看上次管理器自身升级的结果'),
     'help_status':('show installed versions and recorded state as JSON','以 JSON 显示已安装版本和记录状态'),
     'help_auto':('enable, disable or inspect daily background upgrades','开启、关闭或查看每日后台升级'),
     'help_hours':('minimum hours between automatic attempts (default: 24)','自动升级的最短间隔小时数（默认 24）'),
@@ -147,7 +149,11 @@ class Parser(argparse.ArgumentParser):
 def human_error(message):
     if UI_LANG=='en':return message
     translations={
-        'No upgrade report yet; run use upgrade first':tr('no_report'),
+        'No upgrade report yet; run use update first':tr('no_report'),
+        'No manager upgrade report yet; run use upgrade first':'尚无管理器升级报告，请先运行 use upgrade',
+        'Run the installed use command to upgrade the manager; source checkouts are preserved':'请通过已安装的 use 命令升级管理器；源码工作区保持不变',
+        'Family names belong to use update; use upgrade only upgrades use itself':'家族工具名称请交给 use update；use upgrade 仅升级 use 自身',
+        'Installed use version could not be verified':'无法确认 use 的实际安装版本',
         'No stable use manager release found':'未找到稳定版管理器发布包',
         'Use archive checksum mismatch; nothing installed':'发布包校验失败，未安装任何内容',
         'Use archive version/owner mismatch':'发布包版本或来源不符',
@@ -248,14 +254,18 @@ def _install_bytes(content,expected):
 
 
 def self_upgrade(report,check):
-    if SCRIPT != INSTALL/'use.py': return  # source checkout/plugin bootstrap; do not edit development code.
+    if SCRIPT != INSTALL/'use.py':
+        raise RuntimeError('Run the installed use command to upgrade the manager; source checkouts are preserved')
     try:
         latest,data=release()
         if check: status='available' if tuple(map(int,latest.split('.')))>tuple(map(int,VERSION.split('.'))) else 'current'
         elif tuple(map(int,latest.split('.')))>tuple(map(int,VERSION.split('.'))):
-            install_bytes(release_script(data),latest); status='updated'
+            launcher=install_bytes(release_script(data),latest)
+            after=cli_version(launcher)
+            if after!=latest: raise RuntimeError('Installed use version could not be verified')
+            status='updated'
         else: status='current'
-        report['items'].append(dict(name='use',channel='manager',status=status,before=VERSION,target=latest))
+        report['items'].append(dict(name='use',channel='manager',status=status,before=VERSION,target=latest,after=latest if status=='updated' else VERSION))
     except Exception as e:
         report['items'].append(dict(name='use',channel='manager',status='failed',reason=str(e)))
 
@@ -853,7 +863,6 @@ def upgrade(args):
         if unknown: raise RuntimeError('Unknown family member: '+', '.join(sorted(unknown)))
         progress(report,tr('copies'))
         copy_baselines=canonical_sources(names) if not args.check else {}
-        if 'use-family' in names: self_upgrade(report,args.check)
         limited=github_limit_reached() if any(installed_cli(n) for n in names if n not in ('thermo-use','use-family')) else False
         PROBES.clear()
         # Each installed CLI owns its installer, native apps and skill refresh. Do not install missing tools.
@@ -932,13 +941,24 @@ def upgrade(args):
         return report,0 if report['ok'] else 2
 
 
+def manager_upgrade(args):
+    """Keep self updates independent of family inventory, scheduling and reports."""
+    report=dict(ok=False,started=time.time(),automatic=False,check=args.check,json=args.json,scope='manager',items=[])
+    with lock(),github_auth():
+        self_upgrade(report,args.check)
+        report['ok']=bool(report['items']) and all(i['status'] not in ('failed','manual','unverified','pending') for i in report['items'])
+        report['finished']=time.time();report.pop('json')
+        if not args.check:save(STATE/'last-manager-report.json',report)
+    return report,0 if report['ok'] else 2
+
+
 def plugin_names(names):
     return names+(['use-manager'] if 'use-family' in names else [])
 
 
 def tool_name(item):
     name=item.get('name','').split('@')[0]
-    return 'use-family' if name in ('use','use-manager') else name
+    return 'use-family' if name=='use-manager' else name
 
 
 def human_reason(item):
@@ -1000,9 +1020,9 @@ def next_step(item):
     return None
 
 
-def load_report():
-    report=read(STATE/'last-report.json')
-    if not report:raise RuntimeError('No upgrade report yet; run use upgrade first')
+def load_report(manager=False):
+    report=read(STATE/('last-manager-report.json' if manager else 'last-report.json'))
+    if not report:raise RuntimeError('No manager upgrade report yet; run use upgrade first' if manager else 'No upgrade report yet; run use update first')
     # Older reports omitted failure reasons. Recover only a matching log entry
     # from this report's time interval, never echoing raw owner output.
     missing=[i for i in report.get('items',[]) if i['status']=='failed' and not i.get('reason')]
@@ -1024,7 +1044,7 @@ def print_report(report,verbose=False):
     items=report.get('items',[])
     if report.get('skipped'):
         print({'not due':tr('not_due'),'automatic upgrades disabled':tr('disabled')}.get(report['skipped'],report['skipped'])); return
-    known=set(NAMES+['use-family'])
+    known=set(NAMES+['use-family','use'])
     tools={tool_name(i) for i in items if tool_name(i) in known}
     changes={}
     wanted='available' if report.get('check') else 'updated'
@@ -1091,7 +1111,9 @@ def print_report(report,verbose=False):
         print('  '+paint('·','dim')+' '+tr('preserved',tools=len(names),copies=len(copied)))
         print('    '+paint(sep.join(names),'dim'))
     if problems or manuals:
-        print('\n'+paint(tr('details',command='use upgrade --check --verbose' if report.get('check') else 'use report --verbose',path=home_path(STATE/'upgrade.log')),'dim'))
+        manager=report.get('scope')=='manager'
+        command=('use upgrade' if manager else 'use update')+' --check --verbose' if report.get('check') else 'use report'+(' --manager' if manager else '')+' --verbose'
+        print('\n'+paint(tr('details',command=command,path=home_path(STATE/'upgrade.log')),'dim'))
     if not report.get('check') and any(i['status']=='updated' and i.get('channel') in ('plugin','codex-plugin') for i in items):
         print(paint(tr('new_session'),'dim'))
     if verbose:
@@ -1110,14 +1132,15 @@ def schedule(kind,enable):
     values=dict(USE_MANAGER_STATE=str(STATE),USE_MANAGER_HOME=str(INSTALL),USE_MANAGER_BIN=str(BIN),USE_FAMILY_DIR=str(BASE),PATH=os.environ.get('PATH',''))
     for key in ['USE_NO_AUTO_UPGRADE']+[n.upper().replace('-','_')+'_NO_AUTO_UPGRADE' for n in NAMES+['use-family']]:
         if os.environ.get(key): values[key]='1'
-    command=([str(BIN/'use')] if kind in ('Darwin','Linux') else [sys.executable,str(SCRIPT)])+['upgrade','--automatic','--json','--context',str(context)]
+    command=([str(BIN/'use')] if kind in ('Darwin','Linux') else [sys.executable,str(SCRIPT)])+['update','--automatic','--json','--context',str(context)]
     if kind=='Darwin':
         import plistlib
         p=HOME/'Library/LaunchAgents'/f'{label}.plist'
         if enable:
             loaded,_=run(['launchctl','print',f'gui/{os.getuid()}/{label}'],timeout=10)
             old=plistlib.loads(p.read_bytes()).get('ProgramArguments') if p.exists() else None
-            if loaded==0 and old!=command: raise RuntimeError('Registered scheduler belongs to another installation; disable it there before changing paths')
+            legacy=command.copy();legacy[1]='upgrade'
+            if loaded==0 and old not in (command,legacy): raise RuntimeError('Registered scheduler belongs to another installation; disable it there before changing paths')
             save(context,values)
             p.parent.mkdir(parents=True,exist_ok=True)
             p.write_bytes(plistlib.dumps(dict(Label=label,ProgramArguments=command,RunAtLoad=True,StartInterval=3600,Umask=63,
@@ -1199,20 +1222,23 @@ def main(argv=None):
     ins.add_argument('names',nargs='*',help=tr('help_install_names'))
     ins.add_argument('--local',action='store_true',help=tr('help_local'))
     ins.add_argument('--auto',action='store_true',help=tr('help_auto_flag')); ins.add_argument('--json',action='store_true',help=tr('help_json'))
-    up=commands.add_parser('upgrade',help=tr('help_upgrade'))
-    up.add_argument('names',nargs='*',help=tr('help_names'))
-    up.add_argument('--check',action='store_true',help=tr('help_check'));up.add_argument('--json',action='store_true',help=tr('help_json'))
-    up.add_argument('--automatic',action='store_true',help=argparse.SUPPRESS);up.add_argument('--context',help=argparse.SUPPRESS)
-    up.add_argument('--verbose',action='store_true',help=tr('help_verbose'))
+    up=commands.add_parser('upgrade',help=tr('help_upgrade'),description=tr('help_upgrade'))
+    family=commands.add_parser('update',help=tr('help_update'),description=tr('help_update'))
+    for command in (up,family):
+        command.add_argument('names',nargs='*',help=tr('help_names') if command is family else argparse.SUPPRESS)
+        command.add_argument('--check',action='store_true',help=tr('help_check'));command.add_argument('--json',action='store_true',help=tr('help_json'))
+        command.add_argument('--automatic',action='store_true',help=argparse.SUPPRESS);command.add_argument('--context',help=argparse.SUPPRESS)
+        command.add_argument('--verbose',action='store_true',help=tr('help_verbose'))
     rp=commands.add_parser('report',help=tr('help_report'))
     rp.add_argument('--json',action='store_true',help=tr('help_json'));rp.add_argument('--verbose',action='store_true',help=tr('help_verbose'))
+    rp.add_argument('--manager',action='store_true',help=tr('help_manager_report'))
     st=commands.add_parser('status',help=tr('help_status'));st.add_argument('--json',action='store_true',help=tr('help_json'))
     au=commands.add_parser('auto',help=tr('help_auto'))
     au.add_argument('action',choices=['enable','disable','status'],help=tr('help_action'))
     au.add_argument('--hours',type=int,default=24,help=tr('help_hours'));au.add_argument('--json',action='store_true',help=tr('help_json'))
     args=parser.parse_args(remaining)
     try:
-        if args.command=='upgrade' and args.context:
+        if args.command in ('upgrade','update') and args.context:
             if not args.automatic: raise RuntimeError('Scheduler context is only for automatic runs')
             apply_context(args.context)
         if args.command=='install' and args.names:
@@ -1228,21 +1254,26 @@ def main(argv=None):
                 rc,text=run([sys.executable,INSTALL/'use.py','auto','enable','--json'])
                 if rc: raise RuntimeError('Installed use, but automatic scheduling failed: '+text[:500])
                 result['auto']=json.loads(text)
-        elif args.command=='upgrade':
+        elif args.command in ('upgrade','update'):
             if args.automatic and args.check: raise RuntimeError('--automatic cannot be combined with --check')
-            result,code=upgrade(args)
+            # Old installed schedulers used upgrade --automatic. Keep their
+            # family-update contract while all newly written jobs use update.
+            if args.command=='update' or args.automatic:result,code=upgrade(args)
+            else:
+                if args.names:raise RuntimeError('Family names belong to use update; use upgrade only upgrades use itself')
+                result,code=manager_upgrade(args)
         elif args.command=='report':
-            result=read(STATE/'last-report.json') if args.json else load_report()
-            if not result:raise RuntimeError('No upgrade report yet; run use upgrade first')
+            result=read(STATE/('last-manager-report.json' if args.manager else 'last-report.json')) if args.json else load_report(args.manager)
+            if not result:raise RuntimeError('No manager upgrade report yet; run use upgrade first' if args.manager else 'No upgrade report yet; run use update first')
             code=0 if result.get('ok') else 2
         elif args.command=='auto':
             if args.hours<1: raise RuntimeError('--hours must be at least 1')
             result,code=auto(args),0
         else:
-            result,code=dict(version=VERSION,clis=[dict(name=n,path=p,version=cli_version(p)) for n in NAMES if (p:=installed_cli(n))],plugins=plugin_entries(),codexPlugins=[p for p in codex_entries() if p['name'] in NAMES+['use-family']],auto=read(CONFIG),lastRun=read(STATE/'last-report.json')),0
+            result,code=dict(version=VERSION,clis=[dict(name=n,path=p,version=cli_version(p)) for n in NAMES if (p:=installed_cli(n))],plugins=plugin_entries(),codexPlugins=[p for p in codex_entries() if p['name'] in NAMES+['use-family']],auto=read(CONFIG),lastRun=read(STATE/'last-report.json'),lastManagerRun=read(STATE/'last-manager-report.json')),0
         if args.json or args.command=='status' or (args.command=='auto' and args.action=='status'):
             print(json.dumps(result,ensure_ascii=False,indent=2))
-        elif args.command in ('upgrade','report'):
+        elif args.command in ('upgrade','update','report'):
             print_report(result,args.verbose)
         else: print(json.dumps(result,ensure_ascii=False))
         return code

@@ -43,7 +43,9 @@ Agent-native CLIs that let coding agents drive real, logged-in surfaces — a br
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh
-use upgrade
+use upgrade               # the use manager itself
+use update                # installed family tools
+use install image-use     # a missing member CLI, on request
 use auto enable           # optional: daily background upgrades, without an agent session
 use auto status --json
 use auto disable
@@ -114,7 +116,7 @@ ChatGPT on the web and mobile can't use these: the uses drive your own browser, 
 
 ### [use-manager](https://github.com/leeguooooo/plugins/tree/main/plugins/use-manager)
 
-The `use` command: `use upgrade` upgrades every *-use tool you have (CLIs, skills, plugins). Every *-use plugin depends on it, so installing any one of them brings `use` along. It never installs missing tools and never schedules upgrades by itself (`use auto enable` does).
+The `use` command: `use upgrade` upgrades the manager itself; `use update` upgrades every *-use tool you have (CLIs, skills, plugins). Every *-use plugin depends on it, so installing any one of them brings `use` along. `use install <name>` installs a missing CLI on request; it never installs missing tools or schedules upgrades by itself (`use auto enable` does).
 
 **Claude Code:** `/plugin install use-manager@leeguooooo-plugins`
 
