@@ -149,6 +149,14 @@ class ManagerTests(unittest.TestCase):
             u.codex_upgrade(report,['motion-use'],False)
         run.assert_not_called();self.assertEqual(report['items'][0]['status'],'manual')
 
+    def test_codex_full_family_refresh_includes_manager_plugins(self):
+        rows=[{'pluginId':n+'@family','name':n,'marketplaceName':'family','version':'1.0.0','enabled':True,'marketplaceSource':{'sourceType':'git'}} for n in ['motion-use','use-family','use-manager']]
+        report={'items':[],'json':True}
+        with patch.object(u,'codex_entries',return_value=rows),patch.object(u,'codex_targets',return_value={}),patch.object(u.shutil,'which',return_value='codex'),patch.object(u,'run',return_value=(0,'{}')) as run:
+            u.codex_upgrade(report,u.NAMES+['use-family'],False)
+        run.assert_called_once()
+        self.assertFalse(any(i['status']=='manual' for i in report['items']))
+
     def test_codex_noop_against_newer_target_is_not_success(self):
         row={'pluginId':'motion-use@family','name':'motion-use','marketplaceName':'family','version':'1.0.0','enabled':True,'marketplaceSource':{'sourceType':'git'}}
         report={'items':[],'json':True}

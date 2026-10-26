@@ -21,7 +21,7 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.6'
+VERSION = '0.15.7'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 # Plugins that carry the manager itself; they follow the use-family upgrade target.
@@ -445,7 +445,7 @@ def codex_upgrade(report,names,check):
     try: entries=codex_entries()
     except (OSError,ValueError,RuntimeError):
         report['items'].append(dict(name='codex',channel='codex-plugin',status='manual',reason='native Codex plugin inventory unavailable')); return
-    allowed=set(names+(['use-family'] if set(names)==set(NAMES) else []))
+    allowed=set(plugin_names(names))
     selected=[p for p in entries if p['name'] in allowed]
     for market in sorted({p['marketplaceName'] for p in selected}):
         progress(report,tr('codex_progress',name=market))
@@ -720,7 +720,7 @@ def folder_hash(root):
 
 def canonical_sources(names):
     # Read only the known skill locations in installed immutable plugin caches.
-    allowed=set(names+(['use-family'] if set(names)==set(NAMES) else [])); result={}
+    allowed=set(plugin_names(names)); result={}
     roots=[]
     raw=read(HOME/'.claude/plugins/installed_plugins.json')
     for key,entries in raw.get('plugins',raw).items():
