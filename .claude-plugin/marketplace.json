@@ -88,7 +88,7 @@
     {
       "name": "iphone-use",
       "description": "Agents operate a real iPhone over USB or Wi-Fi using an XCTest Runner. Native UI elements, batched actions, saved Flows, HTTP API and MCP.",
-      "version": "0.24.1",
+      "version": "0.25.1",
       "category": "productivity",
       "source": {
         "source": "url",
