@@ -116,7 +116,7 @@ ChatGPT on the web and mobile can't use these: the uses drive your own browser, 
 
 ### [use-manager](https://github.com/leeguooooo/plugins/tree/main/plugins/use-manager)
 
-The `use` command: `use upgrade` upgrades the manager itself; `use update` upgrades every *-use tool you have (CLIs, skills, plugins). Every *-use plugin depends on it, so installing any one of them brings `use` along. `use install <name>` installs a missing CLI on request; it never installs missing tools or schedules upgrades by itself (`use auto enable` does).
+The `use` command: `use upgrade` upgrades the manager itself; `use update` updates installed family CLIs, skills and plugins. Every *-use plugin depends on it. `use install <name>` installs a missing CLI on request; scheduling only with `use auto enable`.
 
 **Claude Code:** `/plugin install use-manager@leeguooooo-plugins`
 
