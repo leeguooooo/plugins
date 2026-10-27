@@ -69,16 +69,19 @@ On the old computer, `memory-use migrate` first. On the new one:
 
 ## Upgrade
 
-Use `use upgrade` for all installed family CLIs, skills and Claude/Codex plugins;
-`use upgrade --check` checks CLI availability and inventories the other channels.
+Use `use upgrade` to upgrade only the `use` manager itself;
+`use upgrade --check` checks only its release. Use `use update` for all installed
+family CLIs, skills and Claude/Codex plugins;
+`use update --check` checks CLI availability and inventories the other channels.
 `use status --json` shows installed versions and the last recorded result. Missing
-family tools are not installed by `use upgrade`; `use install <name>` installs one through
+family tools are not installed by `use update`; `use install <name>` installs one through
 its owner installer after the user agrees. Failures, pending app updates and preserved dirty
 skills remain visible. No zero-exit wrapper is accepted instead of version readback.
 Default output groups updates and attention items by tool; `use report` reads the last
-result without running another upgrade. Add `--verbose` for every channel/path, or
+result without running another upgrade (`use report --manager` reads the self-upgrade
+result). Add `--verbose` for every channel/path, or
 `--json` for the structured report. A retained skill copy is distinct from an upgrade failure.
-For international users, `use --lang en upgrade` and `use --lang zh upgrade` select the
+For international users, `use --lang en update` and `use --lang zh update` select the
 complete display language (help/progress/results/errors); `USE_LANG` and terminal locale
 set the default. JSON stays language independent. Never assume all users want Chinese.
 

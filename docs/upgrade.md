@@ -89,12 +89,12 @@ If the skill came from somewhere `upgrade` can't refresh:
 
 ## 5. Whole family
 
-The installed entry point is now `use upgrade`, with opt-in independent daily upgrades via
+The installed entry point is now `use update`, with opt-in independent daily upgrades via
 `use auto enable`. See [use-manager.md](use-manager.md) for channel coverage, version
 readback, failure reporting and scheduler controls. The older script delegates to it.
 
 
-`upgrade-use-family.sh` delegates to `use upgrade` and propagates its result. Missing bundle
+`upgrade-use-family.sh` delegates to `use update` and propagates its result. Missing bundle
 dependencies are reported by the doctor; an upgrade does not install missing family members.
 
 ## 6. Plugin installs: the CLI follows the plugin

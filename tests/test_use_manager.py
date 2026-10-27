@@ -47,6 +47,71 @@ class ManagerTests(unittest.TestCase):
         u.install_bytes(SOURCE.read_bytes(),u.VERSION)
         self.assertEqual((u.INSTALL/'use.py').read_bytes(),newer)
 
+    def test_commands_separate_manager_and_family_updates(self):
+        report={'ok':True,'items':[]}
+        for command,owner in [('upgrade','manager_upgrade'),('update','upgrade')]:
+            with patch.object(u,'manager_upgrade',return_value=(report,0)) as manager,patch.object(u,'upgrade',return_value=(report,0)) as family,contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(u.main([command,'--check','--json']),0)
+            selected=manager if owner=='manager_upgrade' else family
+            other=family if owner=='manager_upgrade' else manager
+            selected.assert_called_once();other.assert_not_called()
+        with patch.object(u,'manager_upgrade') as manager,patch.object(u,'upgrade') as family,contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(u.main(['upgrade','chrome-use','--json']),2)
+        manager.assert_not_called();family.assert_not_called()
+
+    def test_self_upgrade_reads_back_version_without_family_inventory(self):
+        u.install_bytes(SOURCE.read_bytes(),u.VERSION)
+        previous={'ok':True,'items':[{'name':'mail-use','status':'current'}]}
+        u.save(u.STATE/'last-report.json',previous)
+        newer=SOURCE.read_bytes().replace(f"VERSION = '{u.VERSION}'".encode(),b"VERSION = '2.0.0'")
+        with patch.object(u,'SCRIPT',u.INSTALL/'use.py'),patch.object(u,'release',return_value=('2.0.0',{})),patch.object(u,'release_script',return_value=newer),patch.object(u,'plugin_entries',side_effect=AssertionError('self update read family plugins')),patch.object(u,'installed_cli',side_effect=AssertionError('self update read family CLIs')):
+            result,code=u.manager_upgrade(SimpleNamespace(check=False,json=True))
+        self.assertEqual(code,0);self.assertEqual(result['items'][0]['after'],'2.0.0')
+        self.assertEqual(u.read(u.STATE/'last-report.json'),previous)
+        self.assertTrue((u.STATE/'last-manager-report.json').is_file())
+
+    def test_self_upgrade_check_does_not_install(self):
+        with patch.object(u,'SCRIPT',u.INSTALL/'use.py'),patch.object(u,'release',return_value=('2.0.0',{})),patch.object(u,'install_bytes') as install,patch.object(u,'release_script') as download:
+            result,code=u.manager_upgrade(SimpleNamespace(check=True,json=True))
+        self.assertEqual(code,0);self.assertEqual(result['items'][0]['status'],'available')
+        install.assert_not_called();download.assert_not_called()
+        self.assertFalse((u.STATE/'last-manager-report.json').exists())
+
+    def test_self_upgrade_rejects_unverified_installed_version(self):
+        with patch.object(u,'SCRIPT',u.INSTALL/'use.py'),patch.object(u,'release',return_value=('2.0.0',{})),patch.object(u,'release_script',return_value=b'candidate'),patch.object(u,'install_bytes',return_value='use'),patch.object(u,'cli_version',return_value='1.0.0'):
+            result,code=u.manager_upgrade(SimpleNamespace(check=False,json=True))
+        self.assertEqual(code,2);self.assertEqual(result['items'][0]['status'],'failed')
+
+    def test_family_update_never_runs_cli_self_update(self):
+        self.args.names=['use-family']
+        with patch.object(u,'self_upgrade',side_effect=AssertionError('family command ran CLI self upgrade')),patch.object(u,'installed_cli',return_value=None),patch.object(u,'plugin_entries',return_value=[]),patch.object(u,'git_roots',return_value=[]),patch.object(u,'codex_upgrade'):
+            _,code=u.upgrade(self.args)
+        self.assertEqual(code,0)
+
+    def test_old_scheduled_upgrade_keeps_family_semantics(self):
+        for command in ('upgrade','update'):
+            with patch.object(u,'upgrade',return_value=({'ok':True,'items':[]},0)) as family,patch.object(u,'manager_upgrade') as manager,contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(u.main([command,'--automatic','--json']),0)
+            family.assert_called_once();manager.assert_not_called()
+
+    def test_manager_report_does_not_read_family_history(self):
+        u.save(u.STATE/'last-manager-report.json',{'ok':True,'scope':'manager','items':[]})
+        u.save(u.STATE/'last-report.json',{'ok':False,'scope':'family','items':[]})
+        output=io.StringIO()
+        with contextlib.redirect_stdout(output):self.assertEqual(u.main(['report','--manager','--json']),0)
+        self.assertEqual(json.loads(output.getvalue())['scope'],'manager')
+
+    @unittest.skipIf(os.name=='nt','POSIX compatibility wrapper')
+    def test_compatibility_wrapper_uses_family_command_for_old_and_new_managers(self):
+        u.BIN.mkdir()
+        fake=u.BIN/'use'
+        fake.write_text('#!'+sys.executable+'\nimport os,sys,json\nif sys.argv[1:]==["update","--help"]:sys.exit(0 if os.environ["FAKE_NEW"]=="1" else 2)\nprint(json.dumps(sys.argv[1:]))\n')
+        fake.chmod(0o755)
+        for new,verb in [('0','upgrade'),('1','update')]:
+            env={**os.environ,'HOME':str(u.HOME),'PATH':str(u.BIN)+os.pathsep+os.environ['PATH'],'FAKE_NEW':new}
+            result=subprocess.check_output(['sh',str(REPO/'upgrade-use-family.sh'),'--check','chrome-use'],env=env,text=True)
+            self.assertEqual(json.loads(result),[verb,'--check','chrome-use'])
+
     def test_partial_failure_continues_and_verifies_expected_target(self):
         calls=[];versions={'chrome-use':'1.0.0','mail-use':'1.0.0'}
         def run(args,cwd=None,timeout=240):
@@ -213,7 +278,18 @@ class ManagerTests(unittest.TestCase):
         import plistlib
         data=plistlib.loads((u.HOME/'Library/LaunchAgents/com.leeguooooo.use-upgrade.plist').read_bytes())
         self.assertEqual(data['ProgramArguments'][0],str(launcher))
+        self.assertEqual(data['ProgramArguments'][1],'update')
         self.assertEqual(data['StartInterval'],3600)
+
+    def test_mac_scheduler_migrates_legacy_verb_without_restarting_loaded_job(self):
+        import plistlib
+        launcher=u.BIN/'use';u.BIN.mkdir();launcher.write_text(u.MARKER)
+        p=u.HOME/'Library/LaunchAgents/com.leeguooooo.use-upgrade.plist';p.parent.mkdir(parents=True)
+        old=[str(launcher),'upgrade','--automatic','--json','--context',str(u.STATE/'scheduler-context.json')]
+        p.write_bytes(plistlib.dumps({'ProgramArguments':old}))
+        with patch.object(u,'run',return_value=(0,'')) as run,patch.object(u.os,'getuid',return_value=501,create=True):u.schedule('Darwin',True)
+        self.assertEqual(plistlib.loads(p.read_bytes())['ProgramArguments'][1],'update')
+        self.assertFalse(any(c.args[0][1] in ('bootstrap','bootout') for c in run.call_args_list))
 
 
     def test_verified_copy_updates_with_backup_and_keeps_local_edits(self):

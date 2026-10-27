@@ -1,20 +1,31 @@
-# One upgrade command for the installed use family
+# Upgrade use itself and update the installed use family
 
 Install the self-contained Python 3.9+ manager from a checksum-verified GitHub Release:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.sh | sh
-use upgrade
-use upgrade --check
+use upgrade              # upgrade only the use manager
+use upgrade --check      # check only the manager release
+use update               # update installed family tools
+use update --check
+use install image-use     # install a missing member CLI (ask the user first)
 use report                # last result; does not run another upgrade
 use report --verbose      # all channels, failures and preserved paths
 use status --json
 ```
 
-`use upgrade` updates only installed family CLIs, clean Git skill checkouts and installed
-Claude/Codex family plugins. It also updates the manager itself. It does not bulk-install
+`use update` updates only installed family CLIs, clean Git skill checkouts and installed
+Claude/Codex family plugins. `use upgrade` separately upgrades the manager itself. It does not bulk-install
 missing family members. Each CLI keeps ownership of its installer, app and skill refresh.
-`use upgrade motion-use chrome-use` selects a subset. Unknown names are refused.
+`use update motion-use chrome-use` selects a subset. Unknown names are refused.
+`use upgrade` does not accept family names and never inventories or updates their CLIs,
+skills or plugins. Self-update results are kept in `last-manager-report.json` (`use report --manager`); `use report`
+continues to show the last family update.
+
+New scheduled jobs run `use update --automatic`. Jobs installed before this split still
+use `use upgrade --automatic`; that internal form retains its family-update meaning,
+including the existing consent, interval and opt-out checks. Refreshing an already enabled
+macOS schedule rewrites its file without restarting the loaded job. Scheduling stays opt-in.
 
 `use install image-use` installs a missing member's CLI on request: it runs that member's own
 `install.sh` (the line doctor.sh prints) and reads the CLI back from PATH; an installed CLI is left
@@ -59,8 +70,8 @@ Anything else differing is preserved and reported.
 ### English and Chinese
 
 ```sh
-use --lang en upgrade
-use upgrade --lang zh
+use --lang en update
+use update --lang zh
 use --lang en report --verbose
 USE_LANG=zh use report
 ```
@@ -92,7 +103,7 @@ On Windows, install Python 3.9+ first, then run in PowerShell:
 
 ```powershell
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use.ps1)))
-use upgrade
+use update
 ```
 
 The installer creates `~/.local/bin/use` (`use.cmd` with CRLF on Windows). Add that directory
@@ -148,7 +159,7 @@ attention items; the worker never accepts a newly displayed marketplace command 
 One ordinary failure does not stop the remaining members. A process lock prevents two
 manager runs from upgrading concurrently; the OS releases it after a crash, without PID
 killing or stale-lock deletion. Each child command is bounded, and automatic attempts are
-throttled even after failure. Use a manual `use upgrade` after resolving an attention item.
+throttled even after failure. Use a manual `use update` after resolving an attention item.
 
 `--check` checks CLI update availability and inventories the other installed channels; it
 never runs their upgrade operations. It does not claim to have fetched fresh plugin/skill
