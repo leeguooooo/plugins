@@ -31,4 +31,14 @@ echo "$out" | grep -qF 'leeguooooo/session-flow/main/install.sh | sh' || fail "s
 out=$(run arm64)
 echo "$out" | grep -q 'not installed:.* wechat-use' || fail "Apple Silicon: wechat-use not checked"
 
+# image-use's plugin installed, its CLI missing: name the one command that installs it.
+mkdir -p "$TMP/home/.claude/plugins"
+echo '{"plugins":{"image-use@leeguooooo-plugins":[{"version":"1.0.0"}]}}' > "$TMP/home/.claude/plugins/installed_plugins.json"
+out=$(run arm64)
+echo "$out" | grep -q 'plugins are installed but their CLIs are missing: image-use$' || fail "plugin-installed image-use not singled out"
+echo "$out" | grep -qF 'installer lines below' || fail "no fallback hint without use on PATH"
+printf '#!/bin/sh\n' > "$TMP/bin/use"; chmod +x "$TMP/bin/use"
+out=$(run arm64)
+echo "$out" | grep -qF 'run: use install image-use' || fail "no use install command"
+
 echo "ok doctor.sh"
