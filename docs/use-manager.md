@@ -16,6 +16,13 @@ Claude/Codex family plugins. It also updates the manager itself. It does not bul
 missing family members. Each CLI keeps ownership of its installer, app and skill refresh.
 `use upgrade motion-use chrome-use` selects a subset. Unknown names are refused.
 
+`use install image-use` installs a missing member's CLI on request: it runs that member's own
+`install.sh` (the line doctor.sh prints) and reads the CLI back from PATH; an installed CLI is left
+alone. When a member's plugin is installed but its CLI is missing, the use-family session-start check
+names this command; the agent still asks the user before running it, since an installer writes to
+their machine. POSIX only; on Windows run the member's `install.ps1`. While another process holds
+the install or upgrade lock, `use` exits 75 and the session-start hooks stay silent.
+
 The default terminal output shows one live progress line, then a summary grouped by tool.
 Current versions stay out of the summary; a skill checkout whose pull moved `HEAD` is listed
 with its old and new commit. Problems are grouped per tool, one line per channel, each followed

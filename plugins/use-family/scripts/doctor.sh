@@ -25,6 +25,26 @@ if command -v memory-use >/dev/null 2>&1 && [ ! -f "$HOME/.config/memory-use/con
 fi
 [ -z "$missing" ] && exit 0
 
+# A member whose plugin is installed but whose CLI is missing: its skill is offered to the agent
+# yet cannot run, so name the one command that fixes it. Still the user's call (installers write
+# to their machine), so the agent asks first; \`use install\` runs the same owner installer.
+plugins="$HOME/.claude/plugins/installed_plugins.json"
+wanted=""
+if [ -f "$plugins" ]; then
+  installed=$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "$plugins")  # shell only: no grep needed
+  for name in $missing; do
+    case "$installed" in *"\"$name@leeguooooo-plugins\""*) wanted="$wanted $name" ;; esac
+  done
+fi
+if [ -n "$wanted" ]; then
+  echo "use-family: these plugins are installed but their CLIs are missing:$wanted"
+  if command -v use >/dev/null 2>&1; then
+    echo "Their skills cannot run until installed. Ask the user once, then run: use install$wanted"
+  else
+    echo "Their skills cannot run until installed. Ask the user once, then run the installer lines below."
+  fi
+fi
+
 echo "use-family: these CLIs are not installed:$missing"
 echo "Install them when a task needs one, after asking the user. All at once:"
 echo "  curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-clis.sh | sh"

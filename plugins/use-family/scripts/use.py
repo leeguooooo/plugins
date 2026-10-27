@@ -21,12 +21,17 @@ import plistlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-VERSION = '0.15.7'
+VERSION = '0.16.0'
 MARKER = '# use-family managed CLI'
 NAMES = 'android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use profile-use bitwarden-use chatgpt-use image-use memory-use ocs sflow message-use paste-use motion-use thermo-use switch-use'.split()
 # Plugins that carry the manager itself; they follow the use-family upgrade target.
 MANAGER_PLUGINS = ['use-family','use-manager']
 ALIASES = {'thermo-use':['thermo-use','thermo'], 'bitwarden-use':['bitwarden-use','bwu']}
+# Owner repos whose name differs from the member; profile-use ships inside its skill, no CLI to install.
+REPOS = {'ocs':'open-cross-session','sflow':'session-flow'}
+NO_CLI = ['profile-use']
+# Exit code when another process holds the lock: startup hooks treat it as nothing to do.
+LOCK_BUSY = 75
 HOME = Path.home()
 SCRIPT = Path(__file__).resolve()
 try:
@@ -98,7 +103,8 @@ TEXT={
     'help':('show this help message and exit','显示帮助并退出'),
     'help_version':('show the manager version and exit','显示管理器版本并退出'),
     'help_lang':('output language (default: USE_LANG or terminal locale)','输出语言（默认跟随 USE_LANG 或终端语言）'),
-    'help_install':('install the manager without installing missing family tools','安装管理器，不补装其他家族工具'),
+    'help_install':('install the manager; with names, install those missing family CLIs via their owner installers','安装管理器；带名称时用官方安装脚本补装这些缺失的家族 CLI'),
+    'help_install_names':('family members whose CLI to install, e.g. image-use','要补装 CLI 的家族成员，例如 image-use'),
     'help_local':('install from this trusted checkout or plugin','从这个可信工作区或插件安装'),
     'help_auto_flag':('enable daily automatic upgrades after installation','安装后开启每日自动升级'),
     'help_upgrade':('upgrade installed family CLIs, skills and plugins','升级已安装的家族 CLI、技能和插件'),
@@ -156,6 +162,9 @@ def human_error(message):
         'Refusing to replace an unmanaged use executable: ':'已保留非本管理器维护的程序：',
         'Codex plugin inventory unavailable; native refresh not attempted':'无法读取 Codex 插件清单，未执行刷新',
         'Another use upgrade is running; no second upgrade started':'已有升级任务正在运行，未重复启动',
+        'Another use install is running; no second install started':'已有安装任务正在运行，未重复启动',
+        'Installing family CLIs needs a POSIX shell; on Windows run the member\'s install.ps1':'补装家族 CLI 需要 POSIX shell；Windows 请运行该成员的 install.ps1',
+        'Has no CLI to install: ':'没有可安装的 CLI：',
         'Thermo appcast has no release version':'Thermo 更新源未提供版本',
         'Unknown family member: ':'未知的家族成员：',
         'Install use before enabling a persistent schedule':'请先安装 use，再开启后台任务',
@@ -474,6 +483,9 @@ def codex_upgrade(report,names,check):
             report['items'].append(row)
 
 
+class LockBusy(RuntimeError): pass
+
+
 @contextlib.contextmanager
 def lock(kind='upgrade'):
     STATE.mkdir(parents=True,exist_ok=True)
@@ -487,9 +499,33 @@ def lock(kind='upgrade'):
             import fcntl
             fcntl.flock(f.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
     except OSError:
-        f.close(); raise RuntimeError('Another use upgrade is running; no second upgrade started')
+        f.close(); raise LockBusy(f'Another use {kind} is running; no second {kind} started')
     try: yield
     finally: f.close()  # OS releases the lock even after a crash; never kill by PID or unlink a live lock.
+
+
+def install_members(names):
+    # Explicit opt-in: the user asked for these tools, so run each owner's own installer (the
+    # same one-liner doctor.sh prints) and read back the CLI. Already installed CLIs are left alone.
+    unknown=[n for n in names if n not in NAMES]
+    if unknown: raise RuntimeError('Unknown family member: '+', '.join(unknown))
+    if [n for n in names if n in NO_CLI]: raise RuntimeError('Has no CLI to install: '+', '.join(n for n in names if n in NO_CLI))
+    if os.name=='nt': raise RuntimeError("Installing family CLIs needs a POSIX shell; on Windows run the member's install.ps1")
+    items=[]
+    for name in dict.fromkeys(names):
+        if installed_cli(name): items.append(dict(name=name,status='current',path=installed_cli(name))); continue
+        url=f'https://raw.githubusercontent.com/leeguooooo/{REPOS.get(name,name)}/main/install.sh'
+        try:
+            with tempfile.TemporaryDirectory(prefix='use-install-') as tmp:
+                script=Path(tmp)/'install.sh'; script.write_bytes(fetch(url))
+                code,text=run(['sh',str(script)])
+        except (OSError,ValueError) as e: code,text=1,type(e).__name__
+        write_log(f'\n{datetime.datetime.now().isoformat()} install {name}\n{text}')
+        path=installed_cli(name)
+        row=dict(name=name,status='installed' if code==0 and path else 'failed',path=path,installer=url,exitCode=code)
+        if row['status']=='failed': row['reason']=failure_reason(code,text,'cli') if code else 'installer finished but the CLI is not on PATH'
+        items.append(row)
+    return dict(ok=all(i['status']!='failed' for i in items),items=items)
 
 
 def busy():
@@ -1160,6 +1196,7 @@ def main(argv=None):
     parser.add_argument('--version',action='version',version=VERSION,help=tr('help_version'))
     commands=parser.add_subparsers(dest='command',required=True)
     ins=commands.add_parser('install',help=tr('help_install'))
+    ins.add_argument('names',nargs='*',help=tr('help_install_names'))
     ins.add_argument('--local',action='store_true',help=tr('help_local'))
     ins.add_argument('--auto',action='store_true',help=tr('help_auto_flag')); ins.add_argument('--json',action='store_true',help=tr('help_json'))
     up=commands.add_parser('upgrade',help=tr('help_upgrade'))
@@ -1178,7 +1215,10 @@ def main(argv=None):
         if args.command=='upgrade' and args.context:
             if not args.automatic: raise RuntimeError('Scheduler context is only for automatic runs')
             apply_context(args.context)
-        if args.command=='install':
+        if args.command=='install' and args.names:
+            if args.local or args.auto: raise RuntimeError('--local/--auto install the manager; pass member names without them')
+            result=install_members(args.names); code=0 if result['ok'] else 2
+        elif args.command=='install':
             if args.local: latest,content=VERSION,SCRIPT.read_bytes()
             else:
                 latest,data=release(); content=release_script(data)
@@ -1206,6 +1246,9 @@ def main(argv=None):
             print_report(result,args.verbose)
         else: print(json.dumps(result,ensure_ascii=False))
         return code
+    except LockBusy as e:
+        progress({'json':args.json})
+        print(json.dumps(dict(ok=False,error=str(e),busy=True),ensure_ascii=False) if args.json else tr('error',message=human_error(str(e))),file=sys.stdout if args.json else sys.stderr); return LOCK_BUSY
     except (RuntimeError,OSError,ValueError) as e:
         progress({'json':args.json})
         print(json.dumps(dict(ok=False,error=str(e)),ensure_ascii=False) if args.json else tr('error',message=human_error(str(e))),file=sys.stdout if args.json else sys.stderr); return 2

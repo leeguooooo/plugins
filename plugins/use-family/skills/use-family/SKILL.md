@@ -72,7 +72,8 @@ On the old computer, `memory-use migrate` first. On the new one:
 Use `use upgrade` for all installed family CLIs, skills and Claude/Codex plugins;
 `use upgrade --check` checks CLI availability and inventories the other channels.
 `use status --json` shows installed versions and the last recorded result. Missing
-family tools are not installed; failures, pending app updates and preserved dirty
+family tools are not installed by `use upgrade`; `use install <name>` installs one through
+its owner installer after the user agrees. Failures, pending app updates and preserved dirty
 skills remain visible. No zero-exit wrapper is accepted instead of version readback.
 Default output groups updates and attention items by tool; `use report` reads the last
 result without running another upgrade. Add `--verbose` for every channel/path, or

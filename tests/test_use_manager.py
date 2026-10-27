@@ -95,6 +95,44 @@ class ManagerTests(unittest.TestCase):
             self.assertEqual(subprocess.check_output([sys.executable,'-c',command],env=e,text=True).strip(),'True')
         self.assertFalse(u.busy())
 
+    def test_lock_error_names_its_kind_in_both_languages(self):
+        with u.lock('install'):
+            command=f"import importlib.util; s=importlib.util.spec_from_file_location('u',{str(SOURCE)!r});u=importlib.util.module_from_spec(s);s.loader.exec_module(u)\ntry:\n  with u.lock('install'): pass\nexcept u.LockBusy as e: print(e)"
+            e={**os.environ,'USE_MANAGER_STATE':str(u.STATE)}
+            out=subprocess.check_output([sys.executable,'-c',command],env=e,text=True).strip()
+        self.assertEqual(out,'Another use install is running; no second install started')
+        self.assertEqual(u.human_error(out),'已有安装任务正在运行，未重复启动')
+        self.assertEqual(u.human_error('Another use upgrade is running; no second upgrade started'),'已有升级任务正在运行，未重复启动')
+
+    @unittest.skipIf(os.name=='nt','POSIX hook scripts')
+    def test_bootstrap_hooks_are_silent_while_another_session_installs(self):
+        e=dict(os.environ,HOME=str(self.root),USE_MANAGER_HOME=str(self.root/'install'),USE_MANAGER_BIN=str(self.root/'bin'),USE_MANAGER_STATE=str(self.root/'state'),USE_NO_AUTO_UPGRADE='1',PATH='/usr/bin:/bin:'+str(Path(sys.executable).parent))
+        holder=subprocess.Popen([sys.executable,'-c',f"import importlib.util,sys; s=importlib.util.spec_from_file_location('u',{str(SOURCE)!r});u=importlib.util.module_from_spec(s);s.loader.exec_module(u)\nwith u.lock('install'):\n  print('held',flush=True); sys.stdin.read()"],env=e,stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True)
+        self.addCleanup(holder.wait); self.addCleanup(holder.stdin.close)
+        self.assertEqual(holder.stdout.readline().strip(),'held')
+        done=subprocess.run([sys.executable,str(SOURCE),'install','--local'],env=e,capture_output=True,text=True)
+        self.assertEqual(done.returncode,u.LOCK_BUSY);self.assertIn('install is running',done.stderr)
+        for plugin in ('use-family','use-manager'):
+            done=subprocess.run(['sh',str(REPO/'plugins'/plugin/'scripts/bootstrap-use.sh')],env=e,capture_output=True,text=True)
+            self.assertEqual((plugin,done.returncode,done.stdout,done.stderr),(plugin,0,'',''))
+
+    @unittest.skipIf(os.name=='nt','owner install.sh needs a POSIX shell')
+    def test_install_names_runs_owner_installer_and_reads_back_cli(self):
+        found={}
+        fetched=[]
+        def fetch(url): fetched.append(url); return b'echo installing'
+        def run(argv,cwd=None,timeout=240): found['image-use']='/x/image-use'; found['ocs']='/x/ocs'; return 0,'ok'
+        with patch.object(u,'fetch',side_effect=fetch),patch.object(u,'run',side_effect=run),patch.object(u,'installed_cli',side_effect=lambda n:found.get(n)):
+            result=u.install_members(['image-use','ocs'])
+        self.assertTrue(result['ok'])
+        self.assertEqual([i['status'] for i in result['items']],['installed','current'])
+        self.assertEqual(fetched,['https://raw.githubusercontent.com/leeguooooo/image-use/main/install.sh'])
+        with patch.object(u,'fetch',return_value=b''),patch.object(u,'run',return_value=(0,'')),patch.object(u,'installed_cli',return_value=None):
+            result=u.install_members(['sflow'])
+        self.assertFalse(result['ok']);self.assertEqual(result['items'][0]['installer'],'https://raw.githubusercontent.com/leeguooooo/session-flow/main/install.sh')
+        with self.assertRaisesRegex(RuntimeError,'Unknown'):u.install_members(['nope'])
+        with self.assertRaisesRegex(RuntimeError,'no CLI'):u.install_members(['profile-use'])
+
     def test_dirty_skill_does_not_pull_and_does_not_force(self):
         self.args.names=[]
         def run(args,cwd=None,timeout=240):return (0,' M SKILL.md') if 'status' in args else (0,'')
