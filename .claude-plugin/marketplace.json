@@ -88,7 +88,7 @@
     {
       "name": "iphone-use",
       "description": "Agents operate a real iPhone over USB or Wi-Fi using an XCTest Runner. Native UI elements, batched actions, saved Flows, HTTP API and MCP.",
-      "version": "0.27.5",
+      "version": "0.27.6",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -253,7 +253,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.19.12",
+      "version": "1.19.13",
       "category": "productivity",
       "source": {
         "source": "url",
