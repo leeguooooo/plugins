@@ -186,7 +186,7 @@ echo "$out" | grep -qF "mail-use: not updated, fetch failed" || fail "fetch fail
 out=$(run; echo "exit=$code")
 echo "$out" | grep -qF "exit=0" || fail "clean re-run did not exit 0"
 
-# Grok and Grok Bot: mirrored only where the host exists, and nothing already there is replaced.
+# Grok and Cursor: mirrored only where the host exists, and nothing already there is replaced.
 mkdir -p "$TMP/home/.grok/skills/chrome-use" "$TMP/home/.cursor/skills"
 ln -s /elsewhere "$TMP/home/.cursor/skills/mail-use"
 out=$(run; echo "exit=$code")

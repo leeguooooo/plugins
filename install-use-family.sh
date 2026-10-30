@@ -1,6 +1,6 @@
 #!/bin/sh
 # Install the *-use family as agent skills for Codex and any other agent that reads
-# ~/.agents/skills, then mirror them into Grok and Grok Bot (Cursor) when those are set up.
+# ~/.agents/skills, then mirror them into Grok and Cursor when those are set up.
 # Claude Code users: /plugin install use-family@leeguooooo-plugins instead.
 #   curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.sh | sh
 # Re-run to update: every use is a git checkout under ~/.agents/use-family, linked into
@@ -81,7 +81,7 @@ for entry in $USES; do
   if [ -f "$target/SKILL.md" ]; then link "$target" "$name"; else echo "warn   $name: no SKILL.md at $sub"; fi
 done
 
-# Grok reads ~/.grok/skills; Grok Bot and Cursor read ~/.cursor/skills. Each mirrored link
+# Grok reads ~/.grok/skills; Cursor reads ~/.cursor/skills. Each mirrored link
 # points at $SKILLS/<name>, so it follows updates; anything already there is the user's.
 for host in "$HOME/.grok" "$HOME/.cursor"; do
   [ -d "$host" ] || continue
