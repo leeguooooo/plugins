@@ -88,7 +88,7 @@
     {
       "name": "iphone-use",
       "description": "Agents operate a real iPhone over USB or Wi-Fi using an XCTest Runner. Native UI elements, batched actions, saved Flows, HTTP API and MCP.",
-      "version": "0.27.10",
+      "version": "0.27.11",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -307,7 +307,7 @@
     {
       "name": "ocs",
       "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
-      "version": "0.9.7",
+      "version": "0.9.9",
       "category": "productivity",
       "source": {
         "source": "url",
