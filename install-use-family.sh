@@ -1,6 +1,7 @@
 #!/bin/sh
 # Install the *-use family as agent skills for Codex and any other agent that reads
-# ~/.agents/skills. Claude Code users: /plugin install use-family@leeguooooo-plugins instead.
+# ~/.agents/skills, then mirror them into Grok and Grok Bot (Cursor) when those are set up.
+# Claude Code users: /plugin install use-family@leeguooooo-plugins instead.
 #   curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.sh | sh
 # Re-run to update: every use is a git checkout under ~/.agents/use-family, linked into
 # ~/.agents/skills. CLIs are not installed here; missing ones are listed with their installer.
@@ -80,6 +81,19 @@ for entry in $USES; do
   if [ -f "$target/SKILL.md" ]; then link "$target" "$name"; else echo "warn   $name: no SKILL.md at $sub"; fi
 done
 
+# Grok reads ~/.grok/skills; Grok Bot and Cursor read ~/.cursor/skills. Each mirrored link
+# points at $SKILLS/<name>, so it follows updates; anything already there is the user's.
+for host in "$HOME/.grok" "$HOME/.cursor"; do
+  [ -d "$host" ] || continue
+  mkdir -p "$host/skills"
+  for entry in use-family $USES; do
+    head=${entry%%:*}; name=${head%%=*}; dest="$host/skills/$name"
+    [ -e "$SKILLS/$name" ] || continue
+    { [ -e "$dest" ] || [ -L "$dest" ]; } && continue
+    ln -s "$SKILLS/$name" "$dest" && echo "linked $name into $host/skills"
+  done
+done
+
 # The manager itself is small and local to this already trusted checkout. It does not
 # install missing family CLIs or enable background scheduling without explicit consent.
 manager="$BASE/plugins/plugins/use-manager/scripts/use.py"
@@ -90,7 +104,7 @@ fi
 missing=""
 for name in $CLIS; do command -v "$name" >/dev/null 2>&1 || missing="$missing $name"; done
 echo
-echo "Skills are in $SKILLS. Start a new Codex session to pick them up."
+echo "Skills are in $SKILLS. Start a new agent session to pick them up."
 if [ -n "$missing" ]; then
   echo "CLIs not installed yet:$missing"
   echo "Install them all at once:"

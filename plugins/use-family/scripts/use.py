@@ -34,6 +34,14 @@ NO_CLI = ['profile-use']
 LOCK_BUSY = 75
 HOME = Path.home()
 SCRIPT = Path(__file__).resolve()
+# Agent hosts: where each keeps skills. USE_HOSTS=auto scans the ones present; a comma list narrows it.
+HOSTS = {
+    'claude':{'home':'.claude','skills':'.claude/skills'},
+    'codex':{'home':'.codex','skills':'.codex/skills'},
+    'agents':{'home':'.agents','skills':'.agents/skills'},
+    'grok':{'home':'.grok','skills':os.environ.get('GROK_SKILLS_DIR') or '.grok/skills'},
+    'cursor':{'home':'.cursor','skills':'.cursor/skills'},
+}
 try:
     _metadata=json.loads((SCRIPT.parent/'installed.json').read_text(encoding='utf-8-sig'))
     _paths=_metadata.get('paths',{}) if _metadata.get('installPath')==str(SCRIPT.parent) else {}
@@ -420,6 +428,39 @@ def cli_version(exe):
     return version(text) if code==0 else None
 
 
+def active_hosts():
+    wanted=os.environ.get('USE_HOSTS','auto')
+    names=list(HOSTS) if wanted=='auto' else [n.strip() for n in wanted.split(',') if n.strip()]
+    unknown=[n for n in names if n not in HOSTS]
+    if unknown: raise RuntimeError('Unknown host in USE_HOSTS: '+', '.join(unknown))
+    return [n for n in names if wanted!='auto' or (HOME/HOSTS[n]['home']).is_dir()]
+
+
+def skill_paths(name):
+    return [BASE/name]+[HOME/HOSTS[h]['skills']/name for h in HOSTS]
+
+
+def doctor(names=None):
+    names=names or NAMES
+    hosts=active_hosts()
+    missing=[n for n in names if n not in NO_CLI and not installed_cli(n)]
+    outdated=[i['name'] for i in read(STATE/'last-report.json').get('items',[]) if i.get('status')=='available' and i.get('name') in names]
+    linked={h:[n for n in names if (HOME/HOSTS[h]['skills']/n/'SKILL.md').is_file()] for h in hosts}
+    return dict(ok=not missing,hosts=hosts,missing=missing,outdated=outdated,setup_required=[],skills=linked)
+
+
+def bootstrap():
+    source=HOME/HOSTS['agents']['skills']; linked=[]
+    for host in active_hosts():
+        if host in ('agents','claude','codex'): continue  # agents is the source; the other two install family plugins
+        target=HOME/HOSTS[host]['skills']
+        for name in NAMES+['use-family']:
+            dest=target/name
+            if not (source/name/'SKILL.md').is_file() or dest.exists() or dest.is_symlink(): continue
+            target.mkdir(parents=True,exist_ok=True); dest.symlink_to(source/name); linked.append(str(dest))
+    return dict(ok=True,linked=linked,doctor=doctor())
+
+
 def plugin_entries():
     p=HOME/'.claude/plugins/installed_plugins.json'
     if not p.exists(): return []
@@ -705,7 +746,7 @@ def plugin_target(key):
 def git_roots(only,unmanaged=None):
     paths=[]
     for n in only+(['use-family'] if set(only)==set(NAMES) else []):
-        paths.extend([BASE/n,HOME/'.agents/skills'/n,HOME/'.claude/skills'/n,HOME/'.codex/skills'/n])
+        paths.extend(skill_paths(n))
     if set(only)==set(NAMES) or 'use-family' in only: paths.append(BASE/'plugins')
     seen=set()
     for p in paths:
@@ -871,7 +912,7 @@ def upgrade(args):
             if automatic and not read(CONFIG).get('enabled'): break
             if automatic and os.environ.get(name.upper().replace('-','_')+'_NO_AUTO_UPGRADE'): continue
             if name=='thermo-use':
-                skill_installed=any((p/'SKILL.md').is_file() for p in (BASE/name,HOME/'.agents/skills'/name,HOME/'.claude/skills'/name,HOME/'.codex/skills'/name))
+                skill_installed=any((p/'SKILL.md').is_file() for p in skill_paths(name))
                 if installed_cli(name) or thermo_version() or skill_installed or any(e['key'].split('@')[0]==name for e in initial_plugins) or any(e['name']==name for e in initial_codex): thermo_upgrade(report,args.check)
                 continue
             exe=installed_cli(name)
@@ -1233,6 +1274,8 @@ def main(argv=None):
     rp.add_argument('--json',action='store_true',help=tr('help_json'));rp.add_argument('--verbose',action='store_true',help=tr('help_verbose'))
     rp.add_argument('--manager',action='store_true',help=tr('help_manager_report'))
     st=commands.add_parser('status',help=tr('help_status'));st.add_argument('--json',action='store_true',help=tr('help_json'))
+    dr=commands.add_parser('doctor',help='Report missing CLIs and linked skills per agent host');dr.add_argument('--json',action='store_true',help=tr('help_json'))
+    bs=commands.add_parser('bootstrap',help='Link installed skills into every detected agent host');bs.add_argument('--json',action='store_true',help=tr('help_json'))
     au=commands.add_parser('auto',help=tr('help_auto'))
     au.add_argument('action',choices=['enable','disable','status'],help=tr('help_action'))
     au.add_argument('--hours',type=int,default=24,help=tr('help_hours'));au.add_argument('--json',action='store_true',help=tr('help_json'))
@@ -1262,6 +1305,8 @@ def main(argv=None):
             else:
                 if args.names:raise RuntimeError('Family names belong to use update; use upgrade only upgrades use itself')
                 result,code=manager_upgrade(args)
+        elif args.command=='doctor': result=doctor(); code=0 if result['ok'] else 2
+        elif args.command=='bootstrap': result=bootstrap(); code=0
         elif args.command=='report':
             result=read(STATE/('last-manager-report.json' if args.manager else 'last-report.json')) if args.json else load_report(args.manager)
             if not result:raise RuntimeError('No manager upgrade report yet; run use upgrade first' if args.manager else 'No upgrade report yet; run use update first')
@@ -1271,7 +1316,7 @@ def main(argv=None):
             result,code=auto(args),0
         else:
             result,code=dict(version=VERSION,clis=[dict(name=n,path=p,version=cli_version(p)) for n in NAMES if (p:=installed_cli(n))],plugins=plugin_entries(),codexPlugins=[p for p in codex_entries() if p['name'] in NAMES+['use-family']],auto=read(CONFIG),lastRun=read(STATE/'last-report.json'),lastManagerRun=read(STATE/'last-manager-report.json')),0
-        if args.json or args.command=='status' or (args.command=='auto' and args.action=='status'):
+        if args.json or args.command in ('status','doctor','bootstrap') or (args.command=='auto' and args.action=='status'):
             print(json.dumps(result,ensure_ascii=False,indent=2))
         elif args.command in ('upgrade','update','report'):
             print_report(result,args.verbose)

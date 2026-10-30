@@ -90,6 +90,12 @@ The marketplace also shows up in the ChatGPT desktop app's Plugins Directory. `c
 
 **Any other agent that reads `~/.agents/skills`.** Use the installer. It clones every `*-use` into `~/.agents/use-family` and links each skill into `~/.agents/skills`; run it again to update.
 
+**Grok and Grok Bot.** The same installer also links the family into `~/.grok/skills` (Grok) and `~/.cursor/skills` (Grok Bot, Cursor) when those directories exist. Skills already there are left alone.
+
+`use doctor --json` reports missing CLIs and linked skills per host; `use bootstrap` links installed skills into every detected host. `USE_HOSTS=agents,grok` narrows either one.
+
+**OpenAI dots and Meta Muse.** Both run on their own cloud Linux computer, so nothing installed here reaches them by default. A dot uses the family on this machine after you allow access in the ChatGPT desktop app: it starts Codex tasks here, and Codex reads `~/.agents/skills`. Muse has no documented way to reach a local machine or load these skills yet. Vault, profile and memory data should stay out of either cloud computer.
+
 ```sh
 curl -fsSL https://raw.githubusercontent.com/leeguooooo/plugins/main/install-use-family.sh | sh
 ```

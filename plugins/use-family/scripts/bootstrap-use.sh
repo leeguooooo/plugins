@@ -1,7 +1,8 @@
 #!/bin/sh
 # Keep the manager bundled with this trusted plugin available, without opting in to scheduling.
 set -eu
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT=${USE_PLUGIN_ROOT:+$USE_PLUGIN_ROOT/scripts}
+ROOT=${ROOT:-$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)}
 command -v python3 >/dev/null 2>&1 || exit 0
 # Exit 75: another session is installing the same copy right now; nothing to do or report.
 rc=0; python3 "$ROOT/use.py" install --local >/dev/null 2>&1 || rc=$?
