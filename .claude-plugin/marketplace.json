@@ -17,7 +17,8 @@
         "url": "https://github.com/leeguooooo/wrangler-accounts.git",
         "ref": "main"
       },
-      "homepage": "https://github.com/leeguooooo/wrangler-accounts"
+      "homepage": "https://github.com/leeguooooo/wrangler-accounts",
+      "license": "MIT"
     },
     {
       "name": "claude-statusbar",
@@ -29,7 +30,8 @@
         "url": "https://github.com/leeguooooo/claude-code-usage-bar.git",
         "ref": "main"
       },
-      "homepage": "https://github.com/leeguooooo/claude-code-usage-bar"
+      "homepage": "https://github.com/leeguooooo/claude-code-usage-bar",
+      "license": "MIT"
     },
     {
       "name": "use-family",
@@ -37,7 +39,8 @@
       "version": "0.17.0",
       "category": "productivity",
       "source": "./plugins/use-family",
-      "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family"
+      "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family",
+      "license": "MIT"
     },
     {
       "name": "use-manager",
@@ -45,7 +48,8 @@
       "version": "0.17.0",
       "category": "productivity",
       "source": "./plugins/use-manager",
-      "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-manager"
+      "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-manager",
+      "license": "MIT"
     },
     {
       "name": "chrome-use",
@@ -64,7 +68,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "Apache-2.0"
     },
     {
       "name": "cookie-use",
@@ -83,7 +88,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "Apache-2.0"
     },
     {
       "name": "iphone-use",
@@ -102,7 +108,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "PolyForm-Shield-1.0.0"
     },
     {
       "name": "android-use",
@@ -138,7 +145,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "motion-use",
@@ -153,7 +161,8 @@
       "homepage": "https://github.com/leeguooooo/motion-use",
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "mail-use",
@@ -172,7 +181,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "message-use",
@@ -191,7 +201,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "paste-use",
@@ -210,7 +221,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "switch-use",
@@ -229,7 +241,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT OR Apache-2.0"
     },
     {
       "name": "thermo-use",
@@ -248,7 +261,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "wechat-use",
@@ -264,7 +278,8 @@
       "strict": true,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "LicenseRef-wechat-use-Non-Commercial-Learning"
     },
     {
       "name": "profile-use",
@@ -283,7 +298,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "memory-use",
@@ -302,7 +318,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "ocs",
@@ -321,7 +338,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "sflow",
@@ -340,7 +358,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "bitwarden-use",
@@ -373,7 +392,8 @@
       },
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     },
     {
       "name": "discord-use",
@@ -392,7 +412,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT OR Apache-2.0"
     },
     {
       "name": "chatgpt-use",
@@ -411,7 +432,8 @@
       "strict": false,
       "dependencies": [
         "use-manager"
-      ]
+      ],
+      "license": "MIT"
     }
   ]
 }

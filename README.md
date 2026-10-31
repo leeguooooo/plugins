@@ -282,6 +282,19 @@ Turn a ChatGPT web subscription into a coding-agent backend — no API key, no C
 
 <!-- use-family:end -->
 
+## Connect other agent hosts
+
+Grok, Cursor, Claude Desktop and other MCP hosts: see [docs/integrations.md](docs/integrations.md).
+
+## License and commercial use
+
+This repository is [MIT](LICENSE). Each plugin keeps its own license, listed in the `license` field of [marketplace.json](.claude-plugin/marketplace.json). Check it before shipping a plugin in a product.
+
+- **MIT, Apache-2.0, or `MIT OR Apache-2.0`**: most members.
+- **iphone-use, android-use**: PolyForm Shield 1.0.0. Source-available, not OSI-approved; it restricts competing uses. See [iphone-use's LICENSING.md](https://github.com/leeguooooo/iphone-use/blob/main/LICENSING.md).
+- **wechat-use**: its own non-commercial learning license, so commercial use is not permitted.
+- **thermo-use**: MIT covers the skill only; the app binary is closed source.
+
 ## Retired
 
 **curl-crypto-plugin** is no longer offered here: it needs a private runtime that the plugin doesn't ship, so a fresh install can't run. The source stays at [leeguooooo/curl-crypto-plugin](https://github.com/leeguooooo/curl-crypto-plugin). To remove an existing install: `/plugin uninstall curl-crypto-plugin@leeguooooo-plugins`.
