@@ -17,6 +17,23 @@ spec=importlib.util.spec_from_file_location('use_manager',SOURCE)
 u=importlib.util.module_from_spec(spec); spec.loader.exec_module(u)
 
 class ManagerTests(unittest.TestCase):
+    def test_use_copies_stay_identical(self):
+        root=Path(__file__).resolve().parents[1]/'plugins'
+        self.assertEqual((root/'use-family/scripts/use.py').read_bytes(),(root/'use-manager/scripts/use.py').read_bytes())
+    def test_hosts_filter_and_doctor_without_claude(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ,{'USE_HOSTS':'agents,grok'}), patch.object(u,'STATE',Path(tmp)), patch.object(u,'installed_cli',lambda n:None):
+            result=u.doctor(['mail-use','profile-use'])
+        self.assertEqual(result['hosts'],['agents','grok']); self.assertEqual(result['missing'],['mail-use'])
+    def test_unknown_host_is_refused(self):
+        with patch.dict(os.environ,{'USE_HOSTS':'nope'}), self.assertRaises(RuntimeError): u.active_hosts()
+    def test_bootstrap_links_without_replacing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home=Path(tmp); source=home/'a/mail-use'; source.mkdir(parents=True); (source/'SKILL.md').touch()
+            mine=home/'g/chrome-use'; mine.mkdir(parents=True); (home/'a/chrome-use').mkdir(); (home/'a/chrome-use/SKILL.md').touch()
+            hosts={'agents':{'home':home,'skills':home/'a'},'grok':{'home':home,'skills':home/'g'},'claude':{'home':home,'skills':home/'c'}}
+            with patch.object(u,'HOSTS',hosts), patch.dict(os.environ,{'USE_HOSTS':'agents,grok,claude'}), patch.object(u,'STATE',home), patch.object(u,'installed_cli',lambda n:None):
+                u.bootstrap()
+            self.assertTrue((home/'g/mail-use').is_symlink()); self.assertFalse(mine.is_symlink()); self.assertFalse((home/'c').exists())
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name).resolve()
