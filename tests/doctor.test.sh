@@ -13,6 +13,8 @@ UNAME
 chmod +x "$TMP/bin/uname"
 # Only the shell itself: no *-use CLI and no system tool that doctor.sh might find.
 ln -s "$(command -v sh)" "$TMP/bin/sh"
+# doctor.sh asks use.py for installed plugins, so python3 stays reachable.
+printf '#!/bin/sh\nexec "%s" "$@"\n' "$(command -v python3)" > "$TMP/bin/python3"; chmod +x "$TMP/bin/python3"
 
 run() {  # run <arch>: doctor.sh's stdout on a Mac with that arch
   FAKE_ARCH=$1 HOME="$TMP/home" PATH="$TMP/bin" sh "$ROOT/plugins/use-family/scripts/doctor.sh"

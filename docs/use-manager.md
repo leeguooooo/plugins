@@ -125,7 +125,7 @@ manager attempts upgrades at most once per configured interval. No agent session
 be open. macOS runs once when first registered; Linux/Windows use their next trigger. A
 registered timer does not prove that upgrades succeeded: inspect the last report.
 
-Automatic upgrades are opt-in. `CI`, `USE_NO_AUTO_UPGRADE` and per-member variables such as
+Automatic upgrades are opt-in. `CI`, `USE_NO_AUTOUPDATE`, `USE_NO_AUTO_UPGRADE` and per-member variables such as
 `MAIL_USE_NO_AUTO_UPGRADE` suppress automatic actions when present in the worker's environment.
 Use `use auto disable` for a durable off switch. Disabling stops future upgrades; it does not
 kill a tool already being updated. No other agent session, shared daemon or remote host is

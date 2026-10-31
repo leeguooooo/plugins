@@ -461,8 +461,28 @@ def bootstrap():
     return dict(ok=True,linked=linked,doctor=doctor())
 
 
+def plugin_registry():
+    return HOME/HOSTS['claude']['home']/'plugins/installed_plugins.json'
+
+
+def auto_update_off():
+    # USE_NO_AUTOUPDATE is the host-facing switch; USE_NO_AUTO_UPGRADE is the older spelling.
+    return bool(os.environ.get('USE_NO_AUTOUPDATE') or os.environ.get('USE_NO_AUTO_UPGRADE'))
+
+
+def plugin_versions():
+    # Newest installed version per family plugin, so shell hooks need not parse the host's registry.
+    best={}
+    for e in plugin_entries():
+        name,_,market=e['key'].partition('@')
+        v=str(e.get('version',''))
+        if market=='leeguooooo-plugins' and re.fullmatch(r'\d+\.\d+\.\d+',v):
+            if name not in best or tuple(map(int,v.split('.')))>tuple(map(int,best[name].split('.'))): best[name]=v
+    return best
+
+
 def plugin_entries():
-    p=HOME/'.claude/plugins/installed_plugins.json'
+    p=plugin_registry()
     if not p.exists(): return []
     try: data=json.loads(p.read_text(encoding='utf-8-sig'))
     except (OSError,ValueError): raise RuntimeError('Cannot read installed Claude plugins; no plugin changes attempted')
@@ -809,7 +829,7 @@ def canonical_sources(names):
     # Read only the known skill locations in installed immutable plugin caches.
     allowed=set(plugin_names(names)); result={}
     roots=[]
-    raw=read(HOME/'.claude/plugins/installed_plugins.json')
+    raw=read(plugin_registry())
     for key,entries in raw.get('plugins',raw).items():
         name=key.split('@')[0]
         if name not in allowed: continue
@@ -883,7 +903,7 @@ def upgrade(args):
     automatic=args.automatic
     config=read(CONFIG)
     if automatic:
-        if os.environ.get('CI') or os.environ.get('USE_NO_AUTO_UPGRADE') or not config.get('enabled'):
+        if os.environ.get('CI') or auto_update_off() or not config.get('enabled'):
             return dict(ok=True,skipped='automatic upgrades disabled'),0
         last=read(STATE/'last-attempt.json').get('at',0)
         last=last if isinstance(last,(int,float)) else 0
@@ -1171,7 +1191,7 @@ def schedule(kind,enable):
     label='com.leeguooooo.use-upgrade'
     context=STATE/'scheduler-context.json'
     values=dict(USE_MANAGER_STATE=str(STATE),USE_MANAGER_HOME=str(INSTALL),USE_MANAGER_BIN=str(BIN),USE_FAMILY_DIR=str(BASE),PATH=os.environ.get('PATH',''))
-    for key in ['USE_NO_AUTO_UPGRADE']+[n.upper().replace('-','_')+'_NO_AUTO_UPGRADE' for n in NAMES+['use-family']]:
+    for key in ['USE_NO_AUTO_UPGRADE','USE_NO_AUTOUPDATE']+[n.upper().replace('-','_')+'_NO_AUTO_UPGRADE' for n in NAMES+['use-family']]:
         if os.environ.get(key): values[key]='1'
     command=([str(BIN/'use')] if kind in ('Darwin','Linux') else [sys.executable,str(SCRIPT)])+['update','--automatic','--json','--context',str(context)]
     if kind=='Darwin':
@@ -1237,7 +1257,7 @@ def auto(args):
 def apply_context(file):
     global STATE,CONFIG,INSTALL,BIN,BASE
     data=read(Path(file))
-    keys={'USE_MANAGER_STATE','USE_MANAGER_HOME','USE_MANAGER_BIN','USE_FAMILY_DIR','PATH','USE_NO_AUTO_UPGRADE'}|{n.upper().replace('-','_')+'_NO_AUTO_UPGRADE' for n in NAMES+['use-family']}
+    keys={'USE_MANAGER_STATE','USE_MANAGER_HOME','USE_MANAGER_BIN','USE_FAMILY_DIR','PATH','USE_NO_AUTO_UPGRADE','USE_NO_AUTOUPDATE'}|{n.upper().replace('-','_')+'_NO_AUTO_UPGRADE' for n in NAMES+['use-family']}
     if not isinstance(data,dict) or set(data)-keys: raise RuntimeError('Invalid scheduler context')
     for key in ('USE_MANAGER_STATE','USE_MANAGER_HOME','USE_MANAGER_BIN','USE_FAMILY_DIR'):
         if not isinstance(data.get(key),str) or not Path(data[key]).is_absolute(): raise RuntimeError('Scheduler context requires absolute manager paths')
@@ -1276,6 +1296,7 @@ def main(argv=None):
     st=commands.add_parser('status',help=tr('help_status'));st.add_argument('--json',action='store_true',help=tr('help_json'))
     dr=commands.add_parser('doctor',help='Report missing CLIs and linked skills per agent host');dr.add_argument('--json',action='store_true',help=tr('help_json'))
     bs=commands.add_parser('bootstrap',help='Link installed skills into every detected agent host');bs.add_argument('--json',action='store_true',help=tr('help_json'))
+    pl=commands.add_parser('plugins',help='List installed family plugin versions');pl.add_argument('--json',action='store_true',help=tr('help_json'))
     au=commands.add_parser('auto',help=tr('help_auto'))
     au.add_argument('action',choices=['enable','disable','status'],help=tr('help_action'))
     au.add_argument('--hours',type=int,default=24,help=tr('help_hours'));au.add_argument('--json',action='store_true',help=tr('help_json'))
@@ -1307,6 +1328,12 @@ def main(argv=None):
                 result,code=manager_upgrade(args)
         elif args.command=='doctor': result=doctor(); code=0 if result['ok'] else 2
         elif args.command=='bootstrap': result=bootstrap(); code=0
+        elif args.command=='plugins':
+            result=plugin_versions()
+            if not args.json:
+                for name,ver in result.items(): print(name,ver)
+                return 0
+            code=0
         elif args.command=='report':
             result=read(STATE/('last-manager-report.json' if args.manager else 'last-report.json')) if args.json else load_report(args.manager)
             if not result:raise RuntimeError('No manager upgrade report yet; run use upgrade first' if args.manager else 'No upgrade report yet; run use update first')

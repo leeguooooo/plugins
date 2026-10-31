@@ -114,5 +114,5 @@ That only moves SKILL.md, so at session start the CLI is brought to the plugin's
   and the legacy session-start sync skips it.
 - Output: one line on stdout per CLI upgraded or failed (the agent sees it); nothing when all
   are current.
-- Off: `USE_NO_AUTO_UPGRADE` or `CI`; per use `<NAME>_NO_AUTO_UPGRADE`
+- Off: `USE_NO_AUTOUPDATE`, `USE_NO_AUTO_UPGRADE` or `CI`; per use `<NAME>_NO_AUTO_UPGRADE`
   (e.g. `MAIL_USE_NO_AUTO_UPGRADE`, `BITWARDEN_USE_NO_AUTO_UPGRADE`).

@@ -28,12 +28,16 @@ fi
 # A member whose plugin is installed but whose CLI is missing: its skill is offered to the agent
 # yet cannot run, so name the one command that fixes it. Still the user's call (installers write
 # to their machine), so the agent asks first; \`use install\` runs the same owner installer.
-plugins="$HOME/.claude/plugins/installed_plugins.json"
+# use.py owns the host registry; without python3 (or on a host with no plugins) this hint is skipped.
+ROOT=${USE_PLUGIN_ROOT:+$USE_PLUGIN_ROOT/scripts}
+ROOT=${ROOT:-${0%/*}}
 wanted=""
-if [ -f "$plugins" ]; then
-  installed=$(while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "$plugins")  # shell only: no grep needed
+if command -v python3 >/dev/null 2>&1; then
+  installed=$(python3 "$ROOT/use.py" plugins 2>/dev/null) || installed=""
   for name in $missing; do
-    case "$installed" in *"\"$name@leeguooooo-plugins\""*) wanted="$wanted $name" ;; esac
+    case "
+$installed" in *"
+$name "*) wanted="$wanted $name" ;; esac
   done
 fi
 if [ -n "$wanted" ]; then

@@ -26,6 +26,29 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(result['hosts'],['agents','grok']); self.assertEqual(result['missing'],['mail-use'])
     def test_unknown_host_is_refused(self):
         with patch.dict(os.environ,{'USE_HOSTS':'nope'}), self.assertRaises(RuntimeError): u.active_hosts()
+    def test_plugin_versions_picks_newest_family_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home=Path(tmp); reg=home/'.claude/plugins'; reg.mkdir(parents=True)
+            (reg/'installed_plugins.json').write_text(json.dumps({'plugins':{
+                'mail-use@leeguooooo-plugins':[{'version':'1.9.0'},{'version':'1.10.0'},{'version':'bad'}],
+                'chrome-use@other':[{'version':'9.0.0'}],'stranger@leeguooooo-plugins':[{'version':'1.0.0'}]}}))
+            with patch.object(u,'HOME',home): self.assertEqual(u.plugin_versions(),{'mail-use':'1.10.0'})
+    def test_plugin_versions_without_claude_home(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(u,'HOME',Path(tmp)):
+            self.assertEqual(u.plugin_versions(),{})
+    def test_use_no_autoupdate_stops_automatic_runs(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(u,'CONFIG',Path(tmp)/'c.json'), patch.dict(os.environ,{'USE_NO_AUTOUPDATE':'1'}):
+            os.environ.pop('CI',None); os.environ.pop('USE_NO_AUTO_UPGRADE',None)
+            (Path(tmp)/'c.json').write_text('{"enabled":true}')
+            result,code=u.upgrade(SimpleNamespace(automatic=True,check=False,json=True,names=[]))
+        self.assertEqual((result.get('skipped'),code),('automatic upgrades disabled',0))
+    def test_sync_clis_runs_with_no_claude_home_and_honours_opt_out(self):
+        script=REPO/'plugins/use-family/scripts/sync-clis.sh'
+        with tempfile.TemporaryDirectory() as tmp:
+            base=dict(os.environ,HOME=tmp,XDG_CACHE_HOME=tmp); base.pop('CI',None); base.pop('USE_NO_AUTO_UPGRADE',None)
+            for extra in ({},{'USE_NO_AUTOUPDATE':'1'}):
+                done=subprocess.run(['sh',str(script)],env=dict(base,**extra),capture_output=True,text=True)
+                self.assertEqual((done.returncode,done.stdout,done.stderr),(0,'',''))
     def test_bootstrap_links_without_replacing(self):
         with tempfile.TemporaryDirectory() as tmp:
             home=Path(tmp); source=home/'a/mail-use'; source.mkdir(parents=True); (source/'SKILL.md').touch()

@@ -5,33 +5,19 @@
 # it runs `<name> upgrade` (docs/upgrade.md). A CLI without `upgrade` is only named, with its
 # installer, because some installers do more than swap a binary (wechat-use). bitwarden-use is
 # skipped: its plugin carries its own hook. Silent when every CLI is current.
-# Off with USE_NO_AUTO_UPGRADE or CI; per use with <NAME>_NO_AUTO_UPGRADE (e.g. MAIL_USE_NO_AUTO_UPGRADE).
+# Off with USE_NO_AUTOUPDATE, USE_NO_AUTO_UPGRADE or CI; per use with <NAME>_NO_AUTO_UPGRADE (e.g. MAIL_USE_NO_AUTO_UPGRADE).
 PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
-[ -n "${USE_NO_AUTO_UPGRADE:-}${CI:-}" ] && exit 0
-plugins="$HOME/.claude/plugins/installed_plugins.json"
-[ -f "$plugins" ] && command -v python3 >/dev/null 2>&1 || exit 0
+[ -n "${USE_NO_AUTOUPDATE:-}${USE_NO_AUTO_UPGRADE:-}${CI:-}" ] && exit 0
+command -v python3 >/dev/null 2>&1 || exit 0
+ROOT=${USE_PLUGIN_ROOT:+$USE_PLUGIN_ROOT/scripts}
+ROOT=${ROOT:-$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)}
 
 names="android-use chrome-use cookie-use iphone-use mail-use wechat-use discord-use chatgpt-use memory-use ocs sflow message-use image-use paste-use motion-use switch-use"
 
 # "<name> <plugin version>" for each installed plugin of the family (newest install per name)
-installed=$(python3 - "$plugins" $names <<'EOF'
-import json, re, sys
-try:
-    data = json.load(open(sys.argv[1]))
-except Exception:
-    sys.exit(0)
-data = data.get("plugins", data)
-key = lambda v: tuple(int(x) for x in v.split("."))
-for name in sys.argv[2:]:
-    entries = data.get(f"{name}@leeguooooo-plugins") or []
-    if isinstance(entries, dict):
-        entries = [entries]
-    versions = [e.get("version", "") for e in entries]
-    versions = [v for v in versions if re.fullmatch(r"\d+\.\d+\.\d+", v)]
-    if versions:
-        print(name, max(versions, key=key))
-EOF
-)
+installed=$(python3 "$ROOT/use.py" plugins 2>/dev/null | while read -r name version; do
+  case " $names " in (*" $name "*) echo "$name $version" ;; esac
+done)
 [ -n "$installed" ] || exit 0
 
 # older A B: version A sorts strictly before version B
