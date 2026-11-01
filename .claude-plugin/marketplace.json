@@ -114,7 +114,7 @@
     {
       "name": "android-use",
       "description": "Agent control of real Android devices: native Unicode input, screen reads, semantic waits and batch actions through CLI and MCP.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "development",
       "source": {
         "source": "url",
@@ -304,7 +304,7 @@
     {
       "name": "memory-use",
       "description": "Portable long-term memory for AI coding agents — Markdown notes in a private git repo you own. Recall before work, write back after, background autosync, secret-scan hook, one-line new-computer setup.",
-      "version": "0.5.3",
+      "version": "0.5.4",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -418,7 +418,7 @@
     {
       "name": "chatgpt-use",
       "description": "Turn a ChatGPT web subscription into a coding-agent backend — no API key, no Codex billing. Ask/plan/review/delegate via the logged-in web conversation; built on chrome-use.",
-      "version": "0.0.11",
+      "version": "0.0.12",
       "category": "development",
       "source": {
         "source": "url",
