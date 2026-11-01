@@ -36,7 +36,7 @@
     {
       "name": "use-family",
       "description": "The whole *-use family in one install: every *-use plugin below as a dependency, a routing skill that tells the agent which one to use and how they combine, and a session-start check for missing CLIs, and CLIs kept at their plugin's version.",
-      "version": "0.17.0",
+      "version": "0.18.0",
       "category": "productivity",
       "source": "./plugins/use-family",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-family",
@@ -45,7 +45,7 @@
     {
       "name": "use-manager",
       "description": "The `use` command: `use upgrade` upgrades the manager itself; `use update` updates installed family CLIs, skills and plugins. Every *-use plugin depends on it. `use install <name>` installs a missing CLI on request; scheduling only with `use auto enable`.",
-      "version": "0.17.0",
+      "version": "0.18.0",
       "category": "productivity",
       "source": "./plugins/use-manager",
       "homepage": "https://github.com/leeguooooo/plugins/tree/main/plugins/use-manager",
