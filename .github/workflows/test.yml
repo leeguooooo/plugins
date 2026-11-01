@@ -38,3 +38,63 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m unittest discover -s tests -p 'test_use_manager.py' -v
+
+  prepare-release:
+    needs: [installers, use-manager]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: prepare-release
+      cancel-in-progress: false
+    outputs:
+      tag: ${{ steps.prepare.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: bump version and tag releasable commits
+        id: prepare
+        env:
+          TESTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          # Marketplace bot commits use GITHUB_TOKEN and start no CI, so they must
+          # not cancel a release. A human commit gets its own run.
+          if [ "$(git rev-parse origin/main)" != "$TESTED_SHA" ]; then
+            if git log "$TESTED_SHA..origin/main" --format=%ae | grep -qv 'github-actions\[bot\]'; then
+              echo "Newer main commit exists; its CI will prepare the release"
+              exit 0
+            fi
+            git checkout -q origin/main
+          fi
+          tag="$(python3 scripts/prepare-release.py)"
+          if [ -z "$tag" ]; then
+            echo "No releasable commits since the last tag"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -u
+          git commit -m "chore(release): $tag"
+          git tag "$tag"
+          for attempt in 1 2 3 4; do
+            git push --atomic origin HEAD:refs/heads/main "refs/tags/$tag" && break
+            [ "$attempt" != 4 ] || exit 1
+            git fetch origin main
+            git rebase origin/main
+            git tag -f "$tag"
+          done
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: prepare-release
+    if: needs.prepare-release.outputs.tag != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-use.yml
+    with:
+      tag: ${{ needs.prepare-release.outputs.tag }}
