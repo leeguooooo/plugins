@@ -267,7 +267,7 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.19.15",
+      "version": "1.19.16",
       "category": "productivity",
       "source": {
         "source": "url",
@@ -284,7 +284,7 @@
     {
       "name": "profile-use",
       "description": "Safely fill registration, signup, checkout, banking, KYC, and onboarding forms from a private local personal profile — privacy-first, consent before submission.",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "category": "productivity",
       "source": {
         "source": "url",
