@@ -86,7 +86,7 @@ TEXT={
     'deferred':('{count} deferred','{count} 个暂缓'),
     'no_updates':('No updates needed','暂无更新'),
     'preserved':('Left {copies} skill copies of {tools} tools untouched; they differ from every known release','{tools} 个工具的 {copies} 份技能副本与已知发布版都不同，未覆盖'),
-    'details':('Details: {command} · log: {path}','详情：{command} · 日志：{path}'),
+    'details':('Details:\n  {command}\nLog: {path}','详情：\n  {command}\n日志：{path}'),
     'reason_owner_failed':('upgrade command failed','升级命令失败'),
     'reason_cli_broken':('does not start','无法启动'),
     'reason_diverged':('local commits diverged from upstream; checkout kept','本地提交与上游历史已分叉，无法安全快进；已保留本地内容'),
@@ -496,16 +496,39 @@ def plugin_entries():
     return result
 
 
+class CodexInventoryError(RuntimeError):
+    def __init__(self,reason,diagnostic):
+        super().__init__(reason)
+        self.diagnostic=diagnostic
+
+
+def probe_diagnostic(argv,code,text,kind):
+    # Keep full redacted output in the private log; bound the report excerpt.
+    command=[redact(str(a)) for a in argv]
+    text=redact(text)
+    write_log(f'\n{datetime.datetime.now().isoformat()} probe {kind}\n'+json.dumps(command,ensure_ascii=False)+f'\nexit {code}\n'+text)
+    excerpt=' '.join(re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',text).split())
+    return dict(command=command,exitCode=code,kind=kind,output=excerpt[:500]+('…' if len(excerpt)>500 else ''))
+
+
 def codex_entries():
     exe=shutil.which('codex')
     if not exe: return []
-    code,text=run([exe,'plugin','list','--json'],timeout=30)
+    argv=[exe,'plugin','list','--json']
+    code,text=run(argv,timeout=30)
     if code:
-        if (HOME/'.codex/plugins/cache').exists(): raise RuntimeError('Codex plugin inventory unavailable; native refresh not attempted')
-        return []
-    data=json.loads(text)
-    if not isinstance(data,dict) or not isinstance(data.get('installed'),list): raise RuntimeError('Unsupported Codex plugin inventory schema')
-    return [{k:p.get(k) for k in ('pluginId','name','marketplaceName','version','enabled','marketplaceSource')} for p in data['installed']]
+        reason='Codex plugin inventory timed out after 30s; retry the inventory command' if code==124 else 'Codex plugin inventory command failed'
+        raise CodexInventoryError(reason,probe_diagnostic(argv,code,text,'timeout' if code==124 else 'command-failed'))
+    try: data=json.loads(text)
+    except ValueError:
+        raise CodexInventoryError('Codex plugin inventory returned invalid JSON',probe_diagnostic(argv,code,text,'invalid-json')) from None
+    fields=('pluginId','name','marketplaceName','version')
+    if (not isinstance(data,dict) or not isinstance(data.get('installed'),list)
+        or any(not isinstance(p,dict) or any(not isinstance(p.get(k),str) or not p[k] for k in fields)
+               or not isinstance(p.get('enabled'),bool) or not isinstance(p.get('marketplaceSource'),dict)
+               for p in data['installed'])):
+        raise CodexInventoryError('Unsupported Codex plugin inventory schema',probe_diagnostic(argv,code,text,'unsupported-schema'))
+    return [{k:p.get(k) for k in (*fields,'enabled','marketplaceSource')} for p in data['installed']]
 
 
 def codex_targets(market):
@@ -523,6 +546,8 @@ def codex_targets(market):
 
 def codex_upgrade(report,names,check):
     try: entries=codex_entries()
+    except CodexInventoryError as e:
+        report['items'].append(dict(name='codex',channel='codex-plugin',status='manual',reason=str(e),diagnostic=e.diagnostic)); return
     except (OSError,ValueError,RuntimeError):
         report['items'].append(dict(name='codex',channel='codex-plugin',status='manual',reason='native Codex plugin inventory unavailable')); return
     allowed=set(plugin_names(names))
@@ -941,7 +966,7 @@ def upgrade(args):
                 report['items'].append(dict(name=name,channel='cli',status='pending',before=cli_version(exe),target=None,reason='GitHub API rate limit reached; CLI upgrade deferred'));continue
             code,help_text=run([exe,'--help'],timeout=15)
             if code:
-                report['items'].append(dict(name=name,channel='cli',status='unverified',exitCode=code,reason='CLI help could not be read; upgrade support not determined'));continue
+                report['items'].append(dict(name=name,channel='cli',status='unverified',exitCode=code,reason='CLI help could not be read; upgrade support not determined',diagnostic=probe_diagnostic([exe,'--help'],code,help_text,'cli-help')));continue
             probe=upgrade_probe(exe) if name=='wechat-use' else (None,None)
             if not re.search(r'\bupgrade\b',help_text) and name!='wechat-use':
                 report['items'].append(dict(name=name,channel='cli',status='manual',reason='installed version has no upgrade command')); continue
@@ -1035,6 +1060,10 @@ def human_reason(item):
         'Thermo update requested; installed App has not reached the target version yet':'已请求更新 Thermo，等待 App 完成更新',
         'native marketplace refresh would include plugins outside the requested family scope':'市场更新会涉及所选范围以外的插件，已跳过',
         'native Codex plugin inventory unavailable':'无法读取 Codex 已安装插件，已跳过',
+        'Codex plugin inventory timed out after 30s; retry the inventory command':'读取 Codex 插件清单超时（30 秒），请重试清单命令；已跳过更新',
+        'Codex plugin inventory command failed':'Codex 插件清单命令失败，已跳过更新',
+        'Codex plugin inventory returned invalid JSON':'Codex 插件清单返回了无效 JSON，已跳过更新',
+        'Unsupported Codex plugin inventory schema':'Codex 插件清单结构不受支持，已跳过更新',
         'plugin version, installed set or enabled state could not be verified':'无法确认插件版本、安装列表或启用状态',
         'latest version could not be checked; installer not run':'无法获取最新版本，未运行安装器；现有版本已保留',
         'GitHub API rate limit reached; CLI upgrade deferred':'GitHub API 被限流，已暂缓 CLI 升级',
@@ -1073,6 +1102,7 @@ def home_path(path):
 def next_step(item):
     # Commands that reproduce or inspect a problem; never the owner's captured output.
     reason,channel,name,path=item.get('reason',''),item.get('channel'),tool_name(item),item.get('path')
+    if channel=='codex-plugin' and item.get('diagnostic'):return 'codex plugin list --json'
     if channel=='cli' and reason=='owner command failed; see private upgrade log':return name+' upgrade'
     if channel=='cli' and reason=='CLI help could not be read; upgrade support not determined':return name+' --help'
     if channel=='skill' and path and reason in ('Git history diverged; local checkout preserved','checkout is dirty or unreadable'):
@@ -1185,6 +1215,10 @@ def print_report(report,verbose=False):
             print('  '+i.get('name','')+paint(' ['+channels.get(i.get('channel'),i.get('channel',''))+'] ','dim')+paint(labels.get(i['status'],i['status']),*tone))
             if i.get('path'):print('    '+paint(home_path(i['path']),'dim'))
             if i['status'] in ('failed','manual','unverified','pending'):print('    '+human_reason(i))
+            if i.get('diagnostic'):
+                d=i['diagnostic']
+                print('    '+json.dumps([home_path(a) for a in d['command']],ensure_ascii=False)+tr('exit_code',code=d['exitCode']))
+                if d.get('output'):print('    '+home_path(redact(d['output'])))
 
 
 def schedule(kind,enable):
