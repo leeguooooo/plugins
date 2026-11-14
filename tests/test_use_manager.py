@@ -15,6 +15,7 @@ REPO=Path(__file__).resolve().parents[1]
 SOURCE=REPO/'plugins/use-manager/scripts/use.py'
 spec=importlib.util.spec_from_file_location('use_manager',SOURCE)
 u=importlib.util.module_from_spec(spec); spec.loader.exec_module(u)
+REAL_CODEX_ENTRIES=u.codex_entries
 
 class ManagerTests(unittest.TestCase):
     def test_use_copies_stay_identical(self):
@@ -277,6 +278,70 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(report['items'][0]['status'],'unverified') # absent alias is not a complete install
 
 
+    def test_inventory_errors_are_distinct_and_never_refresh_plugins(self):
+        secret='inventory-test-secret'
+        cases=[(124,'timed out','timeout'),(7,'failure '+secret,'command-failed'),
+               (0,'not JSON '+secret,'invalid-json'),(0,'{}','unsupported-schema'),
+               (0,'{"installed":[null]}','unsupported-schema'),
+               (0,'{"installed":[{"name":"motion-use"}]}','unsupported-schema')]
+        for code,text,kind in cases:
+            with self.subTest(kind=kind,text=text):
+                report={'items':[],'json':True}
+                with patch.object(u,'codex_entries',side_effect=REAL_CODEX_ENTRIES),patch.object(u.shutil,'which',return_value='/bin/codex'),patch.object(u,'run',return_value=(code,text)) as run,patch.dict(u.UPGRADE_AUTH,{'GH_TOKEN':secret}):
+                    u.codex_upgrade(report,['motion-use'],False)
+                self.assertEqual(run.call_count,1)
+                row=report['items'][0]
+                self.assertEqual(row['status'],'manual')
+                self.assertEqual(row['diagnostic']['kind'],kind)
+                self.assertEqual(row['diagnostic']['exitCode'],code)
+                self.assertNotIn(secret,json.dumps(report))
+                self.assertNotIn(secret,(u.STATE/'upgrade.log').read_text())
+                self.assertEqual(u.next_step(row),'codex plugin list --json')
+                if code==124:self.assertIn('30s',row['reason'])
+        with patch.object(u.shutil,'which',return_value='/bin/codex'),patch.object(u,'run',return_value=(0,'{"installed":[]}')):
+            self.assertEqual(REAL_CODEX_ENTRIES(),[])
+
+    def test_host_managed_inventory_accepts_null_marketplace_source(self):
+        row=dict(pluginId='motion-use@host',name='motion-use',marketplaceName='host',version='1.0.0',enabled=True,marketplaceSource=None)
+        with patch.object(u,'codex_entries',side_effect=REAL_CODEX_ENTRIES),patch.object(u.shutil,'which',return_value='/bin/codex'),patch.object(u,'run',return_value=(0,json.dumps({'installed':[row]}))) as run:
+            self.assertEqual(u.codex_entries(),[row])
+            report={'items':[],'json':True}
+            u.codex_upgrade(report,['motion-use'],False)
+        self.assertEqual(report['items'][0]['status'],'manual')
+        self.assertIn('owned by its host',report['items'][0]['reason'])
+        self.assertTrue(all(c.args[0][1:]==['plugin','list','--json'] for c in run.call_args_list))
+
+    def test_failed_cli_help_records_executable_exit_and_redacted_excerpt(self):
+        self.args.names=['motion-use']
+        exe=str(self.root/'bin/motion-use')
+        secret='cli-test-secret'
+        output='node: not found '+secret+'\n'+'x'*600
+        with patch.object(u,'installed_cli',return_value=exe),patch.object(u,'run',return_value=(127,output)),patch.object(u,'git_roots',return_value=[]),patch.dict(u.UPGRADE_AUTH,{'GH_TOKEN':secret}):
+            report,code=u.upgrade(self.args)
+        self.assertEqual(code,2)
+        row=report['items'][0]
+        self.assertEqual(row['diagnostic']['command'],[exe,'--help'])
+        self.assertEqual(row['diagnostic']['exitCode'],127)
+        self.assertIn('node: not found [redacted]',row['diagnostic']['output'])
+        self.assertLessEqual(len(row['diagnostic']['output']),501)
+        self.assertNotIn(secret,json.dumps(report))
+        log=(u.STATE/'upgrade.log').read_text()
+        self.assertIn(json.dumps(exe,ensure_ascii=False),log);self.assertNotIn(secret,log)
+        out=io.StringIO()
+        with contextlib.redirect_stdout(out):u.print_report(report,verbose=True)
+        self.assertIn('node: not found [redacted]',out.getvalue())
+
+    def test_report_hint_keeps_command_on_its_own_line(self):
+        row=dict(name='motion-use',channel='cli',status='unverified',exitCode=127,reason='CLI help could not be read; upgrade support not determined')
+        for lang in ('en','zh'):
+            out=io.StringIO()
+            with patch.object(u,'UI_LANG',lang),contextlib.redirect_stdout(out):
+                u.print_report({'items':[row]})
+            lines=out.getvalue().splitlines()
+            self.assertIn('  use report --verbose',lines)
+            self.assertTrue(any(line.startswith('Log: ' if lang=='en' else '日志：') for line in lines))
+            self.assertFalse(any('use report --verbose' in line and 'upgrade.log' in line for line in lines))
+
     def test_codex_refresh_preserves_enabled_state_and_scope(self):
         before={'pluginId':'motion-use@family','name':'motion-use','marketplaceName':'family','version':'1.0.0','enabled':False,'marketplaceSource':{'sourceType':'git'}}
         report={'items':[],'json':True}
@@ -486,7 +551,7 @@ class ManagerTests(unittest.TestCase):
         with contextlib.redirect_stdout(out):u.print_report({'items':rows})
         text=out.getvalue()
         self.assertIn('1 个已更新',text);self.assertIn('1 个工具的 2 份技能副本',text)
-        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),11)
+        self.assertNotIn('chrome-use',text);self.assertLess(len(text.splitlines()),13)
         self.assertIn('Claude 插件',text);self.assertIn('Codex 插件',text)
 
     def test_problems_are_grouped_per_tool_with_next_steps(self):
