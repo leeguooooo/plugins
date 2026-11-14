@@ -525,7 +525,7 @@ def codex_entries():
     fields=('pluginId','name','marketplaceName','version')
     if (not isinstance(data,dict) or not isinstance(data.get('installed'),list)
         or any(not isinstance(p,dict) or any(not isinstance(p.get(k),str) or not p[k] for k in fields)
-               or not isinstance(p.get('enabled'),bool) or not isinstance(p.get('marketplaceSource'),dict)
+               or not isinstance(p.get('enabled'),bool) or (p.get('marketplaceSource') is not None and not isinstance(p['marketplaceSource'],dict))
                for p in data['installed'])):
         raise CodexInventoryError('Unsupported Codex plugin inventory schema',probe_diagnostic(argv,code,text,'unsupported-schema'))
     return [{k:p.get(k) for k in (*fields,'enabled','marketplaceSource')} for p in data['installed']]
@@ -560,7 +560,7 @@ def codex_upgrade(report,names,check):
             report['items'].extend(dict(name=p['pluginId'],channel='codex-plugin',status='installed',before=p['version'],enabled=p['enabled']) for p in chosen); continue
         if any(p['name'] not in allowed for p in group):
             report['items'].append(dict(name=market,channel='codex-plugin',status='manual',reason='native marketplace refresh would include plugins outside the requested family scope')); continue
-        if any(p.get('marketplaceSource',{}).get('sourceType')!='git' for p in chosen):
+        if any((p.get('marketplaceSource') or {}).get('sourceType')!='git' for p in chosen):
             report['items'].append(dict(name=market,channel='codex-plugin',status='manual',reason='local/managed marketplace is owned by its host; no Git upgrade path')); continue
         code,text=run([shutil.which('codex'),'plugin','marketplace','upgrade',market,'--json'])
         write_log('\nCodex marketplace '+str(market)+'\n'+text)

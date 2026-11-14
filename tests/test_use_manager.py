@@ -301,6 +301,16 @@ class ManagerTests(unittest.TestCase):
         with patch.object(u.shutil,'which',return_value='/bin/codex'),patch.object(u,'run',return_value=(0,'{"installed":[]}')):
             self.assertEqual(REAL_CODEX_ENTRIES(),[])
 
+    def test_host_managed_inventory_accepts_null_marketplace_source(self):
+        row=dict(pluginId='motion-use@host',name='motion-use',marketplaceName='host',version='1.0.0',enabled=True,marketplaceSource=None)
+        with patch.object(u,'codex_entries',side_effect=REAL_CODEX_ENTRIES),patch.object(u.shutil,'which',return_value='/bin/codex'),patch.object(u,'run',return_value=(0,json.dumps({'installed':[row]}))) as run:
+            self.assertEqual(u.codex_entries(),[row])
+            report={'items':[],'json':True}
+            u.codex_upgrade(report,['motion-use'],False)
+        self.assertEqual(report['items'][0]['status'],'manual')
+        self.assertIn('owned by its host',report['items'][0]['reason'])
+        self.assertTrue(all(c.args[0][1:]==['plugin','list','--json'] for c in run.call_args_list))
+
     def test_failed_cli_help_records_executable_exit_and_redacted_excerpt(self):
         self.args.names=['motion-use']
         exe=str(self.root/'bin/motion-use')
@@ -316,7 +326,7 @@ class ManagerTests(unittest.TestCase):
         self.assertLessEqual(len(row['diagnostic']['output']),501)
         self.assertNotIn(secret,json.dumps(report))
         log=(u.STATE/'upgrade.log').read_text()
-        self.assertIn(exe,log);self.assertNotIn(secret,log)
+        self.assertIn(json.dumps(exe,ensure_ascii=False),log);self.assertNotIn(secret,log)
         out=io.StringIO()
         with contextlib.redirect_stdout(out):u.print_report(report,verbose=True)
         self.assertIn('node: not found [redacted]',out.getvalue())
