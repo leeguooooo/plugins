@@ -1,6 +1,6 @@
 {
   "name": "use-manager",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "description": "Installs the `use` manager: `use upgrade` upgrades use itself; `use update` updates installed family CLIs, skills and plugins. Every *-use plugin depends on it. `use install <name>` installs a missing CLI on request; scheduling only with `use auto enable`.",
   "author": {
     "name": "leeguooooo"
