@@ -28,7 +28,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/claude-code-usage-bar.git",
-        "ref": "v3.52.3"
+        "ref": "v3.53.0"
       },
       "homepage": "https://github.com/leeguooooo/claude-code-usage-bar",
       "license": "MIT"
@@ -59,7 +59,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/chrome-use.git",
-        "ref": "v1.5.284"
+        "ref": "v1.5.291"
       },
       "homepage": "https://github.com/leeguooooo/chrome-use",
       "skills": [
@@ -99,7 +99,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/iphone-use.git",
-        "ref": "v0.27.41"
+        "ref": "v0.28.1"
       },
       "homepage": "https://github.com/leeguooooo/iphone-use",
       "skills": [
@@ -136,7 +136,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/image-use.git",
-        "ref": "v0.34.7"
+        "ref": "v0.35.0"
       },
       "homepage": "https://github.com/leeguooooo/image-use",
       "skills": [
@@ -156,7 +156,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/motion-use.git",
-        "ref": "v0.24.1"
+        "ref": "v0.24.2"
       },
       "homepage": "https://github.com/leeguooooo/motion-use",
       "dependencies": [
