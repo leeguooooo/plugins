@@ -90,6 +90,12 @@ jobs:
                   if m: return m.group(1)
               return None
 
+          def tag_exists(repo, tag):
+              return fetch(
+                  f"https://api.github.com/repos/{repo}/git/ref/tags/{tag}",
+                  {"Authorization": f"Bearer {TOKEN}"} if TOKEN else {},
+              ) is not None
+
           def gh_repo(src):
               # "url" sources carry https://github.com/<owner>/<repo>.git — plugin
               # sources use them instead of "github", which Claude Code clones over
@@ -113,12 +119,23 @@ jobs:
               repo = gh_repo(src)
               if not repo:
                   continue
-              ref, sub = src.get("ref", "main"), src.get("path", "")
-              v = manifest_version(repo, ref, sub)
+              sub = src.get("path", "")
+              # Read the version from main, but install from its tag so hosts can
+              # reproduce, audit and roll back. Until v<version> is tagged the entry
+              # stays on its previous ref; repos that never tag keep tracking main.
+              v = manifest_version(repo, "main", sub)
               if not v and not sub:
                   v = release_version(repo)
-              if v and v != entry.get("version"):
-                  changed.append(f'{entry["name"]}: {entry.get("version")} -> {v}')
+              if not v:
+                  continue
+              tag = f"v{v}"
+              if tag_exists(repo, tag):
+                  if v != entry.get("version") or src.get("ref") != tag:
+                      changed.append(f'{entry["name"]}: {entry.get("version")} -> {v} ({tag})')
+                      entry["version"] = v
+                      src["ref"] = tag
+              elif src.get("ref", "main") == "main" and v != entry.get("version"):
+                  changed.append(f'{entry["name"]}: {entry.get("version")} -> {v} (main, untagged)')
                   entry["version"] = v
           if changed:
               mp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
