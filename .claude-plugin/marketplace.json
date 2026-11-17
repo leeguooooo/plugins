@@ -324,12 +324,12 @@
     {
       "name": "ocs",
       "description": "open-cross-session — AI coding agents talking to each other: Claude Code, Codex and Pi sessions on this machine, and on paired machines on the same LAN over a mutually authenticated, encrypted link. Message, wake, delegate, get notified when a peer goes idle. One static binary, no server.",
-      "version": "0.9.22",
+      "version": "0.9.23",
       "category": "productivity",
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/open-cross-session.git",
-        "ref": "v0.9.22"
+        "ref": "v0.9.23"
       },
       "homepage": "https://github.com/leeguooooo/open-cross-session",
       "skills": [
