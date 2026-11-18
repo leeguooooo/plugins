@@ -151,12 +151,12 @@
     {
       "name": "motion-use",
       "description": "Directed local films for AI agents: authored shot plans, exact-time animation, Chinese/English and landscape/portrait outputs, default narration, audio timing and delivered-MP4 verification. HyperFrames CLI + agent skill; scene templates remain optional.",
-      "version": "0.24.2",
+      "version": "0.28.0",
       "category": "productivity",
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/motion-use.git",
-        "ref": "v0.24.2"
+        "ref": "v0.28.0"
       },
       "homepage": "https://github.com/leeguooooo/motion-use",
       "dependencies": [
@@ -267,12 +267,12 @@
     {
       "name": "wechat-use",
       "description": "WeChat CLI and MCP for macOS Apple Silicon and experimental Windows x64. Windows includes a standalone runtime without system Python; macOS also supports HTTP Bridge and Wechaty.",
-      "version": "1.19.28",
+      "version": "1.19.29",
       "category": "productivity",
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/wechat-use.git",
-        "ref": "v1.19.28"
+        "ref": "v1.19.29"
       },
       "homepage": "https://github.com/leeguooooo/wechat-use",
       "strict": true,
