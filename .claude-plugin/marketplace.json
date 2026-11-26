@@ -54,12 +54,12 @@
     {
       "name": "chrome-use",
       "description": "Browser automation CLI for AI agents — drive a real, logged-in Chrome with snapshot/@ref structured reads, stealth, and multi-agent tab isolation. The skill teaches agents the CLI; an MCP server mode (chrome-use mcp) covers no-shell hosts.",
-      "version": "1.5.295",
+      "version": "1.5.296",
       "category": "development",
       "source": {
         "source": "url",
         "url": "https://github.com/leeguooooo/chrome-use.git",
-        "ref": "v1.5.295"
+        "ref": "v1.5.296"
       },
       "homepage": "https://github.com/leeguooooo/chrome-use",
       "skills": [
